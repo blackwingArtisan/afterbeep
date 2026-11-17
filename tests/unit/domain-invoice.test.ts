@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { draftFromSpeech, quoteLines } from '../../src/domain/invoice-draft';
 import { parseInvoiceSpeech, splitSegments } from '../../src/domain/invoice-parser';
 import { lineAmountCents, roundDiv } from '../../src/domain/money';
-import { buildPriceBook, checkLine, findEntry, itemKey, quantityLimit } from '../../src/domain/price-book';
+import {
+  buildPriceBook,
+  checkLine,
+  differenceFromUsual,
+  findEntry,
+  isOutlier,
+  itemKey,
+  quantityLimit,
+} from '../../src/domain/price-book';
 import { computeTotals, stateBaseRateMilli } from '../../src/domain/tax';
 import type { InvoiceLine } from '../../src/domain/types';
 import { pastInvoices, sampleInvoiceScripts } from '../../src/server/seed';
@@ -255,7 +263,7 @@ describe('holds that catch misheard numbers', () => {
   });
 
   it('holds an ambiguous price with no history and offers each reading', () => {
-    const draft = draftFromSpeech('dryer repair, part three twenty-nine taxed, two hours labor at sixty', ctx());
+    const draft = draftFromSpeech('dryer repair, part three twenty-nine taxed, two hours labor at eighty-five', ctx());
     const part = draft.checks[0]!;
     expect(part).toMatchObject({ status: 'ambiguous', blocking: true });
     expect(part.options.map((o) => o.label)).toEqual(["It's $329.00", "It's $3.29"]);
@@ -269,5 +277,44 @@ describe('holds that catch misheard numbers', () => {
   it('still lets history settle an ambiguous price without a hold', () => {
     const draft = draftFromSpeech(script('ambiguous'), ctx());
     expect(draft.checks.map((c) => c.status)).toEqual(['ok', 'ok', 'ok', 'ok']);
+  });
+});
+
+describe('prices against the usual rate', () => {
+  const laborCheck = (speech: string) => draftFromSpeech(speech, ctx()).checks[0]!;
+
+  it('holds a labor rate well below the usual rate', () => {
+    const check = laborCheck('two hours labor at sixty');
+    expect(check).toMatchObject({ status: 'outlier', blocking: true, usualCents: 8500 });
+    expect(check.message).toBe('You said $60.00/hr, but you usually charge $85.00/hr (15 past invoices).');
+    expect(check.message).not.toContain('Matches');
+    expect(check.options.map((o) => o.label)).toEqual(['Keep $60.00/hr', 'Use usual $85.00/hr']);
+  });
+
+  it('holds a rate more than 15% below or 25% above the usual one', () => {
+    expect(laborCheck('one hour labor at seventy').status).toBe('outlier'); // 17.6% below
+    expect(laborCheck('one hour labor at seventy five').status).toBe('ok'); // 11.8% below
+    expect(laborCheck('one hour labor at one hundred five').status).toBe('ok'); // 23.5% above
+    expect(laborCheck('one hour labor at one hundred ten').status).toBe('outlier'); // 29.4% above
+    expect(isOutlier(8500 - 1275, 8500)).toBe(false); // exactly 15% below
+    expect(isOutlier(8500 - 1276, 8500)).toBe(true);
+    expect(isOutlier(10000 + 2500, 10000)).toBe(false); // exactly 25% above
+    expect(isOutlier(10000 + 2501, 10000)).toBe(true);
+  });
+
+  it('says "matches" only for the usual price, and gives the difference otherwise', () => {
+    expect(laborCheck('one hour labor at eighty-five').message).toBe('Matches your usual $85.00/hr (15 past invoices).');
+    expect(laborCheck('one hour labor at eighty').message).toBe('$80.00/hr is 6% below your usual $85.00/hr (15 past invoices).');
+    expect(laborCheck('one hour labor at ninety').message).toBe('$90.00/hr is 6% above your usual $85.00/hr (15 past invoices).');
+    expect(differenceFromUsual(10010, 10000)).toBe('less than 1% above');
+  });
+
+  it('releases a low rate once the owner keeps it', () => {
+    const draft = draftFromSpeech('two hours labor at sixty', ctx());
+    const kept = draft.lines.map((l) => ({ ...l, ...checkLine(l, book).options[0]!.patch }));
+    const quote = quoteLines(kept, { book, taxRateMilli: 5750 });
+    expect(quote.blocked).toBe(false);
+    expect(quote.checks[0]).toMatchObject({ status: 'confirmed', message: 'You confirmed $60.00/hr (usually $85.00/hr).' });
+    expect(quote.totals.totalCents).toBe(12000);
   });
 });

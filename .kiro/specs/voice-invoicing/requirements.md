@@ -6,7 +6,7 @@ After a job, the owner says the invoice out loud. AfterBeep turns the words into
 ## Glossary
 - **Line item**: description, kind (part, labor, fee), quantity, unit, unit price, taxable flag.
 - **Price book**: per item, the history of prices the owner has charged, built from past invoices.
-- **Outlier**: a spoken price more than 40% away from the item's median past price.
+- **Outlier**: a spoken price more than 15% below or more than 25% above the item's median past price.
 - **Hold**: a line that blocks sending until the owner decides a price.
 - **Approved total**: the grand total shown to the owner at the moment they press Approve.
 

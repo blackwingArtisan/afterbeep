@@ -59,7 +59,7 @@ test('two items joined by "and" become two lines, and a misheard quantity is hel
 
 test('an ambiguous price with no history waits for the owner to pick a reading', async ({ page }) => {
   await page.goto('/machine/invoice');
-  await page.getByLabel('What you said').fill('dryer repair, part three twenty-nine taxed, two hours labor at sixty');
+  await page.getByLabel('What you said').fill('dryer repair, part three twenty-nine taxed, two hours labor at eighty-five');
   await page.getByRole('button', { name: 'Line it up' }).click();
   const draft = page.getByTestId('draft');
   await expect(draft.getByTestId('draft-state')).toHaveText('On hold');
@@ -67,4 +67,18 @@ test('an ambiguous price with no history waits for the owner to pick a reading',
   await draft.getByRole('button', { name: "It's $3.29" }).click();
   await expect(draft.getByTestId('draft-state')).toHaveText('Ready');
   await expect(draft.getByTestId('line').first()).toContainText('$3.29');
+});
+
+test('a labor rate well below the usual rate is held until the owner keeps it', async ({ page }) => {
+  await page.goto('/machine/invoice');
+  await page.getByLabel('What you said').fill('two hours labor at sixty');
+  await page.getByRole('button', { name: 'Line it up' }).click();
+  const draft = page.getByTestId('draft');
+  await expect(draft.getByTestId('draft-state')).toHaveText('On hold');
+  // Earlier tests send invoices that join the history, so the count is not fixed here.
+  await expect(draft).toContainText(/You said \$60\.00\/hr, but you usually charge \$85\.00\/hr \(\d+ past invoices\)\./);
+  await expect(draft).not.toContainText('Matches your usual');
+  await draft.getByRole('button', { name: 'Keep $60.00/hr' }).click();
+  await expect(draft.getByTestId('draft-state')).toHaveText('Ready');
+  await expect(draft).toContainText('You confirmed $60.00/hr (usually $85.00/hr).');
 });

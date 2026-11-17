@@ -1,8 +1,13 @@
 import { formatCents } from './money';
 import type { Cents, InvoiceLine, LineKind, LineUnit, PastInvoice } from './types';
 
-/** A spoken price more than 40% away from the usual price holds the invoice. */
-export const OUTLIER_TOLERANCE = 0.4;
+/**
+ * A spoken price more than 15% below the usual price holds the invoice. Undercharging costs the
+ * owner money without anyone noticing, and a misheard number ("fifteen" for "fifty") usually lands low.
+ */
+export const BELOW_USUAL_TOLERANCE = 0.15;
+/** A spoken price more than 25% above the usual price holds the invoice, so a customer is not overbilled. */
+export const ABOVE_USUAL_TOLERANCE = 0.25;
 
 export interface PriceHistoryPoint {
   date: string;
@@ -143,7 +148,15 @@ export function unitsCompatible(a: LineUnit, b: LineUnit): boolean {
 
 export function isOutlier(priceCents: Cents, usualCents: Cents): boolean {
   if (usualCents <= 0) return false;
-  return Math.abs(priceCents - usualCents) / usualCents > OUTLIER_TOLERANCE;
+  const change = (priceCents - usualCents) / usualCents;
+  return change < -BELOW_USUAL_TOLERANCE || change > ABOVE_USUAL_TOLERANCE;
+}
+
+/** How far a price differs from a positive usual price, in words: "6% below", "less than 1% above". */
+export function differenceFromUsual(priceCents: Cents, usualCents: Cents): string {
+  const percent = Math.round((Math.abs(priceCents - usualCents) / usualCents) * 100);
+  const size = percent < 1 ? 'less than 1%' : `${percent}%`;
+  return `${size} ${priceCents < usualCents ? 'below' : 'above'}`;
 }
 
 export type PriceCheckStatus =
@@ -284,7 +297,9 @@ export function checkLine(line: InvoiceLine, book: readonly PriceBookEntry[]): P
       message:
         line.priceSource === 'price-book'
           ? `No price said, so your usual ${usual} was used (${times}).`
-          : `Matches your usual ${usual} (${times}).`,
+          : line.unitPriceCents === entry.medianCents
+            ? `Matches your usual ${usual} (${times}).`
+            : `${said} is ${differenceFromUsual(line.unitPriceCents, entry.medianCents)} your usual ${usual} (${times}).`,
       options: [],
     };
   }

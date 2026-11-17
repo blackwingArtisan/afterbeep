@@ -50,7 +50,7 @@ function settleWithHistory(line: InvoiceLine, book: readonly PriceBookEntry[]): 
         ...line,
         unitPriceCents: better,
         alternativesCents: [line.unitPriceCents, ...line.alternativesCents.filter((a) => a !== better)],
-        note: `Heard "${line.heard}" as ${formatCents(better)}, which matches your usual ${formatCents(entry.medianCents)}.`,
+        note: `Heard "${line.heard}" as ${formatCents(better)}, which is in line with your usual ${formatCents(entry.medianCents)}.`,
       };
     }
   }
