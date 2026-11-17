@@ -8,6 +8,7 @@
   - [x] 4.1 Unit tests for EST/EDT conversion, Saturdays, closed Sundays, booked jobs
 - [x] 5. Adapter ports and local implementations: pass-through transcriber, rule extractor, outbox SMS, JSON file store (Req 7.3, 7.4)
 - [x] 6. Real adapters, type-checked and not executed: Amazon Transcribe, Bedrock Converse with forced tool and fallback, End User Messaging SMS (Req 2.1, 3.5, 4.1)
+  - [x] 6.1 Unit tests with a stubbed Bedrock client: forced tool, grounding guard, fallback, env selection (Req 3.5, 3.6, 7.4)
 - [x] 7. `receiveVoicemail` pipeline service with text-back wording by urgency (Req 2.2, 2.3, 4.1-4.5)
 - [x] 8. Booking service: view, slot re-validation, job creation, confirmation text (Req 5.1-5.8)
 - [x] 9. Hono routes, zod validation, error mapping, Amazon Connect webhook with shared secret (Req 1.2-1.4)

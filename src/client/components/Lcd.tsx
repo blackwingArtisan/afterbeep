@@ -8,7 +8,7 @@ export function MessageCounter({ count, label = 'NEW' }: { count: number; label?
           {digits}
         </span>
       </span>
-      <span aria-hidden="true" style={{ fontSize: 18 }}>
+      <span className="lcd-label" aria-hidden="true" style={{ fontSize: 18 }}>
         {label}
       </span>
     </span>

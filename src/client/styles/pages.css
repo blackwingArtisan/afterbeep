@@ -1180,3 +1180,18 @@
   color: var(--label-ink);
   text-transform: none;
 }
+
+@media (max-width: 480px) {
+  .machine-top .spread {
+    flex-wrap: nowrap;
+  }
+  .machine-top .brand-word {
+    font-size: 19px;
+  }
+  .machine-top .brand-mark {
+    width: 28px;
+  }
+  .machine-top .lcd-label {
+    display: none;
+  }
+}

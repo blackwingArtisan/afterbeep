@@ -70,7 +70,7 @@ interface SmsSender   { name: string; send(msg: { to: string; body: string; link
 | Port | Local (default) | Real |
 |---|---|---|
 | Transcriber | `PassThroughTranscriber` uses the browser transcript | `AwsTranscriber`: StartTranscriptionJob on the S3 recording, poll, fetch transcript |
-| Extractor | `RuleExtractor` | `BedrockExtractor`: Converse API with one forced tool whose input schema is the extraction; zod-validated; falls back to rules |
+| Extractor | `RuleExtractor` | `BedrockExtractor`: Converse API with one forced tool whose input schema is the extraction; zod-validated; drops any number or address not found in the transcript; falls back to rules |
 | SMS | `OutboxSms` writes to the store | `AwsSms`: End User Messaging SMS `SendTextMessage`, transactional |
 
 ## API

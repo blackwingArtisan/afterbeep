@@ -80,7 +80,7 @@ Each external service has a free local default and a real implementation. The re
 | Port | Env var | Local (default) | Real |
 |---|---|---|---|
 | Transcriber | `AFTERBEEP_TRANSCRIBER` | `local`: uses the browser transcript | `aws`: Amazon Transcribe on the S3 recording |
-| Extractor | `AFTERBEEP_EXTRACTOR` | `rules`: deterministic rules | `bedrock`: Amazon Bedrock Converse with a forced tool and schema validation; falls back to rules |
+| Extractor | `AFTERBEEP_EXTRACTOR` | `rules`: deterministic rules | `bedrock`: Amazon Bedrock Converse with a forced tool and schema validation; drops any number or address the caller never said; falls back to rules |
 | SMS | `AFTERBEEP_SMS` | `outbox`: shown at `/machine/outbox` | `aws`: AWS End User Messaging SMS |
 | Invoices | `AFTERBEEP_INVOICES` | `local`: outbox message and `/i/:id` page | `stripe`: Stripe Invoicing, test keys only, voids the invoice if Stripe's total differs |
 | Store | `AFTERBEEP_DATA_DIR` | JSON file with atomic writes | |
