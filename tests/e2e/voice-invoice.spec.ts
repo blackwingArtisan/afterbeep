@@ -11,7 +11,7 @@ test('a spoken invoice is held on a wrong price and sent only at the approved to
   const draft = page.getByTestId('draft');
   await expect(draft.getByTestId('draft-state')).toHaveText('On hold');
   await expect(draft).toContainText('You said $15.00, but you usually charge $50.00 (4 past invoices).');
-  await expect(page.getByRole('button', { name: /Decide the held prices/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /Settle the held lines/ })).toBeDisabled();
 
   await draft.getByRole('button', { name: 'Use usual $50.00' }).click();
   await expect(draft.getByTestId('draft-state')).toHaveText('Ready');
@@ -33,4 +33,38 @@ test('a spoken invoice is held on a wrong price and sent only at the approved to
 
   await page.goto('/machine/prices');
   await expect(page.getByRole('row', { name: /Dryer belt/ })).toContainText('5');
+});
+
+test('two items joined by "and" become two lines, and a misheard quantity is held', async ({ page }) => {
+  await page.goto('/machine/invoice');
+  const speech = page.getByLabel('What you said');
+  const draft = page.getByTestId('draft');
+
+  await speech.fill('water heater element ninety nine dollars and a thermostat for forty, one hour labor at eighty five');
+  await page.getByRole('button', { name: 'Line it up' }).click();
+  await expect(draft.getByTestId('line')).toHaveCount(3);
+  await expect(draft.getByTestId('line').nth(1)).toContainText('Thermostat');
+  await expect(draft.getByTestId('line').nth(1)).toContainText('1 ea x $40.00');
+  await expect(draft.getByTestId('draft-state')).toHaveText('Ready');
+
+  await speech.fill('forty water heater elements at eighty nine');
+  await page.getByRole('button', { name: 'Line it up' }).click();
+  await expect(draft.getByTestId('draft-state')).toHaveText('On hold');
+  await expect(draft).toContainText('That is a quantity of 40 at $89.00. Your most on one invoice is 2.');
+  await expect(page.getByRole('button', { name: /Settle the held lines/ })).toBeDisabled();
+  await draft.getByRole('button', { name: 'Make it 1' }).click();
+  await expect(draft.getByTestId('draft-state')).toHaveText('Ready');
+  await expect(draft.getByTestId('line').first()).toContainText('1 ea x $89.00');
+});
+
+test('an ambiguous price with no history waits for the owner to pick a reading', async ({ page }) => {
+  await page.goto('/machine/invoice');
+  await page.getByLabel('What you said').fill('dryer repair, part three twenty-nine taxed, two hours labor at sixty');
+  await page.getByRole('button', { name: 'Line it up' }).click();
+  const draft = page.getByTestId('draft');
+  await expect(draft.getByTestId('draft-state')).toHaveText('On hold');
+  await expect(draft).toContainText('That could be $329.00 or $3.29');
+  await draft.getByRole('button', { name: "It's $3.29" }).click();
+  await expect(draft.getByTestId('draft-state')).toHaveText('Ready');
+  await expect(draft.getByTestId('line').first()).toContainText('$3.29');
 });

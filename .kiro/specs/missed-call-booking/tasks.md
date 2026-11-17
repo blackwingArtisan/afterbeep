@@ -19,3 +19,6 @@
 - [x] 14. Client: outbox and schedule (Req 7.3, 5.4)
 - [x] 15. Playwright: simulator call to booked job; phone-viewport booking (Req 5, 6, 7)
 - [x] 16. Amazon Connect contact flow and wiring notes in `infra/connect/` (Req 1.1, 1.2)
+- [x] 17. Review fixes: no text-back for empty messages or repeat calls inside the cooldown (Req 4.6, 4.7)
+- [x] 18. Demo mode gate for the simulator and reset, off by default with any real adapter (Req 7.5, 7.6)
+  - [x] 18.1 Unit, API and Playwright tests for hang-ups, cooldown and demo mode (Req 4.6, 4.7, 7.5, 7.6)

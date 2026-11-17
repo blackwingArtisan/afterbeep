@@ -435,7 +435,7 @@
   font-weight: 400;
   color: var(--lcd);
   text-shadow: 0 0 18px var(--lcd-dim);
-  text-transform: lowercase;
+  text-transform: uppercase;
   letter-spacing: 0.02em;
 }
 .tape-grid {

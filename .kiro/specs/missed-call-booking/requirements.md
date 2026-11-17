@@ -44,6 +44,8 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 4.3 WHEN the message is not an emergency THE SYSTEM SHALL include the first open slot in the text.
 4.4 THE SYSTEM SHALL text the caller even when the extraction is partial.
 4.5 THE SYSTEM SHALL record the time the text was sent on the message.
+4.6 IF a message has no caller name, no address, no recognised job and fewer than four meaningful words THEN THE SYSTEM SHALL file it without a text and record why.
+4.7 IF the callback number was texted in the last 10 minutes THEN THE SYSTEM SHALL file the new message without another text and record why.
 
 ## Requirement 5: Book a slot
 **User story:** As a caller, I want to pick a time from my phone, so that the visit is booked without phone tag.
@@ -72,3 +74,5 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 7.2 WHEN the simulator places a call THE SYSTEM SHALL play a ring, the greeting and a beep, then run the same pipeline as a real call.
 7.3 WHILE the local SMS adapter is selected THE SYSTEM SHALL write every text to an outbox shown word for word, with its link.
 7.4 THE SYSTEM SHALL select every external service by environment variable and default to the free local implementation.
+7.5 WHILE demo mode is off THE SYSTEM SHALL refuse simulated calls and the demo reset.
+7.6 THE SYSTEM SHALL turn demo mode on by default only while every adapter is local, and SHALL let `AFTERBEEP_DEMO=on|off` override it.

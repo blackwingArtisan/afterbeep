@@ -66,9 +66,9 @@ export default function Inbox() {
         <div>
           <p className="eyebrow">The machine</p>
           <h1 className="inbox-title" data-testid="inbox-title">
-            You have <span className="lcd-word">{countWord(newOnes.length).toLowerCase()}</span> new message{newOnes.length === 1 ? '' : 's'}
+            You have <span className="lcd-word">{countWord(newOnes.length)}</span> new message{newOnes.length === 1 ? '' : 's'}
           </h1>
-          <p className="muted">Every caller already got a text with a booking link. Play them, call back the emergencies, and let the rest book themselves.</p>
+          <p className="muted">Every real caller already got a text with a booking link. Play them, call back the emergencies, and let the rest book themselves.</p>
         </div>
         <div className="row">
           {playing ? (

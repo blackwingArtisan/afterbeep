@@ -1,4 +1,4 @@
-import { lexNumbers, tokenize, type NumberToken, type Token } from './spoken-numbers';
+import { isNumberWord, lexNumbers, tokenize, type NumberToken, type Token } from './spoken-numbers';
 import type { InvoiceLine, LineKind, LineUnit } from './types';
 
 /**
@@ -42,13 +42,70 @@ const TAX_YES = /\b(taxed|taxable|plus tax|with tax|add tax)\b/;
 const TAX_NO = /\b(no tax|not taxed|tax free|tax exempt|untaxed|non taxable|nontaxable)\b/;
 const TAX_WORDS = /\b(taxed|taxable|plus tax|with tax|add tax|no tax|not taxed|tax free|tax exempt|untaxed|non taxable|nontaxable)\b/g;
 
+const hasNumber = (words: readonly string[]): boolean => lexNumbers(words).some((t) => t.type === 'num');
+const isNumeric = (word: string | undefined): boolean =>
+  word !== undefined && (/^\$?\d/.test(word) || (isNumberWord(word) && word !== 'oh'));
+const SCALE_WORDS = new Set(['hundred', 'thousand']);
+/** Words that continue the number before them, so "and fifteen minutes" is not a new item. */
+const CONTINUES_NUMBER = new Set(['cent', 'cents', 'dollar', 'dollars', 'buck', 'bucks', 'minute', 'minutes', 'min', 'mins']);
+
+/**
+ * True when the "and" at `index` separates two priced items, as in "ninety nine dollars and a
+ * thermostat for forty" or "one hour and two dryer belts at fifty". It stays inside one item for
+ * "three hundred and twenty nine", "ninety dollars and fifty cents", "two and a half hours" and
+ * "an hour and fifteen minutes".
+ */
+function andStartsNewItem(words: readonly string[], index: number): boolean {
+  const left = words.slice(0, index);
+  const right = words.slice(index + 1);
+  const prev = left[left.length - 1];
+  const next = right[0];
+  if (!hasNumber(left) || next === undefined) return false;
+  if (next === 'half' || (next === 'a' && right[1] === 'half')) return false;
+  if (prev !== undefined && SCALE_WORDS.has(prev) && isNumeric(next)) return false;
+  if (isNumeric(next)) {
+    let k = 0;
+    while (k < right.length && (isNumeric(right[k]) || (right[k] === 'and' && isNumeric(right[k + 1])))) k += 1;
+    const after = right[k];
+    if (after === undefined || CONTINUES_NUMBER.has(after)) return false;
+  }
+  const rightText = right.join(' ');
+  return hasNumber(right) || right.some((w) => LABOR_WORDS.has(w)) || FEE_PHRASES.some(([re]) => re.test(rightText));
+}
+
+/** Splits one comma-free phrase at each "and" that starts a new item. */
+function splitOnAnd(segment: string): string[] {
+  const words = tokenize(segment);
+  const cuts = new Set<number>();
+  let andCount = 0;
+  for (const [i, w] of words.entries()) {
+    if (w !== 'and') continue;
+    if (andStartsNewItem(words, i)) cuts.add(andCount);
+    andCount += 1;
+  }
+  if (cuts.size === 0) return [segment];
+  const parts: string[] = [];
+  let from = 0;
+  let seen = 0;
+  for (const match of segment.matchAll(/\band\b/gi)) {
+    if (cuts.has(seen)) {
+      parts.push(segment.slice(from, match.index));
+      from = match.index + match[0].length;
+    }
+    seen += 1;
+  }
+  parts.push(segment.slice(from));
+  return parts.map((p) => p.trim()).filter((p) => p.length > 0);
+}
+
 /** Splits a spoken invoice into one phrase per line item. */
 export function splitSegments(text: string): string[] {
   const raw = text
     .replace(/\.(?!\d)/g, ',')
     .split(/[,;\n]|\band then\b|\bthen\b|\bplus\b(?!\s+tax)|\balso\b|\bnext\b/i)
     .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+    .filter((s) => s.length > 0)
+    .flatMap(splitOnAnd);
   const segments: string[] = [];
   for (const segment of raw) {
     const onlyTax = /^(and\s+)?((it's|that's|it is|that is)\s+)?(taxed|taxable|plus tax|with tax|no tax|not taxed|tax free|untaxed)$/i;
@@ -113,6 +170,8 @@ interface SegmentReading {
   price: NumberToken | null;
   taxable: boolean | null;
   hasNumbers: boolean;
+  /** Numbers that were neither the quantity nor the price, as heard. */
+  unplaced: string[];
 }
 
 function readSegment(segment: string): SegmentReading {
@@ -136,7 +195,9 @@ function readSegment(segment: string): SegmentReading {
     const after = wordAt(tokens, i + 2);
     const prev = wordAt(tokens, i - 1);
     if (next && (HOUR_WORDS.has(next) || MINUTE_WORDS.has(next)) && t.count !== null) {
-      quantity = MINUTE_WORDS.has(next) ? Math.round((t.count / 60) * 100) / 100 : t.count;
+      // "one hour and fifteen minutes" adds up to 1.25 hours.
+      const spoken = MINUTE_WORDS.has(next) ? t.count / 60 : t.count;
+      quantity = Math.round(((hours && quantity ? quantity : 0) + spoken) * 100) / 100;
       hours = true;
       used.add(i);
     } else if (next && RATE_WORDS.has(next) && after && HOUR_WORDS.has(after)) {
@@ -157,10 +218,16 @@ function readSegment(segment: string): SegmentReading {
       used.add(i);
     }
   }
+  // A number said like a price ("for forty", "forty dollars") is never read as a quantity.
+  const priceMarked = ({ t, i }: { t: NumberToken; i: number }) => {
+    const prev = wordAt(tokens, i - 1);
+    const next = wordAt(tokens, i + 1);
+    return t.explicitMoney || (prev !== undefined && PRICE_BEFORE.has(prev)) || (next !== undefined && PRICE_AFTER.has(next));
+  };
   const unused = nums.filter(({ i }) => !used.has(i));
   if (!quantity && unused.length >= (price ? 1 : 2)) {
     const first = unused[0]!;
-    if (first.t.count !== null && Number.isInteger(first.t.count) && first.t.count >= 1 && first.t.count <= 50) {
+    if (!priceMarked(first) && first.t.count !== null && Number.isInteger(first.t.count) && first.t.count >= 1 && first.t.count <= 50) {
       quantity = first.t.count;
       used.add(first.i);
     }
@@ -187,7 +254,8 @@ function readSegment(segment: string): SegmentReading {
   }
 
   const unit: LineUnit = kind === 'labor' ? (hours ? 'hour' : 'flat') : kind === 'fee' ? 'flat' : 'each';
-  return { kind, description, quantity: quantity ?? 1, unit, price, taxable, hasNumbers: nums.length > 0 };
+  const unplaced = nums.filter(({ i }) => !used.has(i)).map(({ t }) => t.raw);
+  return { kind, description, quantity: quantity ?? 1, unit, price, taxable, hasNumbers: nums.length > 0, unplaced };
 }
 
 export function parseInvoiceSpeech(text: string, options: ParseOptions): ParsedInvoice {
@@ -218,6 +286,8 @@ export function parseInvoiceSpeech(text: string, options: ParseOptions): ParsedI
         heard: segment,
         alternativesCents: alternatives,
         confirmedPriceCents: null,
+        confirmedQuantity: null,
+        unplacedNumbers: reading.unplaced,
         note: null,
       } satisfies InvoiceLine;
     });

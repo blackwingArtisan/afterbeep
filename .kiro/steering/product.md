@@ -16,7 +16,8 @@ Solo tradespeople and two-person shops: plumbers, roofers, HVAC techs, appliance
 - **Code does all arithmetic.** Money is integer cents. No model, prompt or parser output is ever trusted for a total, tax or line amount. Models may only label words (description, quantity, unit price as spoken).
 - **Nothing is sent without approval.** An invoice is sent only when the client posts the exact total the owner saw and the server recomputes the same number. Any mismatch is refused.
 - **The price book is the owner's own history.** A spoken price is compared with what this owner charged before for the same item. A large deviation blocks sending until the owner picks a price.
-- **Callers are never left hanging.** Every recorded message gets a text back within the pipeline, even when extraction is partial (fall back to caller ID and a generic job summary).
+- **Callers are never left hanging, and strangers are never spammed.** Every message with a real request gets a text back within the pipeline, even when extraction is partial (fall back to caller ID and a generic job summary). Hang-ups and empty messages are filed without a text, and one number gets at most one text per 10 minutes.
+- **Check quantities as hard as prices.** A misheard quantity costs as much as a misheard price, so unusual quantities and numbers the parser could not place hold the invoice too.
 - **Every external service sits behind an adapter** with a free local implementation used by default, so the product runs, demos and tests with no accounts and no cost.
 
 ## Tone and design

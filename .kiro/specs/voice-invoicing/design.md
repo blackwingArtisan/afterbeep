@@ -39,17 +39,19 @@ interface InvoiceLine {
   heard: string;                  // the words this line came from
   alternativesCents: number[];    // other readings of the spoken price
   confirmedPriceCents: number | null; // owner decided this price; releases a hold
+  confirmedQuantity: number | null;   // owner confirmed an unusual quantity; releases a hold
+  unplacedNumbers: string[];          // numbers heard that were neither quantity nor price
   note: string | null;
 }
 
 interface PriceCheck {
   lineId: string;
-  status: 'ok' | 'filled' | 'new-item' | 'outlier' | 'confirmed' | 'missing-price';
+  status: 'ok' | 'filled' | 'new-item' | 'outlier' | 'confirmed' | 'missing-price' | 'ambiguous' | 'quantity' | 'unplaced';
   blocking: boolean;
   usualCents: number | null;
   historyCount: number;
   message: string;
-  options: Array<{ label: string; cents: number }>;
+  options: Array<{ label: string; patch: Partial<InvoiceLine> }>; // applied to the line when picked
 }
 
 interface InvoiceTotals { subtotalCents: number; taxableCents: number; taxRateMilli: number; taxCents: number; totalCents: number }
@@ -64,6 +66,9 @@ interface InvoiceTotals { subtotalCents: number; taxableCents: number; taxRateMi
 - Item key: lower case, stop words removed, singular, synonyms (labour to labor, fee to charge, service call to trip charge).
 - Match: exact key, else Jaccard similarity of words at least 0.5; labor lines match the labor entry.
 - Outlier: `|spoken - median| / median > 0.4` with compatible units. Ambiguous spoken prices pick the reading closest to the median when it is not an outlier.
+- Check order, first problem wins: missing price, unplaced number, quantity over the limit, ambiguous price with no history, new item, outlier.
+- Quantity limit (`quantityLimit`): labor `max(12, 2 x most hours billed)`; items with history `max(3, 2 x most ever billed)`; new items `10`. The unit-price check alone cannot catch a misheard quantity, so this check exists.
+- The parser splits at "and" only when a number comes before it and a priced item, hours or a fee comes after it (`andStartsNewItem`).
 
 ## Send gate
 | Check | Result |

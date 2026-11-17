@@ -10,14 +10,14 @@ import { seedDb } from '../../src/server/seed-db';
 const NOW = new Date('2026-11-16T19:30:00Z');
 const BASE = 'https://afterbeep.example.com';
 
-async function setup() {
+async function setup(simulator = true) {
   let n = 0;
   const newId = () => `id${String(++n).padStart(4, '0')}`;
   const clock = () => NOW;
   const store = new MemoryStore(await seedDb(NOW, newId, BASE));
   const app = createApp(
     { store, adapters: localAdapters({ store, clock, newId, publicBaseUrl: BASE }), clock, newId, publicBaseUrl: BASE },
-    { webhookSecret: 'test-secret' },
+    { webhookSecret: 'test-secret', simulator },
   );
   const call = async <T = unknown>(method: string, path: string, body?: unknown, headers: Record<string, string> = {}) => {
     const res = await app.request(path, {
@@ -105,6 +105,37 @@ describe('missed call to booked job', () => {
   });
 });
 
+describe('text-back guards', () => {
+  const outboxCount = async () => (await ctx.call<{ outbox: OutboxItem[] }>('GET', '/api/outbox')).body.outbox.length;
+
+  it('files a hang-up without texting anyone', async () => {
+    const before = await outboxCount();
+    const res = await ctx.call<{ message: Message }>('POST', '/api/calls', { from: '614-555-0190', transcript: 'uh hello? hello? nobody there' });
+    expect(res.status).toBe(201);
+    expect(res.body.message).toMatchObject({ textedAt: null, noTextReason: expect.stringMatching(/^No text sent/) });
+    expect(res.body.message.extraction.summary).toBe('Hang-up or empty message. Nothing to book.');
+    expect(await outboxCount()).toBe(before);
+  });
+
+  it('texts a repeat caller only once per cooldown', async () => {
+    const sample = simulatorScripts.find((s) => s.id === 'no-heat')!;
+    const first = await ctx.call<{ message: Message }>('POST', '/api/calls', { from: sample.from, transcript: sample.transcript });
+    const second = await ctx.call<{ message: Message }>('POST', '/api/calls', { from: sample.from, transcript: sample.transcript });
+    expect(first.body.message.textedAt).not.toBeNull();
+    expect(second.body.message).toMatchObject({ textedAt: null, noTextReason: expect.stringContaining('already texted') });
+    const { messages } = (await ctx.call<{ messages: Message[] }>('GET', '/api/messages')).body;
+    expect(messages.filter((m) => m.from === first.body.message.from)).toHaveLength(2);
+  });
+
+  it('turns off the simulator and reset outside demo mode', async () => {
+    const live = await setup(false);
+    const call = await live.call<{ error: string }>('POST', '/api/calls', { from: '614-555-0163', transcript: 'My furnace is out.' });
+    expect(call).toMatchObject({ status: 404, body: { error: 'not-found' } });
+    expect((await live.call('POST', '/api/demo/reset')).status).toBe(404);
+    expect((await live.call<{ demo: boolean }>('GET', '/api/health')).body.demo).toBe(false);
+  });
+});
+
 describe('phone webhook (real path entry point)', () => {
   const hook = { contactId: 'c-1', callerNumber: '+16145550150', recordingUri: 's3://bucket/recording.wav' };
   it('requires the shared secret', async () => {
@@ -181,6 +212,27 @@ describe('spoken invoice to approved bill', () => {
     const after = (await ctx.call<{ entries: { key: string; count: number }[] }>('GET', '/api/price-book')).body.entries;
     const count = (entries: typeof before) => entries.find((e) => e.key === 'drum motor')!.count;
     expect(count(after)).toBe(count(before) + 1);
+  });
+
+  it('holds the misheard "for forty" quantity case and sends the corrected invoice', async () => {
+    const speech = 'water heater element ninety nine dollars and a thermostat for forty, one hour labor at eighty five';
+    const { body } = await ctx.call<Draft>('POST', '/api/invoices/draft', { speech });
+    expect(body.draft.lines.map((l) => l.quantity)).toEqual([1, 1, 1]);
+    expect(body.draft.totals.totalCents).toBe(23199);
+
+    const forced = body.draft.lines.map((l, i) => (i === 0 ? { ...l, quantity: 40 } : l));
+    const send = (lines: InvoiceLine[], approvedTotalCents: number) =>
+      ctx.call<{ error: string; invoice: Invoice }>('POST', '/api/invoices/send', {
+        jobId: null,
+        title: 'Water heater',
+        customer: { name: 'Pat Doe', phone: '(614) 555-0110', email: null, address: null },
+        lines,
+        approvedTotalCents,
+      });
+    const quote = (await ctx.call<{ quote: { blocked: boolean; totals: { totalCents: number } } }>('POST', '/api/invoices/quote', { lines: forced })).body.quote;
+    expect(quote.blocked).toBe(true);
+    expect(await send(forced, quote.totals.totalCents)).toMatchObject({ status: 422, body: { error: 'needs-decision' } });
+    expect((await send(body.draft.lines, 23199)).status).toBe(201);
   });
 
   it('rejects malformed lines', async () => {

@@ -18,12 +18,15 @@ Everything below runs on a laptop with no accounts and no keys.
 - A call simulator rings the machine, plays the greeting and the beep, and records the caller. You can pick a sample voicemail, say one into the mic (Web Speech API), or type it.
 - Each message is read for the caller's name, callback number (a spoken number beats the caller ID), address, job, and urgency (emergency, soon, or routine).
 - The caller gets a text right away with a booking link. Emergencies are promised a call back, and everyone else is shown the first open slot.
+- Hang-ups and "hello? anyone there?" messages are filed but not texted, and a caller who rings twice in 10 minutes gets one text, not two.
 - The booking page shows real open slots: in the business's time zone, inside opening hours, with no overlap with booked jobs. Emergencies are offered slots today. When the caller books, the job lands on the schedule and a confirmation text goes out.
 - The inbox shows each message as a cassette with a seven-segment counter, a blinking message light, playback by speech synthesis, and one-tap call back.
 
 **Voice invoices**
 - Say "Dryer belt fifteen, taxed. One hour labor at eighty-five. Trip charge." and get line items. Code does every multiplication, the tax and the total, in integer cents.
 - A price book is built from the owner's past invoices. "Fifteen" for a belt that has always been $50 holds the invoice until the owner chooses. A missing price is filled from history, and "twelve fifty" reads as $1,250 for a water heater and $12.50 for a cartridge.
+- Quantities are checked too. "Forty water heater elements" when the most ever billed is two, or twenty hours of labor, holds the line. "Element ninety nine dollars and a thermostat for forty" becomes two lines, and a number said like a price is never read as a quantity.
+- A price with two readings and no history to settle it ("part three twenty-nine": $329 or $3.29) waits for the owner to pick one.
 - The confirm screen sends only when the server's recomputed total equals the exact total the owner approved. The customer gets an invoice link, the job is marked invoiced, and the price book learns the new prices.
 
 **Product**
@@ -46,6 +49,8 @@ npm run dev               # client on http://localhost:3110, API on 3111
 
 Open `/machine` for the owner's machine and `/machine/call` to leave it a message. **Reset demo** restores the seeded data.
 
+**Demo mode.** The call simulator and the reset button need no login, so they only run in demo mode. Demo mode is on by default while every adapter is local (texts and invoices go only to the outbox) and turns off by itself when any real adapter is selected. Set `AFTERBEEP_DEMO=off` before any public deploy that holds real customer data. The owner screens have no login yet: this build is a single-tenant demo.
+
 ## How to test
 ```bash
 npm run typecheck
@@ -54,7 +59,7 @@ npx playwright install chromium
 npm run test:e2e          # Playwright against the production build on port 3112
 ```
 
-The end-to-end tests drive the real server. They cover a missed call to a booked job, a held invoice that is approved and sent, the landing page and theme, and the caller booking page on a phone viewport.
+The end-to-end tests drive the real server. They cover a missed call to a booked job, a hang-up that gets no text, a held invoice that is approved and sent, two items joined by "and", a held quantity, an ambiguous price the owner picks, the landing page and theme, and the caller booking page on a phone viewport.
 
 ## Architecture
 ```
@@ -88,7 +93,7 @@ Each external service has a free local default and a real implementation. The re
 All settings are listed in `.env.example`. The phone wiring is described in `infra/connect/README.md`.
 
 ## Deploy
-`render.yaml` targets Render's free web service tier (one Node service, health check `/api/health`). The app has not been deployed.
+`render.yaml` targets Render's free web service tier (one Node service, health check `/api/health`) as a public demo with local adapters, so nothing reaches a real phone or card. The app has not been deployed.
 
 ## Built with Kiro
 - `.kiro/steering/` holds the product rules, stack and file layout that every change follows.

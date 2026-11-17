@@ -20,6 +20,9 @@ After a job, the owner says the invoice out loud. AfterBeep turns the words into
 1.5 THE SYSTEM SHALL classify each line as part, labor or fee and set its unit to each, hour or flat.
 1.6 WHEN the owner says "taxed" or "no tax" for a line THE SYSTEM SHALL set that line's taxable flag; otherwise parts SHALL be taxable, fees SHALL NOT, and labor SHALL follow the business setting.
 1.7 THE SYSTEM SHALL never let a language model perform arithmetic; all amounts SHALL be computed by code.
+1.8 WHEN "and" is followed by a new item that has its own price, hours or fee name THE SYSTEM SHALL start a new line there, and SHALL keep "three hundred and twenty nine", "ninety dollars and fifty cents", "two and a half hours" and "an hour and fifteen minutes" whole.
+1.9 THE SYSTEM SHALL never read a number said like a price ("for forty", "forty dollars") as a quantity.
+1.10 WHEN a phrase holds a number that is neither its quantity nor its price THE SYSTEM SHALL keep it on the line as unplaced.
 
 ## Requirement 2: Money in integer cents
 **User story:** As an owner, I want totals that are exactly right, so that I never send a bill that is off by a cent.
@@ -40,6 +43,9 @@ After a job, the owner says the invoice out loud. AfterBeep turns the words into
 3.6 WHEN an item has no history THE SYSTEM SHALL mark it as new and SHALL NOT hold it for that reason alone.
 3.7 THE SYSTEM SHALL compare prices only between compatible units (hourly with hourly, per-item with per-item).
 3.8 WHEN an invoice is sent THE SYSTEM SHALL add its lines to the price book.
+3.9 IF a line has an unplaced number THEN THE SYSTEM SHALL hold the line until the owner fixes it or chooses to ignore the number.
+3.10 IF a quantity is above the item's limit (labor: 12 hours or twice the most ever billed; items with history: 3 or twice the most ever billed; new items: 10) THEN THE SYSTEM SHALL hold the line and offer "keep" and "make it 1".
+3.11 IF a spoken price has more than one reading and the item has no history THEN THE SYSTEM SHALL hold the line and offer each reading.
 
 ## Requirement 4: Confirm and send
 **User story:** As an owner, I want to see and approve the exact total, so that nothing goes out that I did not agree to.

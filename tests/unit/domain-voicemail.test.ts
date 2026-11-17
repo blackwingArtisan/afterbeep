@@ -3,6 +3,7 @@ import { openSlots, slotIsOpen, wallClock, zonedInstant } from '../../src/domain
 import {
   classifyJob,
   classifyUrgency,
+  emptyMessageReason,
   extractAddress,
   extractCallback,
   extractName,
@@ -127,5 +128,26 @@ describe('slots', () => {
       '2026-11-23T15:00:00.000Z',
     ]);
     expect(slotIsOpen({ start: '2026-11-20T13:00:00.000Z', end: '2026-11-20T15:00:00.000Z' }, { now: friday, timeZone: tz, hours: demoBusiness.hours, slotMinutes: 120, booked, urgency: 'routine' })).toBe(false);
+  });
+});
+
+describe('empty messages', () => {
+  const reason = (transcript: string) =>
+    emptyMessageReason(transcript, extractWithRules(transcript, { callerId: '+16145550190', defaultAreaCode: '614' }));
+
+  it.each(['uh hello? hello? nobody there', 'Hello? Is anyone there? Okay, bye.', 'um sorry wrong number'])(
+    'gets no text-back for "%s"',
+    (transcript) => {
+      expect(reason(transcript)).toMatch(/^No text sent/);
+    },
+  );
+
+  it('texts back anyone who asked for something, even with no job keyword', () => {
+    expect(reason('Hi, please call me back about getting a quote for some work.')).toBeNull();
+    expect(reason('This is Dana, call me back.')).toBeNull();
+  });
+
+  it('texts back every sample voicemail', () => {
+    for (const s of simulatorScripts) expect(reason(s.transcript)).toBeNull();
   });
 });

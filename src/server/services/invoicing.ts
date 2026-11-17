@@ -25,6 +25,8 @@ export const InvoiceLineSchema = z.object({
   heard: z.string().max(400),
   alternativesCents: z.array(cents).max(4),
   confirmedPriceCents: cents.nullable(),
+  confirmedQuantity: z.number().positive().max(1000).nullable().default(null),
+  unplacedNumbers: z.array(z.string().max(60)).max(8).default([]),
   note: z.string().max(300).nullable(),
 });
 

@@ -178,3 +178,26 @@ export function extractWithRules(transcript: string, ctx: RuleContext): Voicemai
     source: 'rules',
   };
 }
+
+/** Words that carry no request on their own: greetings, fillers and hang-up noise. */
+const EMPTY_WORDS = new Set([
+  'hello', 'hi', 'hey', 'hallo', 'uh', 'um', 'umm', 'uhh', 'er', 'ah', 'oh', 'hmm', 'mm', 'yes', 'yeah', 'no', 'ok',
+  'okay', 'is', 'anyone', 'anybody', 'there', 'nobody', 'somebody', 'someone', 'here', 'what', 'who', 'this', 'that',
+  'the', 'a', 'it', 'its', "it's", 'i', 'guess', 'sorry', 'wrong', 'number', 'never', 'mind', 'nevermind', 'bye',
+  'goodbye', 'thanks', 'thank', 'you', 'testing', 'test', 'can', 'hear', 'me', 'machine', 'answering', 'ugh', 'huh',
+]);
+
+/** The fewest meaningful words a message needs before it earns a text-back when nothing else was found. */
+export const MIN_MEANINGFUL_WORDS = 4;
+
+/**
+ * Decides whether a voicemail is worth texting back. A hang-up, a pocket dial or "hello? anyone
+ * there?" is filed for the owner but gets no text, so the machine never texts a stranger a booking
+ * link for nothing. Returns the reason to skip, or null to text.
+ */
+export function emptyMessageReason(transcript: string, extraction: VoicemailExtraction): string | null {
+  if (extraction.callerName || extraction.address || extraction.jobCategory !== 'general') return null;
+  const meaningful = (transcript.toLowerCase().match(/[a-z']+/g) ?? []).filter((w) => !EMPTY_WORDS.has(w));
+  if (meaningful.length >= MIN_MEANINGFUL_WORDS) return null;
+  return 'No text sent: the message had no name, address or job in it.';
+}

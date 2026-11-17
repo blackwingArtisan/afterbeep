@@ -70,7 +70,7 @@ export function Cassette({ message, side, timeZone, job, playing, onPlay, onStop
               ) : message.textedAt ? (
                 <span className="muted">Texted a booking link at {formatTime(message.textedAt, timeZone)}. Waiting for a pick.</span>
               ) : (
-                <span className="muted">Not texted</span>
+                <span className="muted">{message.noTextReason ?? 'Not texted'}</span>
               )}
             </dd>
           </div>

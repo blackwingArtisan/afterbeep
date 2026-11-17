@@ -11,6 +11,8 @@ import { receiveVoicemail, setMessageStatus } from './services/voicemail';
 export interface AppOptions {
   /** Replaces the whole state with fresh demo data. Omit to disable the reset route. */
   resetDemo?: () => Promise<void>;
+  /** Accepts simulated calls on POST /api/calls. Demo mode only: the route has no login. */
+  simulator?: boolean;
   /** Shared secret for the Amazon Connect webhook. Omit to disable the webhook. */
   webhookSecret?: string;
 }
@@ -57,7 +59,13 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
 
   const api = new Hono();
 
-  api.get('/health', (c) => c.json({ ok: true, adapters: Object.fromEntries(Object.entries(deps.adapters).map(([k, v]) => [k, v.name])) }));
+  api.get('/health', (c) =>
+    c.json({
+      ok: true,
+      demo: Boolean(options.simulator),
+      adapters: Object.fromEntries(Object.entries(deps.adapters).map(([k, v]) => [k, v.name])),
+    }),
+  );
 
   api.get('/business', (c) => {
     const { business } = deps.store.read();
@@ -76,6 +84,7 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
   });
 
   api.post('/calls', async (c) => {
+    if (!options.simulator) throw new ServiceError(404, 'not-found', 'The call simulator is turned off');
     const call = CallSchema.parse(await c.req.json());
     return c.json({ message: await receiveVoicemail(deps, call) }, 201);
   });

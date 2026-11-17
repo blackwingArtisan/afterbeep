@@ -16,3 +16,6 @@
 - [x] 13. Client: customer invoice page and price book page with history sparklines (Req 5.2, 3.8)
 - [x] 14. API tests for the gate and price book growth (Req 4, 3.8)
 - [x] 15. Playwright: hold, decide, approve, customer page, outbox (Req 3.4, 4, 5)
+- [x] 16. Review fixes: split items at "and", keep price-marked numbers out of quantities, add hours and minutes (Req 1.8-1.10)
+- [x] 17. Holds for unplaced numbers, unusual quantities and ambiguous prices with no history; options carry a line patch (Req 3.9-3.11)
+  - [x] 17.1 Unit, API and Playwright tests for "a thermostat for forty", "forty water heater elements" and "part three twenty-nine" (Req 1.8-1.10, 3.9-3.11)

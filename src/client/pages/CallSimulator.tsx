@@ -269,13 +269,21 @@ export default function CallSimulator() {
                   <dd>{x.job}</dd>
                 </div>
               </dl>
-              <p className="ok-text">
-                <CheckIcon width={16} height={16} /> Texted back with a booking link
-              </p>
+              {result.textedAt ? (
+                <p className="ok-text">
+                  <CheckIcon width={16} height={16} /> Texted back with a booking link
+                </p>
+              ) : (
+                <p className="muted" data-testid="no-text-reason">
+                  {result.noTextReason}
+                </p>
+              )}
               <div className="row">
-                <Link className="btn btn-primary" to={`/book/${result.bookingToken}`}>
-                  Open the text as the caller <ArrowIcon />
-                </Link>
+                {result.textedAt && (
+                  <Link className="btn btn-primary" to={`/book/${result.bookingToken}`}>
+                    Open the text as the caller <ArrowIcon />
+                  </Link>
+                )}
                 <Link className="btn" to="/machine">
                   See it in Messages
                 </Link>

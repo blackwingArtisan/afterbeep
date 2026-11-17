@@ -39,3 +39,15 @@ test('a missed call becomes a booked job', async ({ page, request }) => {
   await page.goto('/machine/outbox');
   await expect(page.getByTestId('outbox-item').first()).toContainText("You're booked, Hector");
 });
+
+test('a hang-up is filed but nobody is texted', async ({ page, request }) => {
+  const outboxBefore = ((await (await request.get('/api/outbox')).json()) as { outbox: unknown[] }).outbox.length;
+  const res = await request.post('/api/calls', { data: { from: '+16145550191', transcript: 'uh hello? hello? nobody there' } });
+  expect(res.status()).toBe(201);
+
+  await page.goto('/machine');
+  const tape = page.getByTestId('cassette').filter({ hasText: '(614) 555-0191' });
+  await expect(tape.getByTestId('booking-status')).toContainText('No text sent: the message had no name, address or job in it.');
+  const outboxAfter = ((await (await request.get('/api/outbox')).json()) as { outbox: unknown[] }).outbox.length;
+  expect(outboxAfter).toBe(outboxBefore);
+});

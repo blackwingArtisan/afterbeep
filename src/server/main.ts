@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { adaptersFromEnv } from '../adapters';
+import { adaptersFromEnv, isDemoMode } from '../adapters';
 import { JsonFileStore } from '../adapters/store/local';
 import { createApp } from './app';
 import { seedDb } from './seed-db';
@@ -20,10 +20,12 @@ const seed = () => seedDb(clock(), newId, publicBaseUrl);
 const store = await JsonFileStore.open(join(dataDir, 'afterbeep.json'), seed);
 const adapters = await adaptersFromEnv(env, { store, clock, newId, publicBaseUrl });
 
+const demo = isDemoMode(env);
 const app = createApp(
   { store, adapters, clock, newId, publicBaseUrl },
   {
-    resetDemo: env.AFTERBEEP_DEMO === 'off' ? undefined : async () => store.replace(await seed()),
+    resetDemo: demo ? async () => store.replace(await seed()) : undefined,
+    simulator: demo,
     webhookSecret: env.AFTERBEEP_WEBHOOK_SECRET,
   },
 );
@@ -36,5 +38,5 @@ if (existsSync(clientDir)) {
 
 serve({ fetch: app.fetch, port }, () => {
   const names = Object.entries(adapters).map(([k, v]) => `${k}=${v.name}`).join(' ');
-  console.log(`AfterBeep listening on http://localhost:${port} (${names})`);
+  console.log(`AfterBeep listening on http://localhost:${port} (${names}, demo ${demo ? 'on' : 'off'})`);
 });

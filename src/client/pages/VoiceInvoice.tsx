@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import type { PriceCheck } from '../../domain/price-book';
+import type { CheckOption, PriceCheck, PriceCheckStatus } from '../../domain/price-book';
 import { formatCents, formatQuantity, formatRateMilli, lineAmountCents } from '../../domain/money';
 import type { Customer, Invoice, InvoiceLine, InvoiceTotals, Job } from '../../domain/types';
 import { api, ApiError, type InvoiceScript } from '../api';
@@ -21,9 +21,18 @@ const UNIT_LABEL: Record<InvoiceLine['unit'], string> = { each: 'ea', hour: 'hr'
 function CheckBadge({ check }: { check: PriceCheck | undefined }) {
   if (!check) return null;
   const tone = check.blocking ? 'hold' : check.status === 'new-item' || check.status === 'filled' ? 'info' : 'ok';
-  const label = { ok: 'Usual price', filled: 'From history', 'new-item': 'New item', outlier: 'Check price', confirmed: 'Confirmed', 'missing-price': 'No price' }[
-    check.status
-  ];
+  const labels: Record<PriceCheckStatus, string> = {
+    ok: 'Usual price',
+    filled: 'From history',
+    'new-item': 'New item',
+    outlier: 'Check price',
+    confirmed: 'Confirmed',
+    'missing-price': 'No price',
+    ambiguous: 'Which price?',
+    quantity: 'Check quantity',
+    unplaced: 'Check line',
+  };
+  const label = labels[check.status];
   return (
     <span className={`chip chip-${tone}`}>
       {check.blocking ? <AlertIcon width={12} height={12} /> : <CheckIcon width={12} height={12} />} {label}
@@ -98,9 +107,8 @@ export default function VoiceInvoice() {
     );
   }
 
-  function choose(line: InvoiceLine, cents: number) {
-    if (cents === line.unitPriceCents) updateLine(line.id, { confirmedPriceCents: cents });
-    else updateLine(line.id, { unitPriceCents: cents, priceSource: 'owner', confirmedPriceCents: null, note: null });
+  function choose(line: InvoiceLine, option: CheckOption) {
+    updateLine(line.id, option.patch);
   }
 
   function removeLine(id: string) {
@@ -272,7 +280,7 @@ export default function VoiceInvoice() {
                       {check && check.options.length > 0 && (
                         <div className="row line-options">
                           {check.options.map((o) => (
-                            <button key={o.label} type="button" className="btn btn-small" onClick={() => choose(line, o.cents)} disabled={busy}>
+                            <button key={o.label} type="button" className="btn btn-small" onClick={() => choose(line, o)} disabled={busy}>
                               {o.label}
                             </button>
                           ))}
@@ -321,7 +329,7 @@ export default function VoiceInvoice() {
 
               {error && <div className="error-box" role="alert">{error}</div>}
               <button className="btn btn-primary approve" type="button" disabled={busy || work.blocked || !customerReady} onClick={() => void approve()}>
-                {work.blocked ? 'Decide the held prices to continue' : `Approve and send ${formatCents(work.totals.totalCents)}`}
+                {work.blocked ? 'Settle the held lines to continue' : `Approve and send ${formatCents(work.totals.totalCents)}`}
               </button>
               <p className="faint approve-note">The server recomputes this total from the lines and refuses to send if it differs by a cent.</p>
             </div>

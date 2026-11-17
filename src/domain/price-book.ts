@@ -21,6 +21,8 @@ export interface PriceBookEntry {
   maxCents: Cents;
   lastCents: Cents;
   lastDate: string;
+  /** The largest quantity ever billed for this item. */
+  maxQuantity: number;
   history: PriceHistoryPoint[];
 }
 
@@ -66,14 +68,18 @@ function median(sorted: readonly number[]): number {
 
 /** Builds the owner's price book from their invoice history. */
 export function buildPriceBook(invoices: readonly PastInvoice[]): PriceBookEntry[] {
-  const groups = new Map<string, { label: string; kind: LineKind; unit: LineUnit; points: PriceHistoryPoint[] }>();
+  const groups = new Map<
+    string,
+    { label: string; kind: LineKind; unit: LineUnit; maxQuantity: number; points: PriceHistoryPoint[] }
+  >();
   const ordered = [...invoices].sort((a, b) => a.date.localeCompare(b.date));
   for (const invoice of ordered) {
     for (const line of invoice.lines) {
       const key = line.kind === 'labor' ? 'labor' : itemKey(line.description);
       if (!key) continue;
-      const group = groups.get(key) ?? { label: line.description, kind: line.kind, unit: line.unit, points: [] };
+      const group = groups.get(key) ?? { label: line.description, kind: line.kind, unit: line.unit, maxQuantity: 0, points: [] };
       group.label = line.description;
+      group.maxQuantity = Math.max(group.maxQuantity, line.quantity);
       group.points.push({ date: invoice.date, invoiceNumber: invoice.number, unitPriceCents: line.unitPriceCents });
       groups.set(key, group);
     }
@@ -93,6 +99,7 @@ export function buildPriceBook(invoices: readonly PastInvoice[]): PriceBookEntry
       maxCents: prices[prices.length - 1]!,
       lastCents: last.unitPriceCents,
       lastDate: last.date,
+      maxQuantity: group.maxQuantity,
       history: group.points,
     });
   }
@@ -139,11 +146,28 @@ export function isOutlier(priceCents: Cents, usualCents: Cents): boolean {
   return Math.abs(priceCents - usualCents) / usualCents > OUTLIER_TOLERANCE;
 }
 
-export type PriceCheckStatus = 'ok' | 'filled' | 'new-item' | 'outlier' | 'confirmed' | 'missing-price';
+export type PriceCheckStatus =
+  | 'ok'
+  | 'filled'
+  | 'new-item'
+  | 'outlier'
+  | 'confirmed'
+  | 'missing-price'
+  | 'ambiguous'
+  | 'quantity'
+  | 'unplaced';
 
-export interface PriceOption {
+/** The fields a check option may change on its line when the owner picks it. */
+export type LinePatch = Partial<
+  Pick<
+    InvoiceLine,
+    'unitPriceCents' | 'priceSource' | 'confirmedPriceCents' | 'quantity' | 'confirmedQuantity' | 'unplacedNumbers' | 'note'
+  >
+>;
+
+export interface CheckOption {
   label: string;
-  cents: Cents;
+  patch: LinePatch;
 }
 
 export interface PriceCheck {
@@ -153,18 +177,40 @@ export interface PriceCheck {
   usualCents: Cents | null;
   historyCount: number;
   message: string;
-  options: PriceOption[];
+  options: CheckOption[];
+}
+
+/** Above this many hours on one invoice, labor is held for a second look. */
+export const MAX_USUAL_HOURS = 12;
+/** Above this quantity, an item with no history is held for a second look. */
+export const MAX_NEW_ITEM_QUANTITY = 10;
+
+/** The largest quantity that passes without a hold: generous, but far below a misheard price. */
+export function quantityLimit(line: Pick<InvoiceLine, 'kind'>, entry: PriceBookEntry | null): number {
+  if (line.kind === 'labor') return Math.max(MAX_USUAL_HOURS, (entry?.maxQuantity ?? 0) * 2);
+  if (!entry) return MAX_NEW_ITEM_QUANTITY;
+  return Math.max(3, entry.maxQuantity * 2);
 }
 
 function unitSuffix(unit: LineUnit): string {
   return unit === 'hour' ? '/hr' : '';
 }
 
-/** Checks one line's unit price against the owner's own history. */
+function quantityWords(quantity: number, unit: LineUnit): string {
+  if (unit === 'hour') return `${quantity} hour${quantity === 1 ? '' : 's'}`;
+  return `a quantity of ${quantity}`;
+}
+
+/**
+ * Checks one line against the owner's own history. The checks run in order and the first problem
+ * wins; once the owner settles it, the next re-quote shows the next one.
+ */
 export function checkLine(line: InvoiceLine, book: readonly PriceBookEntry[]): PriceCheck {
-  const entry = findEntry(book, line.description, line.kind);
+  const found = findEntry(book, line.description, line.kind);
+  const entry = found && unitsCompatible(found.unit, line.unit) ? found : null;
   const base = { lineId: line.id, usualCents: entry?.medianCents ?? null, historyCount: entry?.count ?? 0 };
   const suffix = unitSuffix(line.unit);
+  const said = `${formatCents(line.unitPriceCents)}${suffix}`;
 
   if (line.unitPriceCents <= 0) {
     return {
@@ -172,10 +218,53 @@ export function checkLine(line: InvoiceLine, book: readonly PriceBookEntry[]): P
       status: 'missing-price',
       blocking: true,
       message: `No price heard for "${line.description}".`,
-      options: entry ? [{ label: `Use usual ${formatCents(entry.medianCents)}${suffix}`, cents: entry.medianCents }] : [],
+      options: entry
+        ? [{ label: `Use usual ${formatCents(entry.medianCents)}${suffix}`, patch: { unitPriceCents: entry.medianCents, priceSource: 'owner' } }]
+        : [],
     };
   }
-  if (!entry || !unitsCompatible(entry.unit, line.unit)) {
+
+  if (line.unplacedNumbers.length > 0) {
+    const extra = line.unplacedNumbers.map((n) => `"${n}"`).join(' and ');
+    return {
+      ...base,
+      status: 'unplaced',
+      blocking: true,
+      message: `Also heard ${extra} here and could not tell what it was for. Check this line, or say each item separately.`,
+      options: [{ label: `Ignore ${extra}`, patch: { unplacedNumbers: [] } }],
+    };
+  }
+
+  const limit = quantityLimit(line, entry);
+  if (line.quantity > limit && line.confirmedQuantity !== line.quantity) {
+    const usually = entry && entry.maxQuantity > 0 ? ` Your most on one invoice is ${entry.maxQuantity}.` : '';
+    return {
+      ...base,
+      status: 'quantity',
+      blocking: true,
+      message: `That is ${quantityWords(line.quantity, line.unit)} at ${said}.${usually}`,
+      options: [
+        { label: `Keep ${line.quantity}`, patch: { confirmedQuantity: line.quantity } },
+        { label: 'Make it 1', patch: { quantity: 1, confirmedQuantity: null } },
+      ],
+    };
+  }
+
+  if (!entry) {
+    const readings = [line.unitPriceCents, ...line.alternativesCents];
+    if (line.priceSource === 'spoken' && line.alternativesCents.length > 0 && line.confirmedPriceCents !== line.unitPriceCents) {
+      const labels = readings.map((c) => `${formatCents(c)}${suffix}`);
+      return {
+        ...base,
+        status: 'ambiguous',
+        blocking: true,
+        message: `Heard "${line.heard}". That could be ${labels.join(' or ')}, and there is no history to settle it.`,
+        options: readings.map((cents, i) => ({
+          label: `It's ${labels[i]}`,
+          patch: { unitPriceCents: cents, confirmedPriceCents: cents, priceSource: 'owner' },
+        })),
+      };
+    }
     return {
       ...base,
       status: 'new-item',
@@ -184,6 +273,7 @@ export function checkLine(line: InvoiceLine, book: readonly PriceBookEntry[]): P
       options: [],
     };
   }
+
   const usual = `${formatCents(entry.medianCents)}${suffix}`;
   const times = `${entry.count} past invoice${entry.count === 1 ? '' : 's'}`;
   if (!isOutlier(line.unitPriceCents, entry.medianCents)) {
@@ -198,7 +288,6 @@ export function checkLine(line: InvoiceLine, book: readonly PriceBookEntry[]): P
       options: [],
     };
   }
-  const said = `${formatCents(line.unitPriceCents)}${suffix}`;
   if (line.confirmedPriceCents === line.unitPriceCents) {
     return { ...base, status: 'confirmed', blocking: false, message: `You confirmed ${said} (usually ${usual}).`, options: [] };
   }
@@ -208,8 +297,8 @@ export function checkLine(line: InvoiceLine, book: readonly PriceBookEntry[]): P
     blocking: true,
     message: `You said ${said}, but you usually charge ${usual} (${times}).`,
     options: [
-      { label: `Keep ${said}`, cents: line.unitPriceCents },
-      { label: `Use usual ${usual}`, cents: entry.medianCents },
+      { label: `Keep ${said}`, patch: { confirmedPriceCents: line.unitPriceCents } },
+      { label: `Use usual ${usual}`, patch: { unitPriceCents: entry.medianCents, priceSource: 'owner', confirmedPriceCents: null, note: null } },
     ],
   };
 }

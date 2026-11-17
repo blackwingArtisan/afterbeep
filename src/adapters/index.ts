@@ -76,3 +76,17 @@ export function localAdapters(ctx: AdapterContext): Adapters {
     invoices: new LocalInvoiceProvider(ctx.store, ctx.clock, ctx.newId, ctx.publicBaseUrl),
   };
 }
+
+const REAL_ADAPTER_VARS = ['AFTERBEEP_TRANSCRIBER', 'AFTERBEEP_EXTRACTOR', 'AFTERBEEP_SMS', 'AFTERBEEP_INVOICES'] as const;
+const LOCAL_VALUES = new Set(['', 'local', 'rules', 'outbox']);
+
+/**
+ * Demo mode turns on the call simulator and the reset button, which need no login. It is on by
+ * default only while every adapter is local, so a deploy wired to real phones, SMS or invoices never
+ * lets an anonymous visitor trigger texts or wipe the data. AFTERBEEP_DEMO=on or off overrides this.
+ */
+export function isDemoMode(env: Env): boolean {
+  if (env.AFTERBEEP_DEMO === 'off') return false;
+  if (env.AFTERBEEP_DEMO === 'on') return true;
+  return REAL_ADAPTER_VARS.every((key) => LOCAL_VALUES.has(env[key] ?? ''));
+}

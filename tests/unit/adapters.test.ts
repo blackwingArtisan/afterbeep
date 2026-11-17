@@ -1,6 +1,6 @@
 import type { ConverseCommand, ConverseCommandOutput } from '@aws-sdk/client-bedrock-runtime';
 import { describe, expect, it } from 'vitest';
-import { adaptersFromEnv } from '../../src/adapters';
+import { adaptersFromEnv, isDemoMode } from '../../src/adapters';
 import { addressIsGrounded, BedrockExtractor, numberIsGrounded } from '../../src/adapters/extractor/bedrock';
 import { MemoryStore } from '../../src/adapters/store/local';
 import { emptyDb } from '../../src/server/seed-db';
@@ -72,6 +72,19 @@ describe('adapter selection', () => {
   it('refuses a live Stripe key and a missing SMS origination number', async () => {
     await expect(adaptersFromEnv({ AFTERBEEP_INVOICES: 'stripe', STRIPE_SECRET_KEY: 'sk_live_example' }, ctx)).rejects.toThrow(/test mode/);
     await expect(adaptersFromEnv({ AFTERBEEP_SMS: 'aws' }, ctx)).rejects.toThrow(/AFTERBEEP_SMS_ORIGINATION/);
+  });
+});
+
+describe('demo mode', () => {
+  it('is on by default only while every adapter is local', () => {
+    expect(isDemoMode({})).toBe(true);
+    expect(isDemoMode({ AFTERBEEP_SMS: 'outbox', AFTERBEEP_EXTRACTOR: 'rules' })).toBe(true);
+    expect(isDemoMode({ AFTERBEEP_SMS: 'aws' })).toBe(false);
+    expect(isDemoMode({ AFTERBEEP_INVOICES: 'stripe' })).toBe(false);
+  });
+  it('follows an explicit AFTERBEEP_DEMO', () => {
+    expect(isDemoMode({ AFTERBEEP_DEMO: 'off' })).toBe(false);
+    expect(isDemoMode({ AFTERBEEP_DEMO: 'on', AFTERBEEP_SMS: 'aws' })).toBe(true);
   });
 });
 

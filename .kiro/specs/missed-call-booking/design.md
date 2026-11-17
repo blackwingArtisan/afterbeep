@@ -51,6 +51,7 @@ interface Message {
   status: 'new' | 'heard' | 'called-back';
   bookingToken: string;          // 72 random bits, base64url
   textedAt: string | null;
+  noTextReason: string | null;   // why no text went out: empty message or cooldown
   jobId: string | null;          // set once the caller books
 }
 

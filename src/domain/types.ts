@@ -81,6 +81,8 @@ export interface Message {
   status: MessageStatus;
   bookingToken: string;
   textedAt: string | null;
+  /** Why no booking link was texted (an empty message, or the caller was texted moments ago). */
+  noTextReason: string | null;
   jobId: string | null;
 }
 
@@ -151,6 +153,10 @@ export interface InvoiceLine {
   alternativesCents: Cents[];
   /** Set when the owner explicitly confirmed this exact unit price despite a price-book warning. */
   confirmedPriceCents: Cents | null;
+  /** Set when the owner explicitly confirmed an unusually large quantity. */
+  confirmedQuantity: number | null;
+  /** Numbers heard in this phrase that the parser could not place as a quantity or a price. */
+  unplacedNumbers: string[];
   /** A short explanation shown under the line, e.g. how an ambiguous price was read. */
   note: string | null;
 }

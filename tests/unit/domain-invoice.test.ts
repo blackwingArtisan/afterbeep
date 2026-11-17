@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { draftFromSpeech, quoteLines } from '../../src/domain/invoice-draft';
 import { parseInvoiceSpeech, splitSegments } from '../../src/domain/invoice-parser';
 import { lineAmountCents, roundDiv } from '../../src/domain/money';
-import { buildPriceBook, checkLine, findEntry, itemKey } from '../../src/domain/price-book';
+import { buildPriceBook, checkLine, findEntry, itemKey, quantityLimit } from '../../src/domain/price-book';
 import { computeTotals, stateBaseRateMilli } from '../../src/domain/tax';
+import type { InvoiceLine } from '../../src/domain/types';
 import { pastInvoices, sampleInvoiceScripts } from '../../src/server/seed';
 
 const counter = () => {
@@ -57,6 +58,33 @@ describe('splitSegments', () => {
   it('does not split decimals', () => {
     expect(splitSegments('anode rod 62.50, labor')).toEqual(['anode rod 62.50', 'labor']);
   });
+  it('splits at an "and" that starts a new priced item', () => {
+    expect(splitSegments('water heater element ninety nine dollars and a thermostat for forty')).toEqual([
+      'water heater element ninety nine dollars',
+      'a thermostat for forty',
+    ]);
+    expect(splitSegments('one hour labor at eighty five and two dryer belts at fifty')).toEqual([
+      'one hour labor at eighty five',
+      'two dryer belts at fifty',
+    ]);
+    expect(splitSegments('two and a half hours labor at ninety and a trip charge')).toEqual([
+      'two and a half hours labor at ninety',
+      'a trip charge',
+    ]);
+    expect(splitSegments('drum motor three hundred and twenty nine and two hours labor at eighty five')).toEqual([
+      'drum motor three hundred and twenty nine',
+      'two hours labor at eighty five',
+    ]);
+  });
+  it.each([
+    'drum motor three hundred and twenty nine',
+    'filter ninety dollars and fifty cents',
+    'two and a half hours labor at ninety',
+    'one hour and fifteen minutes labor at eighty',
+    'dryer belt and pulley for forty',
+  ])('keeps "%s" as one item', (phrase) => {
+    expect(splitSegments(phrase)).toEqual([phrase]);
+  });
 });
 
 describe('parseInvoiceSpeech', () => {
@@ -85,6 +113,19 @@ describe('parseInvoiceSpeech', () => {
   it('reads quantities before parts', () => {
     const [line] = parseInvoiceSpeech('two supply lines at sixteen each', { laborTaxable: false, newId: counter() }).lines;
     expect(line).toMatchObject({ description: 'Supply lines', quantity: 2, unitPriceCents: 1600, taxable: true });
+  });
+
+  it('adds hours and minutes', () => {
+    const [line] = parseInvoiceSpeech('one hour and fifteen minutes labor at eighty', { laborTaxable: false, newId: counter() }).lines;
+    expect(line).toMatchObject({ kind: 'labor', quantity: 1.25, unit: 'hour', unitPriceCents: 8000 });
+  });
+
+  it('never reads a number said like a price as a quantity', () => {
+    const [line] = parseInvoiceSpeech('water heater element ninety nine dollars thermostat for forty', {
+      laborTaxable: false,
+      newId: counter(),
+    }).lines;
+    expect(line).toMatchObject({ quantity: 1, unitPriceCents: 9900, unplacedNumbers: ['forty'] });
   });
 
   it('respects explicit no-tax', () => {
@@ -120,7 +161,10 @@ describe('drafts', () => {
     expect(draft.blocked).toBe(true);
     const belt = draft.checks[0]!;
     expect(belt.status).toBe('outlier');
-    expect(belt.options.map((o) => o.cents)).toEqual([1500, 5000]);
+    expect(belt.options.map((o) => o.patch)).toEqual([
+      { confirmedPriceCents: 1500 },
+      { unitPriceCents: 5000, priceSource: 'owner', confirmedPriceCents: null, note: null },
+    ]);
     expect(draft.checks[2]!.status).toBe('filled');
     expect(draft.lines[2]!.unitPriceCents).toBe(4500);
   });
@@ -155,5 +199,75 @@ describe('drafts', () => {
   it('marks brand-new items without blocking', () => {
     const [line] = draftFromSpeech('flux capacitor ninety', ctx()).lines;
     expect(checkLine(line!, book).status).toBe('new-item');
+  });
+});
+
+describe('holds that catch misheard numbers', () => {
+  const settle = (lines: InvoiceLine[], index: number, option: number) =>
+    lines.map((l, i) => (i === index ? { ...l, ...checkLine(l, book).options[option]!.patch } : l));
+
+  it('reads two items joined by "and" as two lines with correct quantities', () => {
+    const draft = draftFromSpeech('water heater element ninety nine dollars and a thermostat for forty, one hour labor at eighty five', ctx());
+    expect(draft.lines.map((l) => [l.description, l.quantity, l.unitPriceCents])).toEqual([
+      ['Water heater element', 1, 9900],
+      ['Thermostat', 1, 4000],
+      ['Labor', 1, 8500],
+    ]);
+    // 99 + 40 + 85 = 224.00; tax 5.75% of 139.00 = 7.9925 -> 7.99
+    expect(draft.totals).toMatchObject({ subtotalCents: 22400, taxCents: 799, totalCents: 23199 });
+    expect(draft.blocked).toBe(false);
+  });
+
+  it('holds a line with a number it could not place, until the owner says to ignore it', () => {
+    const draft = draftFromSpeech('water heater element ninety nine dollars thermostat for forty', ctx());
+    const check = draft.checks[0]!;
+    expect(check).toMatchObject({ status: 'unplaced', blocking: true });
+    expect(check.message).toContain('"forty"');
+    expect(quoteLines(settle(draft.lines, 0, 0), { book, taxRateMilli: 5750 }).blocked).toBe(false);
+  });
+
+  it('holds a quantity far above anything in history', () => {
+    const draft = draftFromSpeech('forty water heater elements at eighty nine', ctx());
+    const check = draft.checks[0]!;
+    expect(check).toMatchObject({ status: 'quantity', blocking: true });
+    expect(check.message).toBe('That is a quantity of 40 at $89.00. Your most on one invoice is 2.');
+    expect(check.options.map((o) => o.label)).toEqual(['Keep 40', 'Make it 1']);
+    const one = quoteLines(settle(draft.lines, 0, 1), { book, taxRateMilli: 5750 });
+    expect(one.blocked).toBe(false);
+    expect(one.lines[0]!.quantity).toBe(1);
+    const kept = quoteLines(settle(draft.lines, 0, 0), { book, taxRateMilli: 5750 });
+    expect(kept.blocked).toBe(false);
+    expect(kept.totals.subtotalCents).toBe(356000);
+  });
+
+  it('holds labor hours far above a normal day, and large quantities of new items', () => {
+    expect(draftFromSpeech('twenty hours labor at eighty five', ctx()).checks[0]!.status).toBe('quantity');
+    expect(draftFromSpeech('eight hours labor at eighty five', ctx()).checks[0]!.status).toBe('ok');
+    expect(draftFromSpeech('twelve widgets at five each', ctx()).checks[0]!.status).toBe('quantity');
+    expect(draftFromSpeech('three widgets at five each', ctx()).checks[0]!.status).toBe('new-item');
+  });
+
+  it('records the largest past quantity in the price book', () => {
+    expect(findEntry(book, 'Water heater element', 'part')?.maxQuantity).toBe(2);
+    expect(quantityLimit({ kind: 'part' }, findEntry(book, 'Water heater element', 'part'))).toBe(4);
+    expect(quantityLimit({ kind: 'labor' }, findEntry(book, 'Labor', 'labor'))).toBe(12);
+    expect(quantityLimit({ kind: 'part' }, null)).toBe(10);
+  });
+
+  it('holds an ambiguous price with no history and offers each reading', () => {
+    const draft = draftFromSpeech('dryer repair, part three twenty-nine taxed, two hours labor at sixty', ctx());
+    const part = draft.checks[0]!;
+    expect(part).toMatchObject({ status: 'ambiguous', blocking: true });
+    expect(part.options.map((o) => o.label)).toEqual(["It's $329.00", "It's $3.29"]);
+    expect(draft.blocked).toBe(true);
+    const picked = quoteLines(settle(draft.lines, 0, 1), { book, taxRateMilli: 5750 });
+    expect(picked.blocked).toBe(false);
+    expect(picked.lines[0]!.unitPriceCents).toBe(329);
+    expect(picked.checks[0]!.status).toBe('new-item');
+  });
+
+  it('still lets history settle an ambiguous price without a hold', () => {
+    const draft = draftFromSpeech(script('ambiguous'), ctx());
+    expect(draft.checks.map((c) => c.status)).toEqual(['ok', 'ok', 'ok', 'ok']);
   });
 });
