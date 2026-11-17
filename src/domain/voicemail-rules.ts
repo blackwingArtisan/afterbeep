@@ -14,7 +14,9 @@ const NOT_NAMES = new Set([
 
 const CATEGORIES: ReadonlyArray<{ category: JobCategory; label: string; pattern: RegExp }> = [
   { category: 'water-heater', label: 'Water heater', pattern: /\b(water heater|hot water heater|no hot water|tankless)\b/i },
-  { category: 'drain', label: 'Clogged drain', pattern: /\b(clog(ged)?|drain|backing up|backed up|toilet|sewer|garbage disposal)\b/i },
+  { category: 'drain', label: 'Toilet', pattern: /\btoilets?\b/i },
+  { category: 'leak', label: 'Faucet', pattern: /\b(faucet|tap|spigot)\b/i },
+  { category: 'drain', label: 'Clogged drain', pattern: /\b(clog(ged)?|backing up|backed up|sewer|garbage disposal|(sink|tub|shower|floor|basement|kitchen|bathroom) drain|drains? (is|are|line|pipe))\b/i },
   { category: 'leak', label: 'Leak', pattern: /\b(leak(ing|s)?|burst|pipe|flood(ing|ed)?|dripping|water everywhere)\b/i },
   { category: 'appliance', label: 'Appliance repair', pattern: /\b(dryer|washer|washing machine|dishwasher|fridge|refrigerator|freezer|oven|stove|range|microwave|ice maker)\b/i },
   { category: 'heating', label: 'Heating', pattern: /\b(furnace|no heat|heater|boiler|heat pump|thermostat)\b/i },
@@ -31,6 +33,8 @@ const SYMPTOMS: ReadonlyArray<readonly [RegExp, string]> = [
   [/\bleak(ing|s)?\b/i, 'leaking'],
   [/\b(backing|backed) up\b/i, 'backing up'],
   [/\bclog(ged)?\b/i, 'clogged'],
+  [/\b(keeps? running|won'?t stop running|runs (all the time|constantly))\b/i, 'keeps running'],
+  [/\boverflow(ing|ed|s)?\b/i, 'overflowing'],
   [/\bno hot water\b/i, 'no hot water'],
   [/\bno heat\b/i, 'no heat'],
   [/\b(not|won'?t|isn'?t) (heating|drying)|taking forever to dry\b/i, 'not heating'],

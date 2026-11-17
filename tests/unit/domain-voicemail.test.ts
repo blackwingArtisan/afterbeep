@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { openSlots, slotIsOpen, wallClock, zonedInstant } from '../../src/domain/slots';
 import {
+  classifyJob,
   classifyUrgency,
   extractAddress,
   extractCallback,
@@ -68,6 +69,17 @@ describe('rule-based voicemail extraction', () => {
 
   it('ignores text without a street suffix', () => {
     expect(extractAddress('I have 2 dogs and a cat')).toBeNull();
+  });
+
+  it.each([
+    ['The upstairs toilet keeps running.', 'Toilet: keeps running'],
+    ['Our toilet is clogged and overflowing.', 'Toilet: clogged, overflowing'],
+    ['The kitchen faucet is dripping all night.', 'Faucet'],
+    ['The bathroom faucet is leaking under the sink.', 'Faucet: leaking'],
+    ['The garbage disposal is backed up.', 'Clogged drain: backing up'],
+    ['My dishwasher won\'t drain.', "Dishwasher: won't run"],
+  ])('labels the job in "%s"', (text, job) => {
+    expect(classifyJob(text).job).toBe(job);
   });
 
   it('treats "no rush" as routine even with "this week"', () => {

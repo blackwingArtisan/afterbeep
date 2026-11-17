@@ -25,8 +25,8 @@ function textBackBody(
   if (extraction.urgency === 'emergency') {
     return `${hi} Got your message about your ${job}. I'll call you back the minute I'm off this job. Grab the earliest visit here: ${url}`;
   }
-  const opening = firstOpening ? ` First opening: ${firstOpening}.` : '';
-  return `${hi} Sorry I missed your call about your ${job}. Pick a time that works for you: ${url}${opening}`;
+  const opening = firstOpening ? ` The first opening is ${firstOpening}.` : '';
+  return `${hi} Sorry I missed your call about your ${job}.${opening} Pick a time that works for you: ${url}`;
 }
 
 /**
