@@ -20,8 +20,14 @@ export function dayKey(iso: string, timeZone: string): string {
   );
 }
 
+/** "8 - 10 AM" when both ends share AM or PM, else "10 AM - 12 PM"; minutes only when not on the hour. */
 export function formatRange(startIso: string, endIso: string, timeZone: string): string {
-  return `${formatTime(startIso, timeZone)} - ${formatTime(endIso, timeZone)}`;
+  const start = formatTime(startIso, timeZone).replace(':00', '');
+  const end = formatTime(endIso, timeZone).replace(':00', '');
+  // Intl may separate the clock and AM/PM with a narrow no-break space; \s covers it.
+  const [startClock, startHalf] = start.split(/\s/);
+  const [, endHalf] = end.split(/\s/);
+  return startHalf && startHalf === endHalf ? `${startClock} - ${end}` : `${start} - ${end}`;
 }
 
 export function timeAgo(iso: string, now = Date.now()): string {

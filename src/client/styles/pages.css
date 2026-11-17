@@ -1100,6 +1100,9 @@
 }
 .slot {
   min-height: 48px;
+  padding: 6px 8px;
+  font-size: 15px;
+  white-space: nowrap;
   border-radius: var(--radius-m);
   border: 1px solid var(--edge);
   background: var(--panel-2);
