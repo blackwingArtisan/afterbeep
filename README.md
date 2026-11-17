@@ -7,7 +7,7 @@
 ## Who it's for
 Plumbers, appliance techs, HVAC and roofing crews of one. They miss calls because they are under a sink, and they write invoices at 9 pm because they were on a ladder all day. Every missed call is a job that goes to the next name on the search page.
 
-**Why now:** speech-to-text and language models became cheap and accurate enough to read a voicemail for less than a cent, so a one-person shop can have a front desk for less than a tank of gas.
+**Why now:** speech-to-text and language models became accurate enough to understand a rushed voicemail and cheap enough to run on every call, so a one-person shop can have a front desk without hiring one.
 
 **Pricing:** one plan, $39 a month, with a 14-day free trial. No per-invoice fee.
 

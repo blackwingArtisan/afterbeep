@@ -29,4 +29,4 @@ Solo tradespeople and two-person shops: plumbers, roofers, HVAC techs, appliance
 Flat monthly price, one plan: $39/month, includes one phone number, unlimited messages and invoices, and the text-back. 14-day free trial. No per-invoice fees from AfterBeep.
 
 ## Why now
-Speech-to-text and language models became cheap and accurate enough to listen to a voicemail for well under a cent, so a one-person shop can have a front desk for less than a tank of gas.
+Speech-to-text and language models became accurate enough to understand a rushed voicemail and cheap enough to run on every call, so a one-person shop can have a front desk without hiring one.

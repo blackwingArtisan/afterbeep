@@ -90,8 +90,8 @@ export default function Landing() {
       <section className="why wrap" aria-label="Why now">
         <p>
           <span className="eyebrow">Why now</span>
-          Speech-to-text and language models got cheap and accurate enough to listen to a voicemail for less than a cent. So a
-          one-person shop can finally have a front desk for less than a tank of gas.
+          Speech-to-text and language models got accurate enough to understand a rushed voicemail, and cheap enough to run on
+          every call. So a one-person shop can finally have a front desk without hiring one.
         </p>
       </section>
 
