@@ -1,0 +1,20 @@
+# Tasks: Missed-call booking
+
+- [x] 1. Shared domain types for business, message, job and outbox (Req 3.1, 5.4, 7.3)
+- [x] 2. Spoken digit and number reading for phone numbers and house numbers (Req 3.1, 3.2)
+- [x] 3. Rule-based extractor: name, callback number, address, job category, symptoms, urgency, summary (Req 3.1-3.4, 3.6)
+  - [x] 3.1 Unit tests on the three seeded voicemails and two simulator scripts
+- [x] 4. Slot finder in the business time zone with lead time, horizon and overlap checks (Req 5.2, 5.3)
+  - [x] 4.1 Unit tests for EST/EDT conversion, Saturdays, closed Sundays, booked jobs
+- [x] 5. Adapter ports and local implementations: pass-through transcriber, rule extractor, outbox SMS, JSON file store (Req 7.3, 7.4)
+- [x] 6. Real adapters, type-checked and not executed: Amazon Transcribe, Bedrock Converse with forced tool and fallback, End User Messaging SMS (Req 2.1, 3.5, 4.1)
+- [x] 7. `receiveVoicemail` pipeline service with text-back wording by urgency (Req 2.2, 2.3, 4.1-4.5)
+- [x] 8. Booking service: view, slot re-validation, job creation, confirmation text (Req 5.1-5.8)
+- [x] 9. Hono routes, zod validation, error mapping, Amazon Connect webhook with shared secret (Req 1.2-1.4)
+- [x] 10. Seed: the demo business and three voicemails run through the real pipeline (Req 7.1)
+- [x] 11. Client: cassette inbox, message light and counter, playback with speech synthesis, call back link (Req 6.1-6.4)
+- [x] 12. Client: call simulator with ring, greeting, beep, Web Speech dictation, samples and typing (Req 7.1, 7.2)
+- [x] 13. Client: caller booking page, mobile first (Req 5.1, 5.5, 5.6, 5.8)
+- [x] 14. Client: outbox and schedule (Req 7.3, 5.4)
+- [x] 15. Playwright: simulator call to booked job; phone-viewport booking (Req 5, 6, 7)
+- [x] 16. Amazon Connect contact flow and wiring notes in `infra/connect/` (Req 1.1, 1.2)

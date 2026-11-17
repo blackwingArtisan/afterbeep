@@ -1,0 +1,56 @@
+{
+  "name": "afterbeep",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The answering machine, resurrected: missed-call booking and spoken invoices for one-person trade businesses.",
+  "license": "MIT",
+  "author": "Stubborn Otter Software",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node --run dev:api & vite --port 3110 --strictPort",
+    "dev:api": "PORT=3111 tsx watch src/server/main.ts",
+    "build": "vite build && esbuild src/server/main.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/server/main.js",
+    "start": "node dist/server/main.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "npm run typecheck && npm test"
+  },
+  "dependencies": {
+    "@fontsource/big-shoulders-display": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/ibm-plex-sans": "5.3.0",
+    "@fontsource/monoton": "5.3.0",
+    "@fontsource/permanent-marker": "5.3.0",
+    "@fontsource/special-elite": "5.3.0",
+    "@fontsource/vt323": "5.3.0",
+    "@hono/node-server": "2.1.8",
+    "hono": "4.13.19",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router-dom": "7.18.5",
+    "zod": "4.6.7"
+  },
+  "optionalDependencies": {
+    "@aws-sdk/client-bedrock-runtime": "3.1170.0",
+    "@aws-sdk/client-pinpoint-sms-voice-v2": "3.1170.0",
+    "@aws-sdk/client-transcribe": "3.1170.0",
+    "stripe": "23.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "esbuild": "0.28.2",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  }
+}

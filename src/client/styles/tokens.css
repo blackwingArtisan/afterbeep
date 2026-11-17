@@ -1,0 +1,96 @@
+/*
+ * AfterBeep design tokens.
+ * "Graveyard shift" (dark) is the brand default; "Daylight" is the beige 1986 plastic version.
+ */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0c0a0f;
+  --bg-fog-1: rgba(98, 54, 160, 0.22);
+  --bg-fog-2: rgba(40, 140, 90, 0.14);
+  --panel: #17151c;
+  --panel-2: #1f1c26;
+  --panel-3: #29252f;
+  --edge: #35303d;
+  --edge-hi: rgba(255, 255, 255, 0.06);
+  --shadow: rgba(0, 0, 0, 0.55);
+
+  --ink: #efe6d2;
+  --ink-dim: #b3aa98;
+  --ink-faint: #7b7466;
+
+  --led: #ff3b2f;
+  --led-glow: rgba(255, 59, 47, 0.65);
+  --lcd: #a6ff7e;
+  --lcd-dim: rgba(166, 255, 126, 0.16);
+  --lcd-bg: #0a1307;
+  --pumpkin: #ff7a1a;
+  --pumpkin-hi: #ff9a4a;
+  --pumpkin-ink: #1c0c00;
+  --ghost: #c9b8ff;
+
+  --label: #f2e9cf;
+  --label-line: rgba(31, 42, 92, 0.18);
+  --label-ink: #1f2a5c;
+  --marker: #b8241b;
+
+  --emergency: #ff4a3d;
+  --soon: #ffb020;
+  --routine: #5fd38d;
+  --ok: #5fd38d;
+  --hold: #ff4a3d;
+  --info: #8fb8ff;
+
+  --paper: #f6f0e1;
+  --paper-ink: #24201a;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #e8dfcb;
+  --bg-fog-1: rgba(255, 122, 26, 0.16);
+  --bg-fog-2: rgba(120, 90, 200, 0.1);
+  --panel: #f3ecdc;
+  --panel-2: #e6dcc6;
+  --panel-3: #d8ccb2;
+  --edge: #c2b597;
+  --edge-hi: rgba(255, 255, 255, 0.6);
+  --shadow: rgba(80, 60, 30, 0.22);
+
+  --ink: #241d14;
+  --ink-dim: #5b5040;
+  --ink-faint: #8a7d67;
+
+  --led: #e0261a;
+  --led-glow: rgba(224, 38, 26, 0.45);
+  --lcd: #1f4d12;
+  --lcd-dim: rgba(31, 77, 18, 0.12);
+  --lcd-bg: #b9c99a;
+  --pumpkin: #e2620a;
+  --pumpkin-hi: #f07a24;
+  --pumpkin-ink: #fff8ef;
+  --ghost: #5a3fb0;
+
+  --emergency: #c8281e;
+  --soon: #b86e00;
+  --routine: #23804c;
+  --ok: #23804c;
+  --hold: #c8281e;
+  --info: #2f5fb8;
+}
+
+:root {
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-display: 'Big Shoulders Display', 'IBM Plex Sans', sans-serif;
+  --font-logo: 'Monoton', 'Big Shoulders Display', sans-serif;
+  --font-lcd: 'VT323', ui-monospace, monospace;
+  --font-hand: 'Permanent Marker', cursive;
+  --font-type: 'Special Elite', 'IBM Plex Mono', monospace;
+
+  --radius-s: 6px;
+  --radius-m: 12px;
+  --radius-l: 20px;
+  --gutter: 16px;
+  --max: 1160px;
+}

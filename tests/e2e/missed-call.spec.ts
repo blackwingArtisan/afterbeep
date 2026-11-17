@@ -1,0 +1,41 @@
+import { expect, test } from '@playwright/test';
+
+test('a missed call becomes a booked job', async ({ page, request }) => {
+  const before = ((await (await request.get('/api/messages')).json()) as { newCount: number }).newCount;
+  await page.goto('/machine/call');
+  await page.getByRole('radio', { name: /Furnace out overnight/ }).click();
+  await expect(page.getByLabel('Caller ID')).toHaveValue('(614) 555-0163');
+
+  await page.getByRole('button', { name: 'Call the machine' }).click();
+  // Skip the ring and the greeting.
+  for (let i = 0; i < 2; i++) {
+    const skip = page.getByRole('button', { name: 'Skip to the beep' });
+    if (await skip.isVisible().catch(() => false)) await skip.click().catch(() => {});
+    await page.waitForTimeout(150);
+  }
+
+  const result = page.getByTestId('sim-result');
+  await expect(result).toBeVisible({ timeout: 20_000 });
+  await expect(result).toContainText('Hector Alvarez');
+  await expect(result).toContainText('41 Lantern Hill Drive');
+  await expect(result).toContainText('(614) 555-0163');
+
+  await page.getByRole('link', { name: /Open the text as the caller/ }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Hi Hector');
+  await expect(page.getByLabel('Address for the visit')).toHaveValue('41 Lantern Hill Drive');
+  const firstSlot = page.getByRole('radio').first();
+  await firstSlot.click();
+  await page.getByRole('button', { name: /^Book / }).click();
+  await expect(page.getByTestId('booked')).toContainText("You're on the schedule, Hector");
+
+  await page.goto('/machine/schedule');
+  await expect(page.getByTestId('job').filter({ hasText: 'Hector Alvarez' })).toContainText('41 Lantern Hill Drive');
+
+  await page.goto('/machine');
+  await expect(page.getByTestId('lcd-count')).toHaveText(String(before + 1).padStart(2, '0'));
+  const tape = page.getByTestId('cassette').filter({ hasText: 'Hector Alvarez' });
+  await expect(tape.getByTestId('booking-status')).toContainText('Booked');
+
+  await page.goto('/machine/outbox');
+  await expect(page.getByTestId('outbox-item').first()).toContainText("You're booked, Hector");
+});

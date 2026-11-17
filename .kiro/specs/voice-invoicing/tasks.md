@@ -1,0 +1,18 @@
+# Tasks: Voice invoicing
+
+- [x] 1. Money module: integer cents, hundredths, half-away-from-zero rounding, formatting (Req 2.1, 2.2)
+- [x] 2. State base sales tax table and totals computation (Req 2.3, 2.4)
+- [x] 3. Spoken number lexer with price shorthand and multiple readings (Req 1.2, 1.3)
+  - [x] 3.1 Unit tests: "three twenty-nine", "sixty-two fifty", "twelve fifty", "a hundred and twenty", "three hundred and five"
+- [x] 4. Invoice parser: segments, title, quantity, unit, kind, taxable words (Req 1.1, 1.4-1.6)
+- [x] 5. Price book from past invoices: keys, synonyms, similarity match, unit compatibility (Req 3.1, 3.7)
+- [x] 6. Price checks: fill, settle alternatives, outlier hold, missing price hold, new item (Req 3.2-3.6)
+- [x] 7. Draft and quote services sharing one computation (Req 1.7, 4.2)
+- [x] 8. Send gate: needs-decision, total-mismatch, already-invoiced, provider failure (Req 4.4-4.8)
+- [x] 9. Local invoice provider with outbox message and customer page (Req 5.1, 5.2)
+- [x] 10. Stripe Invoicing provider, test keys only, total cross-check and void (Req 5.3-5.5)
+- [x] 11. Seed: about 15 past invoices for the demo business (Req 3.1)
+- [x] 12. Client: dictation, sample scripts, paper invoice with holds and options, inline edits, approve button showing the exact total (Req 4.1-4.3)
+- [x] 13. Client: customer invoice page and price book page with history sparklines (Req 5.2, 3.8)
+- [x] 14. API tests for the gate and price book growth (Req 4, 3.8)
+- [x] 15. Playwright: hold, decide, approve, customer page, outbox (Req 3.4, 4, 5)

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AfterBeep answers the calls a one-person trade business misses, texts the caller a booking link, and turns a spoken invoice into a checked, approved bill." />
+    <meta name="theme-color" content="#0c0a0f" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>AfterBeep</title>
+    <script>
+      try {
+        const saved = localStorage.getItem('afterbeep-theme');
+        if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>

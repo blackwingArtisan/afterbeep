@@ -1,0 +1,15 @@
+# Render Blueprint for the free web service tier. The free tier's disk is temporary,
+# so the demo data reseeds on each restart, which suits a public demo.
+services:
+  - type: web
+    name: afterbeep
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: AFTERBEEP_DATA_DIR
+        value: /tmp/afterbeep

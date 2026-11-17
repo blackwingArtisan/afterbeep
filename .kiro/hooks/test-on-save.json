@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Unit tests on save",
+      "description": "Run the Vitest suite whenever the agent saves a TypeScript source or test file, so a broken money or parser rule is caught immediately.",
+      "trigger": "PostFileSave",
+      "matcher": "^(src|tests/unit)/.*\\.(ts|tsx)$",
+      "action": { "type": "command", "command": "npm test --silent" },
+      "timeout": 120
+    }
+  ]
+}

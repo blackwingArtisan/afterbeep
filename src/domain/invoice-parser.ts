@@ -1,0 +1,226 @@
+import { lexNumbers, tokenize, type NumberToken, type Token } from './spoken-numbers';
+import type { InvoiceLine, LineKind, LineUnit } from './types';
+
+/**
+ * Turns a spoken invoice into draft line items. This step only labels words: it decides which
+ * number is a quantity and which is a unit price. It never adds, multiplies or taxes anything.
+ */
+
+export interface ParsedInvoice {
+  title: string | null;
+  lines: InvoiceLine[];
+}
+
+export interface ParseOptions {
+  laborTaxable: boolean;
+  newId: () => string;
+}
+
+const HOUR_WORDS = new Set(['hour', 'hours', 'hr', 'hrs']);
+const MINUTE_WORDS = new Set(['minute', 'minutes', 'min', 'mins']);
+const LABOR_WORDS = new Set(['labor', 'labour', ...HOUR_WORDS, ...MINUTE_WORDS]);
+const PRICE_BEFORE = new Set(['at', '@', 'for', 'is', 'costs', 'cost', 'price', 'priced', 'charge']);
+const PRICE_AFTER = new Set(['each', 'apiece', 'ea']);
+const RATE_WORDS = new Set(['an', 'a', 'per']);
+const QTY_MARKERS = new Set(['x', 'times']);
+const FILLER = new Set([
+  'at', '@', 'for', 'each', 'apiece', 'ea', 'per', 'an', 'a', 'x', 'times', 'the', 'and', 'of', 'um', 'uh',
+  'dollars', 'dollar', 'bucks', 'buck', 'cents', 'cent', 'is', 'costs', 'cost', 'price', 'priced', 'that', 'was',
+  'okay', 'ok', 'so', 'then', 'with', 'plus', 'also', 'next',
+]);
+const FEE_PHRASES: ReadonlyArray<readonly [RegExp, string]> = [
+  [/\btrip (charge|fee)\b/, 'Trip charge'],
+  [/\bservice (call|fee|charge)\b/, 'Service call'],
+  [/\bdiagnostic( fee)?\b/, 'Diagnostic fee'],
+  [/\bhaul ?away( fee)?\b/, 'Haul-away fee'],
+  [/\bdisposal fee\b/, 'Disposal fee'],
+  [/\bpermit( fee)?\b/, 'Permit fee'],
+  [/\b(after hours|emergency) (fee|charge|surcharge)\b/, 'After-hours fee'],
+];
+
+const TAX_YES = /\b(taxed|taxable|plus tax|with tax|add tax)\b/;
+const TAX_NO = /\b(no tax|not taxed|tax free|tax exempt|untaxed|non taxable|nontaxable)\b/;
+const TAX_WORDS = /\b(taxed|taxable|plus tax|with tax|add tax|no tax|not taxed|tax free|tax exempt|untaxed|non taxable|nontaxable)\b/g;
+
+/** Splits a spoken invoice into one phrase per line item. */
+export function splitSegments(text: string): string[] {
+  const raw = text
+    .replace(/\.(?!\d)/g, ',')
+    .split(/[,;\n]|\band then\b|\bthen\b|\bplus\b(?!\s+tax)|\balso\b|\bnext\b/i)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  const segments: string[] = [];
+  for (const segment of raw) {
+    const onlyTax = /^(and\s+)?((it's|that's|it is|that is)\s+)?(taxed|taxable|plus tax|with tax|no tax|not taxed|tax free|untaxed)$/i;
+    if (onlyTax.test(segment) && segments.length > 0) {
+      segments[segments.length - 1] += `, ${segment}`;
+    } else {
+      segments.push(segment);
+    }
+  }
+  return segments;
+}
+
+/** Rewrites fractional time and count phrases into digits before number lexing. */
+function normaliseWords(words: string[]): string[] {
+  const text = ` ${words.join(' ')} `
+    .replace(/ (an|a|one) hour and a half /g, ' 1.5 hours ')
+    .replace(/ hour and a half /g, ' 1.5 hours ')
+    .replace(/ half (an )?hour /g, ' 0.5 hours ')
+    .replace(/ (an|a) hour /g, ' 1 hours ')
+    .replace(/ (a )?couple( of)? /g, ' 2 ')
+    .replace(/ (a )?pair( of)? /g, ' 2 ')
+    .replace(/ (a )?dozen /g, ' 12 ');
+  return text.trim().split(/\s+/).filter(Boolean);
+}
+
+/** Folds "two and a half" into a single count of 2.5. */
+function foldHalves(tokens: Token[]): Token[] {
+  const out: Token[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i]!;
+    const isHalf =
+      t.type === 'num' &&
+      t.count !== null &&
+      tokens[i + 1]?.type === 'word' && (tokens[i + 1] as { text: string }).text === 'and' &&
+      tokens[i + 2]?.type === 'word' && (tokens[i + 2] as { text: string }).text === 'a' &&
+      tokens[i + 3]?.type === 'word' && (tokens[i + 3] as { text: string }).text === 'half';
+    if (isHalf && t.type === 'num' && t.count !== null) {
+      out.push({ ...t, raw: `${t.raw} and a half`, count: t.count + 0.5, priceCents: [], explicitMoney: false });
+      i += 3;
+    } else {
+      out.push(t);
+    }
+  }
+  return out;
+}
+
+function titleCase(words: string[]): string {
+  const text = words.join(' ').trim();
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : '';
+}
+
+const wordAt = (tokens: Token[], i: number): string | undefined => {
+  const t = tokens[i];
+  return t?.type === 'word' ? t.text : undefined;
+};
+
+interface SegmentReading {
+  kind: LineKind;
+  description: string;
+  quantity: number;
+  unit: LineUnit;
+  price: NumberToken | null;
+  taxable: boolean | null;
+  hasNumbers: boolean;
+}
+
+function readSegment(segment: string): SegmentReading {
+  const lower = segment.toLowerCase();
+  const taxable = TAX_NO.test(lower) ? false : TAX_YES.test(lower) ? true : null;
+  const words = normaliseWords(tokenize(lower.replace(TAX_WORDS, ' ')));
+  const tokens = foldHalves(lexNumbers(words));
+  const nums = tokens.map((t, i) => ({ t, i })).filter((x): x is { t: NumberToken; i: number } => x.t.type === 'num');
+
+  const isLabor = words.some((w) => LABOR_WORDS.has(w));
+  const fee = FEE_PHRASES.find(([re]) => re.test(lower));
+  const kind: LineKind = isLabor ? 'labor' : fee ? 'fee' : 'part';
+
+  let price: NumberToken | null = null;
+  let quantity: number | null = null;
+  let hours = false;
+  const used = new Set<number>();
+
+  for (const { t, i } of nums) {
+    const next = wordAt(tokens, i + 1);
+    const after = wordAt(tokens, i + 2);
+    const prev = wordAt(tokens, i - 1);
+    if (next && (HOUR_WORDS.has(next) || MINUTE_WORDS.has(next)) && t.count !== null) {
+      quantity = MINUTE_WORDS.has(next) ? Math.round((t.count / 60) * 100) / 100 : t.count;
+      hours = true;
+      used.add(i);
+    } else if (next && RATE_WORDS.has(next) && after && HOUR_WORDS.has(after)) {
+      price = t;
+      hours = true;
+      used.add(i);
+    } else if ((prev && QTY_MARKERS.has(prev)) || (next && QTY_MARKERS.has(next))) {
+      if (t.count !== null) quantity = t.count;
+      used.add(i);
+    }
+  }
+  for (const { t, i } of nums) {
+    if (used.has(i) || price) continue;
+    const prev = wordAt(tokens, i - 1);
+    const next = wordAt(tokens, i + 1);
+    if (t.explicitMoney || (prev && PRICE_BEFORE.has(prev)) || (next && PRICE_AFTER.has(next))) {
+      price = t;
+      used.add(i);
+    }
+  }
+  const unused = nums.filter(({ i }) => !used.has(i));
+  if (!quantity && unused.length >= (price ? 1 : 2)) {
+    const first = unused[0]!;
+    if (first.t.count !== null && Number.isInteger(first.t.count) && first.t.count >= 1 && first.t.count <= 50) {
+      quantity = first.t.count;
+      used.add(first.i);
+    }
+  }
+  if (!price) {
+    const last = nums.filter(({ i }) => !used.has(i)).pop();
+    if (last && last.t.priceCents.length > 0) {
+      price = last.t;
+      used.add(last.i);
+    }
+  }
+
+  let description: string;
+  if (kind === 'labor') {
+    description = 'Labor';
+  } else if (fee) {
+    description = fee[1];
+  } else {
+    const descWords = tokens
+      .filter((t, i) => t.type === 'word' && !used.has(i) && !FILLER.has(t.text))
+      .map((t) => (t as { text: string }).text);
+    const withoutPart = descWords.filter((w) => w !== 'part' && w !== 'parts');
+    description = titleCase(withoutPart.length > 0 ? withoutPart : descWords) || (nums.length > 0 ? 'Part' : '');
+  }
+
+  const unit: LineUnit = kind === 'labor' ? (hours ? 'hour' : 'flat') : kind === 'fee' ? 'flat' : 'each';
+  return { kind, description, quantity: quantity ?? 1, unit, price, taxable, hasNumbers: nums.length > 0 };
+}
+
+export function parseInvoiceSpeech(text: string, options: ParseOptions): ParsedInvoice {
+  const segments = splitSegments(text);
+  const readings = segments.map((s) => ({ segment: s, reading: readSegment(s) }));
+
+  let title: string | null = null;
+  const first = readings[0];
+  if (first && !first.reading.hasNumbers && first.reading.kind === 'part' && readings.length > 1) {
+    title = first.reading.description;
+    readings.shift();
+  }
+
+  const lines: InvoiceLine[] = readings
+    .filter(({ reading }) => reading.description.length > 0)
+    .map(({ segment, reading }) => {
+      const defaultTaxable = reading.kind === 'part' ? true : reading.kind === 'labor' ? options.laborTaxable : false;
+      const [primary, ...alternatives] = reading.price?.priceCents ?? [];
+      return {
+        id: options.newId(),
+        description: reading.description,
+        kind: reading.kind,
+        quantity: reading.quantity,
+        unit: reading.unit,
+        unitPriceCents: primary ?? 0,
+        taxable: reading.taxable ?? defaultTaxable,
+        priceSource: primary === undefined ? 'price-book' : 'spoken',
+        heard: segment,
+        alternativesCents: alternatives,
+        confirmedPriceCents: null,
+        note: null,
+      } satisfies InvoiceLine;
+    });
+
+  return { title, lines };
+}

@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Money rules guard",
+      "description": "When domain money code changes, remind the agent of the integer-cents and code-does-arithmetic rules before it continues.",
+      "trigger": "PostFileSave",
+      "matcher": "^src/domain/(money|tax|invoice-parser|price-book)\\.ts$",
+      "action": {
+        "type": "agent",
+        "prompt": "You just edited money code. Confirm: all amounts are integer cents, no floating-point sums, tax is rounded once per invoice rounded half away from zero, and no model output is used for arithmetic. Add or update a unit test for any rule you changed."
+      }
+    }
+  ]
+}

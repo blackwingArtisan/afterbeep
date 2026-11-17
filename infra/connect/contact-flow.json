@@ -1,0 +1,47 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "save-caller",
+  "Metadata": { "name": "AfterBeep voicemail", "description": "Answers a forwarded call, plays the greeting, beeps, records the caller, hangs up." },
+  "Actions": [
+    {
+      "Identifier": "save-caller",
+      "Type": "UpdateContactAttributes",
+      "Parameters": { "Attributes": { "afterbeepCaller": "$.CustomerEndpoint.Address" }, "TargetContact": "Current" },
+      "Transitions": { "NextAction": "record", "Errors": [{ "NextAction": "record", "ErrorType": "NoMatchingError" }] }
+    },
+    {
+      "Identifier": "record",
+      "Type": "UpdateContactRecordingBehavior",
+      "Parameters": { "RecordingBehavior": { "RecordedParticipants": ["Customer"] } },
+      "Transitions": { "NextAction": "greeting" }
+    },
+    {
+      "Identifier": "greeting",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "SSML": "<speak>You've reached Hollow Creek Plumbing and Appliance. I'm on a job. Leave your name, address, and what's going on, and you'll get a text with a booking link. Start after the beep. <break time=\"300ms\"/></speak>"
+      },
+      "Transitions": { "NextAction": "listen", "Errors": [{ "NextAction": "listen", "ErrorType": "NoMatchingError" }] }
+    },
+    {
+      "Identifier": "listen",
+      "Type": "GetParticipantInput",
+      "Parameters": { "Text": " ", "InputTimeLimitSeconds": "120", "StoreInput": "False" },
+      "Transitions": {
+        "NextAction": "goodbye",
+        "Errors": [
+          { "NextAction": "goodbye", "ErrorType": "InputTimeLimitExceeded" },
+          { "NextAction": "goodbye", "ErrorType": "NoMatchingCondition" },
+          { "NextAction": "goodbye", "ErrorType": "NoMatchingError" }
+        ]
+      }
+    },
+    {
+      "Identifier": "goodbye",
+      "Type": "MessageParticipant",
+      "Parameters": { "Text": "Got it. Watch for a text." },
+      "Transitions": { "NextAction": "hang-up", "Errors": [{ "NextAction": "hang-up", "ErrorType": "NoMatchingError" }] }
+    },
+    { "Identifier": "hang-up", "Type": "DisconnectParticipant", "Parameters": {}, "Transitions": {} }
+  ]
+}

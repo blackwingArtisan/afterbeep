@@ -1,0 +1,12 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Typecheck when the agent finishes",
+      "description": "After each agent turn, type-check the whole project and report errors back to the agent.",
+      "trigger": "Stop",
+      "action": { "type": "command", "command": "npm run typecheck --silent" },
+      "timeout": 180
+    }
+  ]
+}
