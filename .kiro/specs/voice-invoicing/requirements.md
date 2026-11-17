@@ -58,6 +58,7 @@ After a job, the owner says the invoice out loud. AfterBeep turns the words into
 4.6 IF any line is still held on the server THEN THE SYSTEM SHALL refuse with a needs-decision error.
 4.7 IF the job has already been invoiced THEN THE SYSTEM SHALL refuse a second invoice.
 4.8 WHEN an invoice is sent THE SYSTEM SHALL assign the next invoice number, mark the job invoiced, and record the provider reference.
+4.9 WHEN the owner invoices a booked job and the spoken invoice has no title THE SYSTEM SHALL use the job's description as the invoice title.
 
 ## Requirement 5: Delivery
 **User story:** As a customer, I want a clear invoice with a link to pay, so that I can settle it from my phone.
@@ -67,3 +68,4 @@ After a job, the owner says the invoice out loud. AfterBeep turns the words into
 5.3 WHILE the Stripe provider is selected THE SYSTEM SHALL create a customer, invoice items and an invoice in test mode, finalize it and send it.
 5.4 IF Stripe's invoice total differs from the approved total THEN THE SYSTEM SHALL void the Stripe invoice and report a provider error.
 5.5 IF the Stripe key is not a test-mode key THEN THE SYSTEM SHALL refuse to start the Stripe provider.
+5.6 WHEN an invoice is sent THE SYSTEM SHALL set its due date 14 days after the invoice date and show that due date on the customer invoice page.

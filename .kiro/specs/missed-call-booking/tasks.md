@@ -22,3 +22,5 @@
 - [x] 17. Review fixes: no text-back for empty messages or repeat calls inside the cooldown (Req 4.6, 4.7)
 - [x] 18. Demo mode gate for the simulator and reset, off by default with any real adapter (Req 7.5, 7.6)
   - [x] 18.1 Unit, API and Playwright tests for hang-ups, cooldown and demo mode (Req 4.6, 4.7, 7.5, 7.6)
+- [x] 19. Booking page lets the caller confirm or correct the visit address, and the confirmed address becomes the job's address (Req 5.9)
+- [x] 20. Booking page tells the caller to call the business when no open slot is available (Req 5.10)

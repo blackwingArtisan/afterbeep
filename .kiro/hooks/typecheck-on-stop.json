@@ -2,11 +2,12 @@
   "version": "v1",
   "hooks": [
     {
-      "name": "Typecheck when the agent finishes",
-      "description": "After each agent turn, type-check the whole project and report errors back to the agent.",
+      "name": "Typecheck on stop (retired)",
+      "description": "Retired this pass so the active hooks are the requested pair: run unit tests when a source file is edited, and guard the money rules. Kept as a valid v1 hook with enabled false rather than deleted, because file deletion is not permitted in this non-interactive session. Set enabled true to use it again.",
       "trigger": "Stop",
-      "action": { "type": "command", "command": "npm run typecheck --silent" },
-      "timeout": 180
+      "action": { "type": "command", "command": "npm run typecheck" },
+      "timeout": 180,
+      "enabled": false
     }
   ]
 }

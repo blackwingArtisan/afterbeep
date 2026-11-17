@@ -3,12 +3,12 @@
   "hooks": [
     {
       "name": "Money rules guard",
-      "description": "When domain money code changes, remind the agent of the integer-cents and code-does-arithmetic rules before it continues.",
+      "description": "When the agent edits money or pricing code in src/domain, re-state AfterBeep's non-negotiable money rules and ask it to add or update a unit test before it continues.",
       "trigger": "PostFileSave",
-      "matcher": "^src/domain/(money|tax|invoice-parser|price-book)\\.ts$",
+      "matcher": "^src/domain/(money|tax|invoice-parser|price-book|invoice-draft)\\.ts$",
       "action": {
         "type": "agent",
-        "prompt": "You just edited money code. Confirm: all amounts are integer cents, no floating-point sums, tax is rounded once per invoice rounded half away from zero, and no model output is used for arithmetic. Add or update a unit test for any rule you changed."
+        "prompt": "You just edited money or pricing code in src/domain. Before continuing, confirm every amount stays integer cents with no floating-point sums, that line amounts and tax are rounded half away from zero (tax rounded once per invoice), and that no model or parser output is ever used for arithmetic. Add or update a unit test under tests/unit for any rule you changed, then run `npm test`."
       }
     }
   ]

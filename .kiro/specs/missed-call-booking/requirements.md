@@ -58,6 +58,8 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 5.6 IF the link was already used to book THEN THE SYSTEM SHALL show the existing booking and refuse a second one.
 5.7 WHEN a job is booked THE SYSTEM SHALL text the caller a confirmation with the day and time.
 5.8 IF the booking link is unknown THEN THE SYSTEM SHALL show a "link expired" page.
+5.9 WHEN the caller opens a booking link THE SYSTEM SHALL show the address it heard in a field the caller can confirm or correct, and SHALL make the address the caller confirms the job's address.
+5.10 IF no open slot is available in the search window THEN THE SYSTEM SHALL tell the caller to call the business and SHALL show the business phone number.
 
 ## Requirement 6: Cassette inbox
 **User story:** As an owner, I want my messages to look like tapes on an answering machine, so that I can see what needs me at a glance.

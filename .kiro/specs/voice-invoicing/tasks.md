@@ -19,3 +19,5 @@
 - [x] 16. Review fixes: split items at "and", keep price-marked numbers out of quantities, add hours and minutes (Req 1.8-1.10)
 - [x] 17. Holds for unplaced numbers, unusual quantities and ambiguous prices with no history; options carry a line patch (Req 3.9-3.11)
   - [x] 17.1 Unit, API and Playwright tests for "a thermostat for forty", "forty water heater elements" and "part three twenty-nine" (Req 1.8-1.10, 3.9-3.11)
+- [x] 18. Invoice title falls back to the job's description when the spoken invoice has no title (Req 4.9)
+- [x] 19. Sent invoices get a due date 14 days after the invoice date, shown on the customer page (Req 5.6)
