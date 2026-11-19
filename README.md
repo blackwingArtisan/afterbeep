@@ -74,7 +74,11 @@ A transcript is free now. What a solo tech still lacks is what happens after the
 
 | The caller's phone | Sent | The inbox |
 |---|---|---|
-| ![Booking page on a phone](docs/screens/booking-phone.png) | ![Invoice stamped sent, next to the customer's text](docs/screens/story-sent.png) | ![Cassette inbox with the Kept this week readout](docs/inbox.png) |
+| ![Booking page on a phone](docs/screens/booking-phone.png) | ![Invoice stamped sent, next to the customer's text](docs/screens/story-sent.png) | ![Cassette inbox with the Kept this week readout: 2 booked, $557 of work, $35 caught, paid for itself 14 times](docs/inbox.png) |
+
+| The finale | Paid | Raise the dead |
+|---|---|---|
+| ![The story finale counting up what one missed call kept](docs/screens/finale.png) | ![June's invoice stamped PAID](docs/screens/paid.png) | ![Five unreturned hang-ups raised from the graveyard, each texted a booking link](docs/screens/graveyard.png) |
 
 ## What works today
 Everything runs on a laptop with no accounts. Each item is covered by the tests below.
@@ -121,9 +125,9 @@ Every outside service sits behind a port with a free local default, so the demo 
 | Store | `AFTERBEEP_DATA_DIR` | JSON file with atomic writes | |
 
 ```
-src/domain/     pure logic: money, spoken numbers, tax, invoice parser, price book (carbon copies), voicemail rules, slots, kept stats
+src/domain/     pure logic: money, spoken numbers, tax, invoice parser, price book (carbon copies), voicemail rules, Spanish glossary, slots, kept stats, graveyard, payback, story caller IDs
 src/adapters/   ports and implementations: store, transcriber, extractor, sms, invoices
-src/server/     Hono API, services (voicemail, booking, invoicing), seed data
+src/server/     Hono API, services (voicemail, booking, invoicing, revive), seed data
 src/client/     React app: landing, machine (inbox, call, schedule, invoice, outbox, prices), caller pages
 infra/          SAM template for the real phone path; connect/ holds the contact flow and Lambda
 .kiro/          steering, specs, hooks, MCP settings

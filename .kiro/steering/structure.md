@@ -6,7 +6,8 @@ inclusion: always
 ```
 .kiro/                 steering, specs, hooks and MCP settings (this folder)
 .github/workflows/      CI: typecheck, spec coverage, unit and end-to-end tests
-scripts/               spec-coverage.ts: every EARS criterion must be named by a test
+scripts/               spec-coverage.ts: every EARS criterion must be named by a test; eval-extractor.ts and
+                       transcribe-sample.ts score and spot-check extraction (paid paths are switched off by default)
 src/
   domain/              pure business logic, fully unit tested
     money.ts           cents, formatting, rounding
@@ -17,6 +18,9 @@ src/
     voicemail-rules.ts rule-based extraction of name, number, address, job, urgency
     slots.ts           open appointment slots from hours and booked jobs
     kept.ts            "Kept this week": calls, texts, bookings and amounts caught
+    graveyard.ts       which unreturned hang-ups can be raised from the dead
+    spanish.ts         detects Spanish voicemails and maps trade phrases to English for the rules
+    payback.ts         the landing page payback estimate
     types.ts           shared domain types
   adapters/
     transcriber/  extractor/  sms/  invoices/  store/
@@ -26,17 +30,19 @@ src/
     index.ts           selects implementations from env
   server/
     app.ts             Hono app factory (dependencies injected)
-    services/          voicemail pipeline, booking, invoicing
+    services/          voicemail pipeline, booking, invoicing, revive (raise the dead)
     seed.ts            the demo business, past invoices and sample voicemails
     main.ts            Node entry point
   client/
     pages/             one file per route
     components/        cassette, message light, tape deck, etc.
     styles/            tokens.css and global styles
-infra/connect/         Amazon Connect contact flow and wiring notes for the real phone path
+infra/template.yaml    SAM template for the real phone path (validated in CI)
+infra/connect/         Amazon Connect contact flow, hand-off Lambda and wiring notes
 tests/
   unit/                Vitest
   e2e/                 Playwright
+  aws/                 live AWS checks, skipped unless AFTERBEEP_AWS_TEST=1
 ```
 
 ## Conventions
