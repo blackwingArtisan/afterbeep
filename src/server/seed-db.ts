@@ -27,7 +27,7 @@ export const PRIYA_QUOTE_CENTS = 37_700;
  * older than the seven-day "Kept this week" window, so they wait in the graveyard to be raised.
  */
 export const GRAVEYARD_SEED = [
-  { from: '+16145550142', daysAgo: 8, hour: 11, transcript: 'Hello? Hello? Anyone there?' },
+  { from: '+16145550146', daysAgo: 8, hour: 11, transcript: 'Hello? Hello? Anyone there?' },
   { from: '+16145550116', daysAgo: 9, hour: 15, transcript: 'Hi, is this the plumber? Okay.' },
   { from: '+16145550193', daysAgo: 10, hour: 9, transcript: 'Yeah, hi, um. I will call back.' },
   { from: '+16145550127', daysAgo: 11, hour: 13, transcript: 'Hello?' },

@@ -54,15 +54,32 @@ export default function Machine() {
               <Brand to="/" />
               <span className="machine-biz muted">{business?.name}</span>
             </div>
-            <div className="row">
+            <div className="row machine-actions">
               <MessageCounter count={newCount} />
-              <ThemeToggle />
-              <NavLink className="btn btn-small story-btn" to="/machine/call?story=1">
-                Demo the whole story
+              <span className="wide-only">
+                <ThemeToggle />
+              </span>
+              <NavLink className="btn btn-small story-btn" to="/machine/call?story=1" aria-label="Demo the whole story">
+                <span className="story-long">Demo the whole story</span>
+                <span className="story-short" aria-hidden="true">
+                  Demo
+                </span>
               </NavLink>
               <button className="btn btn-ghost btn-small reset-btn" type="button" onClick={() => void resetDemo()} title="Restore the demo data">
                 Reset demo
               </button>
+              {/* On a phone, the theme switch and reset fold into one overflow menu so the header stays on one row. */}
+              <details className="more-menu" data-testid="more-menu">
+                <summary className="btn btn-ghost btn-small" aria-label="More">
+                  <span aria-hidden="true">&middot;&middot;&middot;</span>
+                </summary>
+                <div className="more-panel panel">
+                  <ThemeToggle />
+                  <button className="btn btn-ghost btn-small" type="button" onClick={() => void resetDemo()}>
+                    Reset demo
+                  </button>
+                </div>
+              </details>
             </div>
           </div>
         </header>

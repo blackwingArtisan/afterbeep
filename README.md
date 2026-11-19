@@ -135,7 +135,7 @@ The phone wiring is in [infra/connect/README.md](infra/connect/README.md). All s
 ```bash
 npm run check             # typecheck, spec coverage, 154 Vitest unit and API tests
 npx playwright install chromium
-npm run test:e2e          # 20 Playwright tests against the production build on port 3112
+npm run test:e2e          # 22 Playwright tests (one is phone-only) against the production build on port 3112
 ```
 
 Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 97 of 101 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.

@@ -58,7 +58,7 @@ describe('the graveyard', () => {
     const { call } = await setup();
     const { graveyard: view } = (await call<{ graveyard: GraveyardView }>('GET', '/api/graveyard')).body;
     expect(view.ghosts).toHaveLength(5);
-    expect(view.ghosts.map((g) => g.from)).toContain('+16145550142');
+    expect(view.ghosts.map((g) => g.from)).toContain('+16145550146');
     expect(view.raised).toEqual([]);
     expect(view.mightWinBackCents).toBe(view.typicalJobCents * 5);
     expect(view.typicalJobCents).toBeGreaterThan(0);
@@ -76,7 +76,7 @@ describe('the graveyard', () => {
     expect(first.graveyard.raised).toHaveLength(5);
     const texts = store.read().outbox.slice(before);
     expect(texts).toHaveLength(5);
-    const toGhost = texts.find((t) => t.to === '+16145550142')!;
+    const toGhost = texts.find((t) => t.to === '+16145550146')!;
     expect(toGhost.body).toMatch(/^Hi, it's Morgan at Hollow Creek Plumbing & Appliance\. Sorry I missed your call on \w+day\. /);
     expect(toGhost.linkPath).toMatch(/^\/book\//);
 
@@ -106,7 +106,7 @@ describe('the graveyard', () => {
     const { call, store, later } = await setup();
     const before = keptThisWeek(store.read(), NOW);
     await call('POST', '/api/graveyard/raise');
-    const ghost = store.read().messages.find((m) => m.from === '+16145550142')!;
+    const ghost = store.read().messages.find((m) => m.from === '+16145550146')!;
     later(60_000);
     const view = (await call<{ slots: Array<{ start: string; end: string }> }>('GET', `/api/book/${ghost.bookingToken}`)).body;
     const booked = await call('POST', `/api/book/${ghost.bookingToken}`, { ...view.slots[0], address: '14 Gravel Pit Road' });

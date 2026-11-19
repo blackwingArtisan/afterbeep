@@ -29,3 +29,18 @@ test('[VI 5.8] a bad invoice link gives up the ghost but still offers a call', a
   await expect(card).toContainText('This invoice has given up the ghost');
   await expect(card.getByRole('link', { name: /Call \(614\) 555-0142/ })).toHaveAttribute('href', 'tel:+16145550142');
 });
+
+test('on a phone the machine header stays on one row, with theme and reset in a menu', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'phone layout only');
+  await page.goto('/machine');
+  const header = page.locator('.machine-top .machine-actions');
+  const story = header.getByRole('link', { name: 'Demo the whole story' });
+  expect(await story.innerText()).toBe('Demo');
+  const rows = await header.evaluate((el) => new Set([...el.children].filter((c) => (c as HTMLElement).offsetParent).map((c) => Math.round(c.getBoundingClientRect().top))).size);
+  expect(rows).toBe(1);
+  await page.getByTestId('more-menu').locator('summary').click();
+  await expect(page.getByTestId('more-menu').getByRole('button', { name: 'Reset demo' })).toBeVisible();
+  for (const key of await page.locator('.keys-row .key').all()) {
+    expect(await key.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+  }
+});
