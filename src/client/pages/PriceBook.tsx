@@ -27,7 +27,7 @@ function Spark({ entry }: { entry: PriceBookEntry }) {
 }
 
 export default function PriceBook() {
-  useTitle('Price book');
+  useTitle('Carbon copies');
   const [entries, setEntries] = useState<PriceBookEntry[] | null>(null);
 
   useEffect(() => {
@@ -39,10 +39,10 @@ export default function PriceBook() {
   return (
     <div className="stack" style={{ gap: 24 }}>
       <section>
-        <p className="eyebrow">Price book</p>
+        <p className="eyebrow">Carbon copies</p>
         <h1 className="page-title">What you actually charge</h1>
         <p className="muted page-lede">
-          Built from your own past invoices, never a catalog. When a spoken price lands more than 15% below or 25% above your usual,
+          Your price book, built from your own past invoices, never a catalog. When a spoken price lands more than 15% below or 25% above your usual,
           the invoice waits for you to pick.
         </p>
       </section>

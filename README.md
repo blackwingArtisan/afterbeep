@@ -4,7 +4,13 @@
 
 ### The machine that hears fifteen and knows you meant fifty.
 
-The 1985 front office, back from the dead, for one-person trade businesses. **The answering machine** answers the calls a plumber misses under a sink and texts every caller a booking link. **The Dictaphone** turns a spoken invoice into line items. **The carbon copies** remember what you charge, so "dryer belt, fifteen" is held until you confirm you meant $50. One plan, $39 a month.
+**AfterBeep answers the calls a one-person trade business misses, texts the caller a booking link, and won't let you bill $15 for a $50 part.** One plan, $39 a month.
+
+| <img src="docs/icons/answering-machine.svg" width="56" height="56" alt=""> | <img src="docs/icons/dictaphone.svg" width="56" height="56" alt=""> | <img src="docs/icons/carbon-copies.svg" width="56" height="56" alt=""> |
+|:---:|:---:|:---:|
+| **The answering machine**<br>answers, reads and texts back | **The Dictaphone**<br>a spoken invoice becomes line items | **Carbon copies**<br>remember what you charge |
+
+**What died.** A one-truck business used to run on three machines: an answering machine on the kitchen counter, a Dictaphone in the truck and a carbon-copy invoice book on the dash. The cell phone folded all three into a beep and a red badge. Voicemail promises the caller nothing, nobody types up the invoice until midnight, and there is no yellow copy to say what you charged last time. AfterBeep brings the three machines back, and this time they book the job and check the bill.
 
 **Live demo:** link added at deploy · **Video:** link added at submission
 
@@ -77,7 +83,7 @@ Everything runs on a laptop with no accounts. Each item is covered by the tests 
 
 **The Dictaphone and the carbon copies**
 - "Dryer belt fifteen, taxed. One hour labor at eighty-five. Trip charge." becomes three lines. Code does every multiplication, the tax and the total in integer cents.
-- A price book built from past invoices holds a price more than 15% below or 25% above the usual one, fills a missing price from history, reads "twelve fifty" as $1,250 for a water heater, and keeps "forty gallon" as a size, not a quantity.
+- The carbon copies, a price book built from past invoices, hold a price more than 15% below or 25% above the usual one, fills a missing price from history, reads "twelve fifty" as $1,250 for a water heater, and keeps "forty gallon" as a size, not a quantity.
 - Quantities are checked too, and a price with two readings and no history waits for the owner to pick one.
 - The server recomputes the total and sends only when it equals the exact total the owner approved.
 
@@ -94,7 +100,7 @@ flowchart LR
   api --> sms[AWS End User Messaging SMS]
   sms -->|booking link| caller
   owner([Owner]) -->|spoken invoice| api
-  api --> book[(Price book<br/>integer cents)]
+  api --> book[(Carbon copies<br/>price book, integer cents)]
   api --> stripe[Stripe Invoicing<br/>test mode]
 ```
 
@@ -109,7 +115,7 @@ Every outside service sits behind a port with a free local default, so the demo 
 | Store | `AFTERBEEP_DATA_DIR` | JSON file with atomic writes | |
 
 ```
-src/domain/     pure logic: money, spoken numbers, tax, invoice parser, price book, voicemail rules, slots, kept stats
+src/domain/     pure logic: money, spoken numbers, tax, invoice parser, price book (carbon copies), voicemail rules, slots, kept stats
 src/adapters/   ports and implementations: store, transcriber, extractor, sms, invoices
 src/server/     Hono API, services (voicemail, booking, invoicing), seed data
 src/client/     React app: landing, machine (inbox, call, schedule, invoice, outbox, prices), caller pages

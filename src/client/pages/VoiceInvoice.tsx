@@ -195,7 +195,7 @@ export default function VoiceInvoice() {
             Invoice {sent.number} is out: {formatCents(sent.totals.totalCents)}
           </h1>
           <p className="muted">
-            {sent.customer.name} got a link to view and pay. The prices you just used joined your price book.
+            {sent.customer.name} got a link to view and pay. The prices you just used went into your carbon copies.
           </p>
           <div className="row">
             <Link className="btn btn-primary" to={sent.customerUrl}>

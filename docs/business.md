@@ -1,6 +1,6 @@
 # AfterBeep: the business case
 
-AfterBeep is the 1985 front office, back from the dead, for one-person trade businesses: an answering machine that texts callers a booking link, a Dictaphone that turns a spoken invoice into a checked bill, and carbon copies that remember what you charge. One plan, $39 a month.
+AfterBeep is the 1980s front office, back from the dead, for one-person trade businesses: an answering machine that texts callers a booking link, a Dictaphone that turns a spoken invoice into a checked bill, and carbon copies that remember what you charge. One plan, $39 a month.
 
 Every figure below has a source. Where a number is our own assumption, it says so.
 

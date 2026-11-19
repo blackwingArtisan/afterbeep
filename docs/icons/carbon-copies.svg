@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" role="img" aria-label="Carbon copies">
+  <rect width="72" height="72" rx="16" fill="#17141c"/>
+  <path d="M26 14h24v40l-6-4-6 4-6-4-6 4z" fill="#ffd1dc" stroke="#ff9fb8" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M20 18h24v40l-6-4-6 4-6-4-6 4z" fill="#fff3b0" stroke="#ff7a1a" stroke-width="2.4" stroke-linejoin="round"/>
+  <path d="M26 28h12M26 36h12M26 44h7" stroke="#3a2a00" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

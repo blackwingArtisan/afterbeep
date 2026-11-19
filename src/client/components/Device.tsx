@@ -16,7 +16,7 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /**
- * The hero: a 1986 answering machine that never stopped working. Play runs a real-looking missed
+ * The hero: a 1980s answering machine, back from the dead. Play runs a real-looking missed
  * call (ring, beep, the words typed across the label, the text back), Bill prints the price-book
  * hold, and Book opens a real booking page from the demo data.
  */

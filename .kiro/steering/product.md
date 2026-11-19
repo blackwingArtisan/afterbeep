@@ -3,9 +3,11 @@ inclusion: always
 ---
 # Product: AfterBeep
 
-**One line:** The 1985 front office, back from the dead. AfterBeep answers the calls a one-person trade business misses, books the job by text, and turns a spoken invoice into a checked, approved bill.
+**One line:** The 1980s front office, back from the dead. AfterBeep answers the calls a one-person trade business misses, books the job by text, and turns a spoken invoice into a checked, approved bill.
 
-**The thesis.** Three office machines a one-truck business used to rely on, rebuilt: the **answering machine** (missed calls become booked jobs), the **Dictaphone** (a spoken invoice becomes line items) and the **carbon copies** (the price book: "your carbon copies remember what you charge"). Copy, screen names and features should fit one of the three. Closing line: "The answering machine never died. It learned to book jobs."
+**The thesis.** Three office machines a one-truck business used to rely on, rebuilt: the **answering machine** (missed calls become booked jobs), the **Dictaphone** (a spoken invoice becomes line items) and the **carbon copies** (the price book: "your carbon copies remember what you charge"). Copy, screen names and features should fit one of the three. The price book is called "Carbon copies" on every screen. Closing line: "The answering machine is back. This time it books the job and checks the bill."
+
+**What died.** The answering machine, the Dictaphone and the carbon-copy invoice book were the solo trade's front office. Cell phone voicemail folded all three into a beep. Say this plainly; do not cite dates we have not sourced.
 
 ## Who it is for
 Solo tradespeople and two-person shops: plumbers, roofers, HVAC techs, appliance repair. They work with their hands, often in a crawlspace or on a roof, and cannot answer the phone. Every missed call is a job that goes to the next name on the search results.

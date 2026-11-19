@@ -65,7 +65,7 @@ const FAQ = [
   },
   {
     q: 'What if it mishears a price?',
-    a: 'That is the point of the price book. If you say fifteen for a part you always bill at fifty, the invoice stops and asks. And nothing is ever sent until you approve the exact total.',
+    a: 'That is what the carbon copies are for. They remember every price you have billed, so if you say fifteen for a part you always bill at fifty, the invoice stops and asks. And nothing is ever sent until you approve the exact total.',
   },
   {
     q: 'Does the AI do my math?',
@@ -106,10 +106,11 @@ export default function Landing() {
       <main id="main" tabIndex={-1}>
       <section className="hero wrap">
         <div className="hero-copy">
-          <p className="eyebrow">The 1985 front office, back from the dead</p>
+          <p className="eyebrow">Kiroween 2026 · The 1980s front office, back from the dead</p>
           <h1>
             You were under a sink. <span className="hl">AfterBeep</span> got the job.
           </h1>
+          <p className="hero-sub">The machine that hears fifteen and knows you meant fifty.</p>
           <p className="hero-lede">
             An answering machine, a Dictaphone and a stack of carbon copies, rebuilt for one-person trades. AfterBeep answers the calls
             you miss, texts the caller a booking link, and turns your spoken invoice into a checked, approved bill.
@@ -236,7 +237,7 @@ export default function Landing() {
           <p className="eyebrow">Part two: voice invoices</p>
           <h2>Say the invoice. Code does the math.</h2>
           <p className="muted">
-            Your price book is built from your own invoices, not a catalog. A slip of the tongue gets caught before the customer sees it,
+            Your carbon copies are built from your own invoices, not a catalog. A slip of the tongue gets caught before the customer sees it,
             "twelve fifty" means $1,250 for a water heater and $12.50 for a cartridge, and the total you approve is the total that goes out.
           </p>
           <Link className="btn" to="/machine/invoice">
@@ -302,7 +303,7 @@ export default function Landing() {
 
       <footer className="site-foot wrap">
         <Brand />
-        <p className="faint">The answering machine never died. It learned to book jobs. &copy; 2026 Stubborn Otter Software.</p>
+        <p className="faint">The answering machine is back. This time it books the job and checks the bill. &copy; 2026 Stubborn Otter Software.</p>
       </footer>
     </div>
   );

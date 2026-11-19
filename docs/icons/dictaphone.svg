@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" role="img" aria-label="Dictaphone">
+  <rect width="72" height="72" rx="16" fill="#17141c"/>
+  <g transform="translate(12 12)" fill="none" stroke="#ff7a1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="17" y="5" width="14" height="23" rx="7"/>
+    <path d="M9 22a15 15 0 0 0 30 0M24 37v6M16 43h16"/>
+  </g>
+</svg>

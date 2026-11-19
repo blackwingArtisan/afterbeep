@@ -14,7 +14,7 @@ const KEYS = [
   { to: '/machine/schedule', label: 'Schedule', icon: CalendarIcon },
   { to: '/machine/invoice', label: 'Invoice', icon: ReceiptIcon },
   { to: '/machine/outbox', label: 'Outbox', icon: OutboxIcon },
-  { to: '/machine/prices', label: 'Prices', icon: BookIcon },
+  { to: '/machine/prices', label: 'Copies', icon: BookIcon },
 ];
 
 export default function Machine() {
