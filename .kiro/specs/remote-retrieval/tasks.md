@@ -15,17 +15,17 @@ Each task is one commit and leaves `npm run check` and `npm run test:e2e` passin
 - [x] 8. Seeded random-key run: the script never throws, never emits after `ended`, and gives the same output for the same input (Req 10.1, 10.3, 10.5)
 
 ## Code, messages and routes
-- [ ] 9. `Business.remoteCode` and `db.remoteFailures`, the demo code 427 in the seed, and the pure `checkRemoteCode(db, digits, now)` in `src/domain/remote-code.ts`: constant-time compare, five wrong codes in 15 minutes lock it, a right code clears the count, expiry after 15 minutes (Req 2.1, 2.2, 2.4, 2.6)
-  - [ ] 9.1 Unit tests in `tests/unit/remote-code.test.ts` with an injected `now`, including a right code during lockout (Req 2.4, 2.6)
-- [ ] 10. `erasedAt` on `Message`; the inbox, the new count and `remoteQueue` skip erased messages; kept figures and the booked job are untouched (Req 6.4, 6.5)
-  - [ ] 10.1 Unit tests: an erased message leaves the count and the inbox, and a kept scenario gives the same figures before and after (Req 6.4, 6.5)
-- [ ] 11. `src/server/services/remote.ts` `verifyRemoteCode` and `POST /api/remote/code`: zod body, queue returned only on `ok`, `locked` answer, the code removed from `GET /api/business` and every response, routes closed unless the simulator is on or the bearer secret is valid (Req 2.3, 2.5, 2.7, 11.1, 11.5, 11.6)
-  - [ ] 11.1 API tests in `tests/unit/server-remote.test.ts`: right and wrong code, lockout, a malformed body, simulator off with and without the secret, the code absent from every response (Req 2.3, 2.5, 2.7, 11.1, 11.6)
-- [ ] 12. `remoteTextBack` and `POST /api/remote/messages/:id/text`, reusing `sendText` and the 10-minute cooldown; outcomes sent, opted-out, texted-recently, no-number, refused (Req 5.1-5.7, 11.2, 11.7)
-  - [ ] 12.1 API tests: each outcome, STOP honoured, the time recorded on the message, an unknown id gives 404, the text goes to the message's own number only (Req 5.2-5.7, 11.2, 11.7)
-- [ ] 13. `eraseMessage` and `POST /api/remote/messages/:id/erase` (Req 6.4, 6.6, 11.3, 11.7)
-  - [ ] 13.1 API tests: erase hides the message from `/api/messages`, a second erase and an unknown id give 404 (Req 6.4, 6.6, 11.3, 11.7)
-- [ ] 14. API test that the remote call needs no other new route: mark heard through the existing status route (a called-back message keeps its status in the driver's rule) and draft through the existing invoice draft route, with nothing sent (Req 4.1, 4.3, 8.2, 8.3, 11.4)
+- [x] 9. `Business.remoteCode` and `db.remoteFailures`, the demo code 427 in the seed, and the pure `checkRemoteCode(db, digits, now)` in `src/domain/remote-code.ts`: constant-time compare, five wrong codes in 15 minutes lock it, a right code clears the count, expiry after 15 minutes (Req 2.1, 2.2, 2.4, 2.6)
+  - [x] 9.1 Unit tests in `tests/unit/remote-code.test.ts` with an injected `now`, including a right code during lockout (Req 2.4, 2.6)
+- [x] 10. `erasedAt` on `Message`; the inbox, the new count and `remoteQueue` skip erased messages; kept figures and the booked job are untouched (Req 6.4, 6.5)
+  - [x] 10.1 Unit tests: an erased message leaves the count and the inbox, and a kept scenario gives the same figures before and after (Req 6.4, 6.5)
+- [x] 11. `src/server/services/remote.ts` `verifyRemoteCode` and `POST /api/remote/code`: zod body, queue returned only on `ok`, `locked` answer, the code removed from `GET /api/business` and every response, routes closed unless the simulator is on or the bearer secret is valid (Req 2.3, 2.5, 2.7, 11.1, 11.5, 11.6)
+  - [x] 11.1 API tests in `tests/unit/server-remote.test.ts`: right and wrong code, lockout, a malformed body, simulator off with and without the secret, the code absent from every response (Req 2.3, 2.5, 2.7, 11.1, 11.6)
+- [x] 12. `remoteTextBack` and `POST /api/remote/messages/:id/text`, reusing `sendText` and the 10-minute cooldown; outcomes sent, opted-out, texted-recently, no-number, refused (Req 5.1-5.7, 11.2, 11.7)
+  - [x] 12.1 API tests: each outcome, STOP honoured, the time recorded on the message, an unknown id gives 404, the text goes to the message's own number only (Req 5.2-5.7, 11.2, 11.7)
+- [x] 13. `eraseMessage` and `POST /api/remote/messages/:id/erase` (Req 6.4, 6.6, 11.3, 11.7)
+  - [x] 13.1 API tests: erase hides the message from `/api/messages`, a second erase and an unknown id give 404 (Req 6.4, 6.6, 11.3, 11.7)
+- [x] 14. API test that the remote call needs no other new route: mark heard through the existing status route (a called-back message keeps its status in the driver's rule) and draft through the existing invoice draft route, with nothing sent (Req 4.1, 4.3, 8.2, 8.3, 11.4)
 
 ## The keypad simulation
 - [ ] 15. `dtmf(key)` in `src/client/lib/sound.ts` with an exported frequency table, and a unit test of the table for all twelve keys (Req 12.6)

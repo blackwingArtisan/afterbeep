@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { Hono } from 'hono';
 import { z, ZodError } from 'zod';
 import { keptThisWeek } from '../domain/kept';
+import { publicBusiness } from '../domain/remote-code';
 import { buildPriceBook } from '../domain/price-book';
 import { businessTaxRateMilli } from '../domain/tax';
 import { sampleInvoiceScripts, simulatorScripts } from './seed';
@@ -9,6 +10,7 @@ import { bookingView, bookSlot } from './services/booking';
 import { ServiceError, type Deps } from './services/deps';
 import { draftInvoice, InvoiceLineSchema, payDemoInvoice, publicInvoice, quoteInvoice, SendInvoiceSchema, sendInvoice } from './services/invoicing';
 import { graveyardView, raiseTheDead } from './services/revive';
+import { eraseMessage, remoteTextBack, verifyRemoteCode } from './services/remote';
 import { receiveText } from './services/texting';
 import { saveGreeting } from './services/greeting';
 import { receiveVoicemail, retryTextBack, setMessageStatus } from './services/voicemail';
@@ -48,6 +50,7 @@ const SlotSchema = z.object({
   address: z.string().trim().max(160).nullable().optional(),
 });
 
+const RemoteCodeSchema = z.object({ code: z.string().regex(/^\d{3}$/) });
 const StatusSchema = z.object({ status: z.enum(['new', 'heard', 'called-back']) });
 const DraftSchema = z.object({ speech: z.string().trim().min(1).max(2000), jobId: z.string().nullable().optional() });
 const QuoteSchema = z.object({ lines: z.array(InvoiceLineSchema).max(40) });
@@ -87,16 +90,16 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
 
   api.put('/business/greeting', async (c) => {
     const { greeting } = GreetingSchema.parse(await c.req.json());
-    return c.json({ business: saveGreeting(deps, greeting) });
+    return c.json({ business: publicBusiness(saveGreeting(deps, greeting)) });
   });
 
   api.get('/business', (c) => {
     const { business } = deps.store.read();
-    return c.json({ business, taxRateMilli: businessTaxRateMilli(business) });
+    return c.json({ business: publicBusiness(business), taxRateMilli: businessTaxRateMilli(business) });
   });
 
   api.get('/messages', (c) => {
-    const { messages } = deps.store.read();
+    const messages = deps.store.read().messages.filter((m) => !m.erasedAt);
     const sorted = [...messages].reverse().sort((a, b) => b.receivedAt.localeCompare(a.receivedAt));
     return c.json({ messages: sorted, newCount: messages.filter((m) => m.status === 'new').length });
   });
@@ -107,6 +110,26 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
   });
 
   api.post('/messages/:id/text', async (c) => c.json({ message: await retryTextBack(deps, c.req.param('id')) }));
+
+  // Remote retrieval. Open only while the simulator is on or the request carries the phone secret (RR 2.7).
+  api.use('/remote/*', async (c, next) => {
+    if (!options.simulator) {
+      if (!options.webhookSecret) throw new ServiceError(404, 'not-found', 'Remote retrieval is turned off');
+      if (!bearerMatches(c.req.header('authorization'), options.webhookSecret)) {
+        return c.json({ error: 'unauthorized', message: 'Bad webhook credentials', details: null }, 401);
+      }
+    }
+    await next();
+  });
+
+  api.post('/remote/code', async (c) => {
+    const { code } = RemoteCodeSchema.parse(await c.req.json());
+    return c.json(verifyRemoteCode(deps, code));
+  });
+
+  api.post('/remote/messages/:id/text', async (c) => c.json(await remoteTextBack(deps, c.req.param('id'))));
+
+  api.post('/remote/messages/:id/erase', (c) => c.json(eraseMessage(deps, c.req.param('id'))));
 
   api.post('/calls', async (c) => {
     if (!options.simulator) throw new ServiceError(404, 'not-found', 'The call simulator is turned off');

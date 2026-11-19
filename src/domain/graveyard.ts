@@ -48,7 +48,7 @@ export function graveyard(db: { messages: readonly Message[]; optOuts?: readonly
   const byNumber = new Map<string, Message>();
   for (const m of db.messages) {
     const at = Date.parse(m.receivedAt);
-    if (!m.hangUp || m.raisedAt || at > newest || at < oldest) continue;
+    if (!m.hangUp || m.erasedAt || m.raisedAt || at > newest || at < oldest) continue;
     if (reached.has(m.from) || isOptedOut(db, m.from)) continue;
     const kept = byNumber.get(m.from);
     if (!kept || kept.receivedAt < m.receivedAt) byNumber.set(m.from, m);

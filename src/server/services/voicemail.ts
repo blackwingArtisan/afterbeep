@@ -60,7 +60,7 @@ export function jobNoun(extraction: VoicemailExtraction): string | null {
 }
 
 /** Texts go to the number the caller asked for, or to their caller ID. */
-function textBackNumber(extraction: VoicemailExtraction, callerId: string): string {
+export function textBackNumber(extraction: VoicemailExtraction, callerId: string): string {
   return (extraction.callbackNumber && toE164(extraction.callbackNumber)) || callerId;
 }
 
@@ -135,7 +135,7 @@ export function failureReason(error: unknown): string {
  * Texts the caller their booking link. A provider failure never loses the message: it is filed with
  * the reason and a retry flag, and the owner can retry from the inbox.
  */
-async function textBack(deps: Deps, message: Message): Promise<Message> {
+export async function textBack(deps: Deps, message: Message): Promise<Message> {
   const { business, jobs } = deps.store.read();
   const extraction = message.extraction;
   const [first] = openSlots({

@@ -12,6 +12,8 @@ export interface Db {
   nextInvoiceNumber: number;
   /** Numbers (E.164) that replied STOP. Optional so data saved before texting rules still loads. */
   optOuts?: string[];
+  /** ISO times of recent wrong remote codes, for the lockout. Optional so older saved data still loads. */
+  remoteFailures?: string[];
 }
 
 export interface Store {

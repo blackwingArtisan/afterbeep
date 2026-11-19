@@ -26,6 +26,8 @@ export const demoBusiness: Business = {
   slotMinutes: 120,
   taxRateOverrideMilli: null,
   laborTaxable: false,
+  /** The demo remote code (RR 2.1). The demo screen shows it; no API response does. */
+  remoteCode: '427',
   greeting:
     "You've reached Hollow Creek Plumbing and Appliance's answering machine. Morgan is elbow-deep in a job right now. " +
     "Leave your name, address and what's going on after the beep, and you'll get a text with times we can come out.",

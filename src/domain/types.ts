@@ -42,6 +42,8 @@ export interface Business {
   taxRateOverrideMilli: number | null;
   laborTaxable: boolean;
   greeting: string;
+  /** The 3-digit code the owner keys to hear messages by phone. Never leaves the server (RR 2.3). */
+  remoteCode: string;
 }
 
 export interface VoicemailExtraction {
@@ -95,6 +97,8 @@ export interface Message {
   raisedAt?: string | null;
   /** The phone platform's contact ID (Amazon Connect), so a retried webhook is filed only once. */
   contactId?: string;
+  /** When the owner erased this message from a remote call. It leaves the inbox but its job and figures stay. */
+  erasedAt?: string | null;
   jobId: string | null;
 }
 
