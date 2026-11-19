@@ -12,7 +12,7 @@
 
 **What died.** A one-truck business used to run on three machines: an answering machine on the kitchen counter, a Dictaphone in the truck and a carbon-copy invoice book on the dash. The cell phone folded all three into a beep and a red badge. Voicemail promises the caller nothing, nobody types up the invoice until midnight, and there is no yellow copy to say what you charged last time. AfterBeep brings the three machines back, and this time they book the job and check the bill.
 
-**Live demo:** link added at deploy · **Video:** link added at submission
+**Live demo:** link added at deploy · **Video:** link added at submission · **Judging?** [docs/judging.md](docs/judging.md) maps each criterion to its proof
 
 ![One missed call, from the beep to a sent invoice, in 15 seconds](docs/demo.gif)
 
@@ -151,7 +151,7 @@ For development with hot reload: `npm run dev` (client on 3110, API on 3111).
 Kiro steering, specs, hooks and MCP settings live in [`.kiro/`](.kiro). [KIRO-LOG.md](KIRO-LOG.md) maps each Kiro feature to the files that use it and says which were written by Kiro and which by hand.
 
 - **Steering:** product, tech and structure rules always included; money rules load with domain files and AWS rules with adapters; a manual demo script.
-- **Specs:** two features in EARS form, 89 criteria, every task checked off and traced to tests. A Kiro review against the code added four criteria the code already met.
+- **Specs:** two features in EARS form, 101 criteria, every task checked off and traced to tests. A Kiro review against the code added four criteria the code already met.
 - **Hooks:** unit tests on save, a money-rules guard, spec sync, a copy review, and typecheck plus build checks when the agent stops.
 - **MCP:** AWS documentation and Context7.
 
