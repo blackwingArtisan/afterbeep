@@ -162,8 +162,14 @@ describe('urgency for lost heat, freezing weather and vulnerable people', () => 
     "It's 15 degrees outside and the heat pump keeps blowing cold air.",
     'The heater is acting up and my elderly mother lives with us.',
     'No hot water and we have a newborn at home.',
+    "The heat's out and my dad is eighty five.",
+    'Heat has quit again, call me.',
   ])('[MC 3.7, 3.8] files "%s" as an emergency', (text) => {
     expect(classifyUrgency(text)).toBe('emergency');
+  });
+
+  it('[MC 3.3] files an outlet that sparked as an emergency', () => {
+    expect(classifyUrgency('The outlet sparked when I plugged in the vacuum.')).toBe('emergency');
   });
 
   it('[MC 3.9] files no hot water as soon, never as no rush', () => {

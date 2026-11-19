@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "spec:coverage": "tsx scripts/spec-coverage.ts",
+    "eval": "tsx scripts/eval-extractor.ts --misses",
     "check": "npm run typecheck && npm run spec:coverage && npm test"
   },
   "dependencies": {

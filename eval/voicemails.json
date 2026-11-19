@@ -1,0 +1,125 @@
+{
+  "about": "Invented voicemails, written the way speech-to-text returns them (missing punctuation, spoken numbers, false starts), labelled by hand before the first run. None had been seen when the rules were written; two rule fixes were made after the first run (see docs/eval.md). Caller ID is +16145550100 unless a case gives its own.",
+  "cases": [
+    {
+      "id": "v01",
+      "transcript": "hi yeah this is marcus bell um the pipe under my kitchen sink just burst and water is everywhere I'm at 214 Fernwood Avenue call me back at 614 555 0121 please hurry",
+      "expect": { "callerName": "Marcus Bell", "callbackNumber": "(614) 555-0121", "address": "214 Fernwood Avenue", "jobCategory": "leak", "urgency": "emergency" }
+    },
+    {
+      "id": "v02",
+      "transcript": "Hello, my name is Ruth Okafor. My dishwasher isn't draining. No rush at all, sometime next week is fine. I'm at 9 Birch Court. Thanks.",
+      "expect": { "callerName": "Ruth Okafor", "callbackNumber": "(614) 555-0100", "address": "9 Birch Court", "jobCategory": "appliance", "urgency": "routine" }
+    },
+    {
+      "id": "v03",
+      "transcript": "This is Tom Reyes, I smell gas near the water heater in the garage. 77 Quarry Road. My number is 614-555-0133.",
+      "expect": { "callerName": "Tom Reyes", "callbackNumber": "(614) 555-0133", "address": "77 Quarry Road", "jobCategory": "water-heater", "urgency": "emergency" }
+    },
+    {
+      "id": "v04",
+      "transcript": "hey it's Alma our AC stopped blowing cold air and it's supposed to be ninety tomorrow can somebody come out today or tomorrow 5 Wren Street",
+      "expect": { "callerName": "Alma", "callbackNumber": "(614) 555-0100", "address": "5 Wren Street", "jobCategory": "cooling", "urgency": "soon" }
+    },
+    {
+      "id": "v05",
+      "transcript": "Hi this is Gordon Pike at 1200 Mill Pond Drive. The main drain in the basement is backing up, sewage on the floor. Call me at six one four five five five zero one four four.",
+      "expect": { "callerName": "Gordon Pike", "callbackNumber": "(614) 555-0144", "address": "1200 Mill Pond Drive", "jobCategory": "drain", "urgency": "emergency" }
+    },
+    {
+      "id": "v06",
+      "transcript": "Yes hello, I'd like a quote for replacing my water heater, it's about fifteen years old. Whenever you get a chance. This is Helen Duarte.",
+      "expect": { "callerName": "Helen Duarte", "callbackNumber": "(614) 555-0100", "address": null, "jobCategory": "water-heater", "urgency": "routine" }
+    },
+    {
+      "id": "v07",
+      "transcript": "um hi the outlet in my bathroom sparked and now half the house has no power I'm scared to touch anything it's Priscilla at 40 Larch Lane",
+      "expect": { "callerName": "Priscilla", "callbackNumber": "(614) 555-0100", "address": "40 Larch Lane", "jobCategory": "electrical", "urgency": "emergency" }
+    },
+    {
+      "id": "v08",
+      "transcript": "Hi, Dev Malhotra here. My dryer is making a loud thumping noise. I'm at 316 Kestrel Way, apartment 4. Can you come by this week? 614 555 0158.",
+      "expect": { "callerName": "Dev Malhotra", "callbackNumber": "(614) 555-0158", "address": "316 Kestrel Way, Apartment 4", "jobCategory": "appliance", "urgency": "routine" }
+    },
+    {
+      "id": "v09",
+      "transcript": "This is Carol at 88 Sumac Street. We've got a leak in the roof over the bedroom, water is dripping into a bucket right now. Please call.",
+      "expect": { "callerName": "Carol", "callbackNumber": "(614) 555-0100", "address": "88 Sumac Street", "jobCategory": "roofing", "urgency": "emergency" }
+    },
+    {
+      "id": "v10",
+      "transcript": "hi my toilet keeps running all night, not urgent, just annoying. Pete Lindgren, 61 Ashby Road",
+      "expect": { "callerName": "Pete Lindgren", "callbackNumber": "(614) 555-0100", "address": "61 Ashby Road", "jobCategory": "general", "urgency": "routine" }
+    },
+    {
+      "id": "v11",
+      "transcript": "Good morning, this is Bea Thornton. My refrigerator stopped cooling and all my food is going to spoil. Can you come today? 12 Orchard Lane. 614-555-0167.",
+      "expect": { "callerName": "Bea Thornton", "callbackNumber": "(614) 555-0167", "address": "12 Orchard Lane", "jobCategory": "appliance", "urgency": "soon" }
+    },
+    {
+      "id": "v12",
+      "transcript": "yeah this is Luis my furnace is making a weird clicking but it still heats fine, maybe next week, 503 Cardinal Drive",
+      "expect": { "callerName": "Luis", "callbackNumber": "(614) 555-0100", "address": "503 Cardinal Drive", "jobCategory": "heating", "urgency": "routine" }
+    },
+    {
+      "id": "v13",
+      "transcript": "Hi it's Nora Kim, the water heater is leaking from the bottom, a small puddle. 27 Hazel Court. Call me back at 614 555 0172 when you can.",
+      "expect": { "callerName": "Nora Kim", "callbackNumber": "(614) 555-0172", "address": "27 Hazel Court", "jobCategory": "water-heater", "urgency": "soon" }
+    },
+    {
+      "id": "v14",
+      "transcript": "Hello? Hello? I guess nobody's there.",
+      "expect": { "callerName": null, "callbackNumber": "(614) 555-0100", "address": null, "jobCategory": "general", "urgency": "routine" }
+    },
+    {
+      "id": "v15",
+      "transcript": "This is Frank Osei calling about the garbage disposal, it's jammed and humming. I'm at four ten Pinecrest Road. As soon as possible would be great.",
+      "expect": { "callerName": "Frank Osei", "callbackNumber": "(614) 555-0100", "address": "410 Pinecrest Road", "jobCategory": "appliance", "urgency": "soon" }
+    },
+    {
+      "id": "v16",
+      "transcript": "Hi there my name's Joan Pruitt, the heat's out and my mother is ninety two and lives with me, it's getting cold in here. 19 Brookside Lane. 614-555-0181.",
+      "expect": { "callerName": "Joan Pruitt", "callbackNumber": "(614) 555-0181", "address": "19 Brookside Lane", "jobCategory": "heating", "urgency": "emergency" }
+    },
+    {
+      "id": "v17",
+      "transcript": "Hey, Sam from the coffee shop on 300 Main Street. The bathroom sink drain is slow. Tomorrow morning before we open would be ideal. Call 614 555 0190.",
+      "expect": { "callerName": "Sam", "callbackNumber": "(614) 555-0190", "address": "300 Main Street", "jobCategory": "drain", "urgency": "soon" }
+    },
+    {
+      "id": "v18",
+      "transcript": "Hi this is Wanda Price I need someone to look at my washing machine it won't spin, I'm at 7 Glen Echo Drive, no hurry",
+      "expect": { "callerName": "Wanda Price", "callbackNumber": "(614) 555-0100", "address": "7 Glen Echo Drive", "jobCategory": "appliance", "urgency": "routine" }
+    },
+    {
+      "id": "v19",
+      "transcript": "this is Ike Barnes there's smoke coming out of the back of my oven and a burning smell, 52 Dogwood Trail, please call right away 614 555 0119",
+      "expect": { "callerName": "Ike Barnes", "callbackNumber": "(614) 555-0119", "address": "52 Dogwood Trail", "jobCategory": "appliance", "urgency": "emergency" }
+    },
+    {
+      "id": "v20",
+      "transcript": "Hi, calling to get an estimate on a new ceiling fan and two light fixtures. This is Rosa Delgado. You can reach me at 380-555-0126.",
+      "expect": { "callerName": "Rosa Delgado", "callbackNumber": "(380) 555-0126", "address": null, "jobCategory": "electrical", "urgency": "routine" }
+    },
+    {
+      "id": "v21",
+      "transcript": "Hello it's Mike at 1450 Harbor View Boulevard, our shower has no hot water since this morning. Thanks.",
+      "expect": { "callerName": "Mike", "callbackNumber": "(614) 555-0100", "address": "1450 Harbor View Boulevard", "jobCategory": "water-heater", "urgency": "soon" }
+    },
+    {
+      "id": "v22",
+      "transcript": "hi this is Greta Sundquist the pipes froze overnight and now one split in the crawl space and it's spraying, 8 Elm Hollow Road call 614 555 0147",
+      "expect": { "callerName": "Greta Sundquist", "callbackNumber": "(614) 555-0147", "address": "8 Elm Hollow Road", "jobCategory": "leak", "urgency": "emergency" }
+    },
+    {
+      "id": "v23",
+      "transcript": "Hi, Terrence Webb. A few shingles blew off in the storm. Nothing's leaking yet but I'd like someone to look at it this week. 66 Ridgeline Drive.",
+      "expect": { "callerName": "Terrence Webb", "callbackNumber": "(614) 555-0100", "address": "66 Ridgeline Drive", "jobCategory": "roofing", "urgency": "routine" }
+    },
+    {
+      "id": "v24",
+      "transcript": "This is Ana Ferreira, my kitchen faucet is dripping. Call me back at 614-555-0193. I live at 21 Sparrow Lane, unit B.",
+      "expect": { "callerName": "Ana Ferreira", "callbackNumber": "(614) 555-0193", "address": "21 Sparrow Lane, Unit B", "jobCategory": "leak", "urgency": "routine" }
+    }
+  ]
+}

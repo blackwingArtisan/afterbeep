@@ -29,12 +29,13 @@ const APPLIANCES = /\b(dryer|washer|washing machine|dishwasher|fridge|refrigerat
 
 /** The heat itself has failed: "furnace quit", "heat went out", "boiler won't turn on". Never a dryer or water heater. */
 const HEAT_OUT =
-  /\b(no heat|(furnace|boiler|heat pump)\s+(just\s+)?(quit|died|stopped|went out|is out|gave out|shut off|(is |isn'?t |not |won'?t )(working|heating|turn(ing)? on|kick(ing)? on|start(ing)?))|(the )?heat (just )?(went out|is out|quit|stopped|isn'?t working|is not working|won'?t (come|turn) on))\b/i;
+  /\b(no heat|(furnace|boiler|heat pump)\s+(just\s+)?(quit|died|stopped|went out|is out|gave out|shut off|(is |isn'?t |not |won'?t )(working|heating|turn(ing)? on|kick(ing)? on|start(ing)?))|(the )?heat('?s| has)? (just )?(went out|is out|out|quit|stopped|isn'?t working|is not working|won'?t (come|turn) on))\b/i;
 /** Freezing weather or frozen pipes, which turn a heating call into a burst-pipe call. */
 const FREEZING =
   /\b(freezing|froze|frozen|below zero|zero degrees|single digits|(ten|fifteen|twenty|twenty[- ]\w+|thirty|thirty[- ]\w+|\d{1,2}) degrees)\b/i;
 /** Someone in the house who cannot ride out a cold night or a day without hot water. */
-const VULNERABLE = /\b(bab(y|ies)|infant|newborn|toddler|elderly|senior|grandm(a|other)|grandp(a|arent)|oxygen|on dialysis|just had surgery|disabled)\b/i;
+const VULNERABLE =
+  /\b(bab(y|ies)|infant|newborn|toddler|elderly|senior|grandm(a|other)|grandp(a|arent)|oxygen|on dialysis|just had surgery|disabled|(is|she'?s|he'?s) (eighty|ninety)|(eighty|ninety)([- ]\w+)? years? old)\b/i;
 const NO_HOT_WATER = /\b(no hot water|without hot water|hot water (is )?(out|gone)|water heater (is )?(leaking|dripping))\b/i;
 
 const SYMPTOMS: ReadonlyArray<readonly [RegExp, string]> = [
@@ -56,7 +57,7 @@ const SYMPTOMS: ReadonlyArray<readonly [RegExp, string]> = [
   [/\bspark(s|ing)?\b/i, 'sparking'],
 ];
 
-const EMERGENCY = /\b(burst|flood(ing|ed)?|water (all over|everywhere)|gushing|no heat|smell(s)? (like )?gas|gas smell|carbon monoxide|spark(s|ing)?|smoke|sewage|emergency|ceiling is leaking|coming through the ceiling)\b/i;
+const EMERGENCY = /\b(burst|flood(ing|ed)?|water (all over|everywhere)|gushing|no heat|smell(s)? (like )?gas|gas smell|carbon monoxide|spark(s|ed|ing)?|smoke|sewage|emergency|ceiling is leaking|coming through the ceiling)\b/i;
 const SOON = /\b(today|tonight|tomorrow|asap|a\.s\.a\.p|as soon as|urgent(ly)?|right away|quickly|this week|soon)\b/i;
 const NO_RUSH = /\b(no rush|whenever|next week|not urgent|no hurry|when you get a chance)\b/i;
 
