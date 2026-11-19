@@ -19,13 +19,23 @@ const CATEGORIES: ReadonlyArray<{ category: JobCategory; label: string; pattern:
   { category: 'drain', label: 'Clogged drain', pattern: /\b(clog(ged)?|backing up|backed up|sewer|garbage disposal|(sink|tub|shower|floor|basement|kitchen|bathroom) drain|drains? (is|are|line|pipe))\b/i },
   { category: 'leak', label: 'Leak', pattern: /\b(leak(ing|s)?|burst|pipe|flood(ing|ed)?|dripping|water everywhere)\b/i },
   { category: 'appliance', label: 'Appliance repair', pattern: /\b(dryer|washer|washing machine|dishwasher|fridge|refrigerator|freezer|oven|stove|range|microwave|ice maker)\b/i },
-  { category: 'heating', label: 'Heating', pattern: /\b(furnace|no heat|heater|boiler|heat pump|thermostat)\b/i },
+  { category: 'heating', label: 'Heating', pattern: /\b(furnace|no heat|heat|heater|boiler|heat pump|thermostat)\b/i },
   { category: 'cooling', label: 'Air conditioning', pattern: /\b(a\/?c|air condition(er|ing)?|cooling|not cooling)\b/i },
   { category: 'roofing', label: 'Roofing', pattern: /\b(roof|shingles?|gutters?|flashing|skylight)\b/i },
   { category: 'electrical', label: 'Electrical', pattern: /\b(outlet|breaker|sparks?|sparking|wiring|lights? flicker)\b/i },
 ];
 
 const APPLIANCES = /\b(dryer|washer|washing machine|dishwasher|fridge|refrigerator|freezer|oven|stove|range|microwave|ice maker)\b/i;
+
+/** The heat itself has failed: "furnace quit", "heat went out", "boiler won't turn on". Never a dryer or water heater. */
+const HEAT_OUT =
+  /\b(no heat|(furnace|boiler|heat pump)\s+(just\s+)?(quit|died|stopped|went out|is out|gave out|shut off|(is |isn'?t |not |won'?t )(working|heating|turn(ing)? on|kick(ing)? on|start(ing)?))|(the )?heat (just )?(went out|is out|quit|stopped|isn'?t working|is not working|won'?t (come|turn) on))\b/i;
+/** Freezing weather or frozen pipes, which turn a heating call into a burst-pipe call. */
+const FREEZING =
+  /\b(freezing|froze|frozen|below zero|zero degrees|single digits|(ten|fifteen|twenty|twenty[- ]\w+|thirty|thirty[- ]\w+|\d{1,2}) degrees)\b/i;
+/** Someone in the house who cannot ride out a cold night or a day without hot water. */
+const VULNERABLE = /\b(bab(y|ies)|infant|newborn|toddler|elderly|senior|grandm(a|other)|grandp(a|arent)|oxygen|on dialysis|just had surgery|disabled)\b/i;
+const NO_HOT_WATER = /\b(no hot water|without hot water|hot water (is )?(out|gone)|water heater (is )?(leaking|dripping))\b/i;
 
 const SYMPTOMS: ReadonlyArray<readonly [RegExp, string]> = [
   [/\bburst\b/i, 'burst'],
@@ -36,7 +46,8 @@ const SYMPTOMS: ReadonlyArray<readonly [RegExp, string]> = [
   [/\b(keeps? running|won'?t stop running|runs (all the time|constantly))\b/i, 'keeps running'],
   [/\boverflow(ing|ed|s)?\b/i, 'overflowing'],
   [/\bno hot water\b/i, 'no hot water'],
-  [/\bno heat\b/i, 'no heat'],
+  [HEAT_OUT, 'no heat'],
+  [FREEZING, 'freezing'],
   [/\b(not|won'?t|isn'?t) (heating|drying)|taking forever to dry\b/i, 'not heating'],
   [/\bnot cooling\b/i, 'not cooling'],
   [/\b(noise|noisy|squeal(ing)?|grinding|banging)\b/i, 'making noise'],
@@ -141,8 +152,17 @@ export function classifyJob(text: string): { category: JobCategory; job: string 
   return { category, job };
 }
 
+/**
+ * Urgency, most serious first. Lost heat is an emergency on its own; freezing weather or a baby,
+ * an elderly person or someone medically fragile in the house makes a heat, cooling or hot-water
+ * problem an emergency too. No hot water is never "no rush".
+ */
 export function classifyUrgency(text: string): Urgency {
-  if (EMERGENCY.test(text)) return 'emergency';
+  if (EMERGENCY.test(text) || HEAT_OUT.test(text)) return 'emergency';
+  const comfort = /\b(furnace|heat|heating|heater|boiler|heat pump|a\/?c|air condition(er|ing)?|cooling|hot water|water heater|pipes?)\b/i.test(text);
+  if (comfort && FREEZING.test(text)) return 'emergency';
+  if (comfort && VULNERABLE.test(text)) return 'emergency';
+  if (NO_HOT_WATER.test(text)) return 'soon';
   if (NO_RUSH.test(text)) return 'routine';
   if (SOON.test(text)) return 'soon';
   return 'routine';

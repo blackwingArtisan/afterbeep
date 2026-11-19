@@ -49,6 +49,9 @@ export default function Landing() {
   useTitle('');
   return (
     <div className="landing">
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <header className="site-nav wrap">
         <Brand />
         <nav className="site-links" aria-label="Site">
@@ -64,6 +67,7 @@ export default function Landing() {
         </div>
       </header>
 
+      <main id="main" tabIndex={-1}>
       <section className="hero wrap">
         <div className="hero-copy">
           <p className="eyebrow">The answering machine, back from the dead</p>
@@ -228,6 +232,8 @@ export default function Landing() {
           ))}
         </div>
       </section>
+
+      </main>
 
       <footer className="site-foot wrap">
         <Brand />

@@ -24,3 +24,8 @@
   - [x] 18.1 Unit, API and Playwright tests for hang-ups, cooldown and demo mode (Req 4.6, 4.7, 7.5, 7.6)
 - [x] 19. Booking page lets the caller confirm or correct the visit address, and the confirmed address becomes the job's address (Req 5.9)
 - [x] 20. Booking page tells the caller to call the business when no open slot is available (Req 5.10)
+- [x] 21. Urgency rules for lost heat, freezing weather, vulnerable people and no hot water (Req 3.7-3.9)
+  - [x] 21.1 Unit cases, including a furnace that quit at twenty degrees with a baby at home, and a dryer that is not heating staying routine (Req 3.7-3.9)
+- [x] 22. A refused text-back is filed with its reason and can be retried from the inbox (Req 4.8)
+- [x] 23. Inbox puts new emergencies first under a "Call back now" strip and numbers tapes by arrival (Req 6.5)
+- [x] 24. The link-expired page shows the business and a call button (Req 5.8)

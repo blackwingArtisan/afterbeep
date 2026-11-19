@@ -51,7 +51,7 @@
   gap: 22px;
 }
 .hero h1 .hl {
-  color: var(--pumpkin);
+  color: var(--pumpkin-text);
   text-shadow: 0 0 40px rgba(255, 122, 26, 0.35);
 }
 .hero-lede {
@@ -170,7 +170,7 @@
   align-content: start;
 }
 .step-card svg {
-  color: var(--pumpkin);
+  color: var(--pumpkin-text);
 }
 
 .demo-row {
@@ -225,7 +225,7 @@
   font-size: 17px;
 }
 .spoken svg {
-  color: var(--pumpkin);
+  color: var(--pumpkin-text);
   flex: none;
   margin-top: 3px;
 }
@@ -276,7 +276,7 @@
   font-weight: 900;
   font-size: 72px;
   line-height: 1;
-  color: var(--pumpkin);
+  color: var(--pumpkin-text);
 }
 .ticks {
   list-style: none;
@@ -621,7 +621,7 @@
   border: 1px solid var(--edge);
 }
 .step.active {
-  color: var(--pumpkin);
+  color: var(--pumpkin-text);
 }
 .step.active .step-dot {
   border-color: var(--pumpkin);
@@ -646,7 +646,7 @@
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 30px;
-  color: var(--pumpkin);
+  color: var(--pumpkin-text);
   letter-spacing: 0.08em;
   animation: shake 0.4s ease-in-out infinite;
   text-transform: uppercase;
@@ -1197,4 +1197,57 @@
   .machine-top .lcd-label {
     display: none;
   }
+}
+
+/* ---------- Inbox states ---------- */
+
+.empty-tape {
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+  text-align: center;
+}
+.empty-tape .cassette {
+  width: min(100%, 360px);
+}
+.warn-text {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  color: var(--hold);
+  font-weight: 600;
+}
+.call-now {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: center;
+  padding: 14px 18px;
+  border-radius: var(--radius-m);
+  border: 1px solid var(--emergency);
+  background: repeating-linear-gradient(-45deg, transparent 0 14px, color-mix(in srgb, var(--emergency) 8%, transparent) 14px 28px), var(--panel);
+}
+.call-now-label {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--emergency);
+}
+.call-now ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.call-now .btn {
+  white-space: normal;
+  text-align: left;
 }

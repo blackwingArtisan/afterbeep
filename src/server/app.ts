@@ -6,7 +6,7 @@ import { sampleInvoiceScripts, simulatorScripts } from './seed';
 import { bookingView, bookSlot } from './services/booking';
 import { ServiceError, type Deps } from './services/deps';
 import { draftInvoice, InvoiceLineSchema, publicInvoice, quoteInvoice, SendInvoiceSchema, sendInvoice } from './services/invoicing';
-import { receiveVoicemail, setMessageStatus } from './services/voicemail';
+import { receiveVoicemail, retryTextBack, setMessageStatus } from './services/voicemail';
 
 export interface AppOptions {
   /** Replaces the whole state with fresh demo data. Omit to disable the reset route. */
@@ -82,6 +82,8 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
     const { status } = StatusSchema.parse(await c.req.json());
     return c.json({ message: setMessageStatus(deps, c.req.param('id'), status) });
   });
+
+  api.post('/messages/:id/text', async (c) => c.json({ message: await retryTextBack(deps, c.req.param('id')) }));
 
   api.post('/calls', async (c) => {
     if (!options.simulator) throw new ServiceError(404, 'not-found', 'The call simulator is turned off');

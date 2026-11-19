@@ -35,6 +35,9 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 3.4 WHEN the caller asks for today, tomorrow or as soon as possible THE SYSTEM SHALL mark the message as soon, unless they also say there is no rush.
 3.5 WHILE the Bedrock extractor is selected, IF the model output fails schema validation or the call fails THEN THE SYSTEM SHALL fall back to the rule-based extractor.
 3.6 THE SYSTEM SHALL never invent an address or phone number that the caller did not say.
+3.7 WHEN the caller says the furnace, boiler or heat pump has quit, stopped or gone out, or that the heat went out THE SYSTEM SHALL mark the message as an emergency.
+3.8 WHEN a heating, cooling, hot-water or pipe problem comes with freezing weather, or with a baby, an elderly person or someone medically fragile in the house THE SYSTEM SHALL mark the message as an emergency.
+3.9 WHEN the caller has no hot water or a leaking water heater and nothing more serious THE SYSTEM SHALL mark the message as soon.
 
 ## Requirement 4: Text the caller back
 **User story:** As a caller, I want a quick text back with a way to book, so that I do not call the next plumber.
@@ -46,6 +49,7 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 4.5 THE SYSTEM SHALL record the time the text was sent on the message.
 4.6 IF a message has no caller name, no address, no recognised job and fewer than four meaningful words THEN THE SYSTEM SHALL file it without a text and record why.
 4.7 IF the callback number was texted in the last 10 minutes THEN THE SYSTEM SHALL file the new message without another text and record why.
+4.8 IF the text provider refuses the text-back THEN THE SYSTEM SHALL keep the message, record the reason, mark it retryable and let the owner retry the text.
 
 ## Requirement 5: Book a slot
 **User story:** As a caller, I want to pick a time from my phone, so that the visit is booked without phone tag.
@@ -57,7 +61,7 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 5.5 IF the slot was taken in the meantime THEN THE SYSTEM SHALL refuse the booking and show fresh slots.
 5.6 IF the link was already used to book THEN THE SYSTEM SHALL show the existing booking and refuse a second one.
 5.7 WHEN a job is booked THE SYSTEM SHALL text the caller a confirmation with the day and time.
-5.8 IF the booking link is unknown THEN THE SYSTEM SHALL show a "link expired" page.
+5.8 IF the booking link is unknown THEN THE SYSTEM SHALL show a "link expired" page with the business name and a one-tap call button.
 5.9 WHEN the caller opens a booking link THE SYSTEM SHALL show the address it heard in a field the caller can confirm or correct, and SHALL make the address the caller confirms the job's address.
 5.10 IF no open slot is available in the search window THEN THE SYSTEM SHALL tell the caller to call the business and SHALL show the business phone number.
 
@@ -68,6 +72,7 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 6.2 THE SYSTEM SHALL show each message as a cassette with name, job, urgency colour, summary, callback number, address, received time and booking status.
 6.3 WHEN the owner presses Play THE SYSTEM SHALL read the message aloud and mark it heard.
 6.4 THE SYSTEM SHALL offer a one-tap call back link to the callback number.
+6.5 THE SYSTEM SHALL list new emergencies first, under a "Call back now" strip with a call button for each, and number tapes in the order the calls arrived.
 
 ## Requirement 7: Local call simulator and outbox
 **User story:** As an evaluator, I want to run the whole flow on a laptop with no accounts, so that I can see it work.

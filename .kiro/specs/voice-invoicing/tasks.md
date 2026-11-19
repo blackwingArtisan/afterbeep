@@ -21,3 +21,4 @@
   - [x] 17.1 Unit, API and Playwright tests for "a thermostat for forty", "forty water heater elements" and "part three twenty-nine" (Req 1.8-1.10, 3.9-3.11)
 - [x] 18. Invoice title falls back to the job's description when the spoken invoice has no title (Req 4.9)
 - [x] 19. Sent invoices get a due date 14 days after the invoice date, shown on the customer page (Req 5.6)
+- [x] 20. Sizes said before a part name stay in the name, with unit tests for gallons, amps and inches (Req 1.11)

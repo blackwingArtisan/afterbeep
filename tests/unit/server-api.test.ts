@@ -93,7 +93,9 @@ describe('missed call to booked job', () => {
   });
 
   it('rejects unknown tokens, bad caller IDs and empty bodies', async () => {
-    expect((await ctx.call('GET', '/api/book/nope')).status).toBe(404);
+    const bad = await ctx.call<{ details: { business: { name: string; phone: string } } }>('GET', '/api/book/nope');
+    expect(bad.status).toBe(404);
+    expect(bad.body.details.business).toEqual({ name: 'Hollow Creek Plumbing & Appliance', phone: '(614) 555-0142' });
     expect((await ctx.call('POST', '/api/calls', { from: '12', transcript: 'hi' })).status).toBe(400);
     expect((await ctx.call('POST', '/api/calls', { from: 'not a phone', transcript: 'hi there' })).status).toBe(400);
   });
@@ -238,5 +240,43 @@ describe('spoken invoice to approved bill', () => {
   it('rejects malformed lines', async () => {
     const res = await ctx.call<{ error: string }>('POST', '/api/invoices/quote', { lines: [{ id: 'x', quantity: 1.234 }] });
     expect(res).toMatchObject({ status: 400, body: { error: 'invalid-request' } });
+  });
+});
+
+describe('text-back failures', () => {
+  it('files the message with a reason when the provider refuses the text, then retries it', async () => {
+    let n = 0;
+    const newId = () => `fx${String(++n).padStart(4, '0')}`;
+    const clock = () => NOW;
+    const store = new MemoryStore(await seedDb(NOW, newId, BASE));
+    const adapters = localAdapters({ store, clock, newId, publicBaseUrl: BASE });
+    const outbox = adapters.sms;
+    let carrierDown = true;
+    adapters.sms = {
+      name: 'flaky',
+      send: async (message) => {
+        if (carrierDown) throw new Error('The carrier rejected the number');
+        return outbox.send(message);
+      },
+    };
+    const app = createApp({ store, adapters, clock, newId, publicBaseUrl: BASE }, { simulator: true });
+    const post = async (path: string, body?: unknown) => {
+      const res = await app.request(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body ?? {}) });
+      return { status: res.status, body: (await res.json()) as { message: Message } };
+    };
+
+    const created = await post('/api/calls', { from: '+16145550101', transcript: 'This is Ivy Sloane, the heat went out at 12 Oak Street. Call 614-555-0101.' });
+    expect(created.status).toBe(201);
+    expect(created.body.message).toMatchObject({ textedAt: null, textFailed: true });
+    expect(created.body.message.noTextReason).toBe('Text not sent: The carrier rejected the number. Call them back, or retry the text.');
+
+    carrierDown = false;
+    const retried = await post(`/api/messages/${created.body.message.id}/text`);
+    expect(retried.status).toBe(200);
+    expect(retried.body.message).toMatchObject({ textFailed: false, noTextReason: null });
+    expect(retried.body.message.textedAt).not.toBeNull();
+    expect(store.read().outbox.at(-1)?.body).toContain('Got your message about your heat.');
+
+    expect((await post(`/api/messages/${created.body.message.id}/text`)).status).toBe(409);
   });
 });

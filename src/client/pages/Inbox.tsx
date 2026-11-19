@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import type { Job, Message } from '../../domain/types';
 import { api } from '../api';
 import { Cassette } from '../components/Cassette';
+import { Reels } from '../components/Reels';
 import { PhoneIcon, PlayIcon, StopIcon } from '../components/Icons';
-import { countWord, formatTime } from '../lib/format';
+import { countWord, formatPhone, formatTime, telHref } from '../lib/format';
 import { useMachine, useTitle } from '../lib/machine';
 import { speak, stopSpeaking } from '../lib/speech';
 
@@ -33,6 +34,14 @@ export default function Inbox() {
   }, [load]);
 
   const newOnes = messages?.filter((m) => m.status === 'new') ?? [];
+  // Tape numbers follow the order calls came in, so the newest call is always the highest number.
+  const sideOf = new Map(
+    [...(messages ?? [])].sort((a, b) => a.receivedAt.localeCompare(b.receivedAt)).map((m, i) => [m.id, `A${i + 1}`] as const),
+  );
+  // New emergencies go to the top; everything else stays newest first.
+  const urgentFirst = (m: Message) => (m.status === 'new' && m.extraction.urgency === 'emergency' ? 0 : 1);
+  const ordered = [...(messages ?? [])].sort((a, b) => urgentFirst(a) - urgentFirst(b) || b.receivedAt.localeCompare(a.receivedAt));
+  const callNow = ordered.filter((m) => urgentFirst(m) === 0);
 
   async function playList(list: Message[]) {
     const token = ++playToken.current;
@@ -51,6 +60,11 @@ export default function Inbox() {
     playToken.current++;
     stopSpeaking();
     setPlaying(null);
+  }
+
+  async function retryText(m: Message) {
+    await api.retryText(m.id).catch(() => {});
+    await load();
   }
 
   async function calledBack(m: Message) {
@@ -86,23 +100,54 @@ export default function Inbox() {
         </div>
       </section>
 
+      {callNow.length > 0 && (
+        <section className="call-now" aria-label="Call back now" data-testid="call-now">
+          <span className="call-now-label">
+            <span className="led blink" aria-hidden="true" /> Call back now
+          </span>
+          <ul>
+            {callNow.map((m) => (
+              <li key={m.id}>
+                <a className="btn btn-primary btn-small" href={telHref(m.extraction.callbackNumber ?? m.from)} onClick={() => void calledBack(m)}>
+                  <PhoneIcon width={16} height={16} /> {m.extraction.callerName ?? formatPhone(m.from)}: {m.extraction.job}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {messages.length === 0 ? (
-        <div className="empty panel">
-          No messages. The line is quiet... too quiet. <Link to="/machine/call">Leave one from the call simulator.</Link>
+        <div className="empty-tape panel panel-pad" data-testid="empty-tape">
+          <div className="cassette sim-cassette">
+            <div className="cassette-label">
+              <span className="cassette-stripe unknown" />
+              <div className="spread" style={{ marginTop: 6 }}>
+                <span className="cassette-side">A0</span>
+              </div>
+              <div className="cassette-name">Blank tape</div>
+              <div className="cassette-job">The line is quiet... too quiet.</div>
+            </div>
+            <Reels spinning={false} />
+          </div>
+          <Link className="btn btn-primary" to="/machine/call">
+            <PhoneIcon /> Leave the first message
+          </Link>
         </div>
       ) : (
         <div className="tape-grid">
-          {messages.map((m, i) => (
+          {ordered.map((m) => (
             <Cassette
               key={m.id}
               message={m}
-              side={`A${messages.length - i}`}
+              side={sideOf.get(m.id)!}
               timeZone={tz}
               job={jobs.find((j) => j.id === m.jobId) ?? null}
               playing={playing === m.id}
               onPlay={() => void playList([m])}
               onStop={stop}
               onCalledBack={() => void calledBack(m)}
+              onRetryText={() => void retryText(m)}
             />
           ))}
         </div>

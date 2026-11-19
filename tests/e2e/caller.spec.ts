@@ -15,3 +15,10 @@ test('the caller booking page works on a phone', async ({ page, request }) => {
   await page.getByRole('button', { name: /^Book / }).click();
   await expect(page.getByTestId('booked')).toBeVisible();
 });
+
+test('a bad booking link still shows the business and a call button', async ({ page }) => {
+  await page.goto('/book/not-a-real-token');
+  const card = page.getByTestId('bad-link');
+  await expect(card).toContainText('Hollow Creek Plumbing & Appliance');
+  await expect(card.getByRole('link', { name: /Call \(614\) 555-0142/ })).toHaveAttribute('href', 'tel:+16145550142');
+});

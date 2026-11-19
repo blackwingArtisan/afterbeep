@@ -21,12 +21,20 @@ function textBackBody(
   firstOpening: string | null,
 ): string {
   const hi = `Hi ${firstName(extraction.callerName)}, it's ${owner} at ${businessName}.`;
-  const job = extraction.job.split(':')[0]!.toLowerCase();
+  const noun = jobNoun(extraction);
+  const about = noun ? ` about your ${noun}` : '';
   if (extraction.urgency === 'emergency') {
-    return `${hi} Got your message about your ${job}. I'll call you back the minute I'm off this job. Grab the earliest visit here: ${url}`;
+    return `${hi} Got your message${about}. I'll call you back the minute I'm off this job. Grab the earliest visit here: ${url}`;
   }
   const opening = firstOpening ? ` The first opening is ${firstOpening}.` : '';
-  return `${hi} Sorry I missed your call about your ${job}.${opening} Pick a time that works for you: ${url}`;
+  return `${hi} Sorry I missed your call${about}.${opening} Pick a time that works for you: ${url}`;
+}
+
+/** What the text calls the job ("your heat", "your water heater", "your dryer"), or null when it is unknown. */
+export function jobNoun(extraction: VoicemailExtraction): string | null {
+  if (extraction.jobCategory === 'heating') return 'heat';
+  if (extraction.jobCategory === 'general') return null;
+  return extraction.job.split(':')[0]!.toLowerCase();
 }
 
 /** Texts go to the number the caller asked for, or to their caller ID. */
@@ -84,9 +92,24 @@ export async function receiveVoicemail(deps: Deps, call: IncomingCall): Promise<
     db.messages.push(message);
   });
   if (message.noTextReason) return message;
+  return textBack(deps, message);
+}
 
+/** Why a text could not be sent, in words the owner can act on. */
+function failureReason(error: unknown): string {
+  const detail = error instanceof Error && error.message ? error.message.replace(/\.$/, '') : 'the text provider gave no reason';
+  return `Text not sent: ${detail}. Call them back, or retry the text.`;
+}
+
+/**
+ * Texts the caller their booking link. A provider failure never loses the message: it is filed with
+ * the reason and a retry flag, and the owner can retry from the inbox.
+ */
+async function textBack(deps: Deps, message: Message): Promise<Message> {
+  const { business, jobs } = deps.store.read();
+  const extraction = message.extraction;
   const [first] = openSlots({
-    now,
+    now: deps.clock(),
     timeZone: business.timezone,
     hours: business.hours,
     slotMinutes: business.slotMinutes,
@@ -95,24 +118,44 @@ export async function receiveVoicemail(deps: Deps, call: IncomingCall): Promise<
     limit: 1,
   });
   const linkPath = `/book/${message.bookingToken}`;
-  await deps.adapters.sms.send({
-    to,
-    linkPath,
-    body: textBackBody(
-      extraction,
-      business.ownerName.split(' ')[0]!,
-      business.name,
-      `${deps.publicBaseUrl}${linkPath}`,
-      first ? formatSlot(first.start, first.end, business.timezone) : null,
-    ),
-  });
+  try {
+    await deps.adapters.sms.send({
+      to: textBackNumber(extraction, message.from),
+      linkPath,
+      body: textBackBody(
+        extraction,
+        business.ownerName.split(' ')[0]!,
+        business.name,
+        `${deps.publicBaseUrl}${linkPath}`,
+        first ? formatSlot(first.start, first.end, business.timezone) : null,
+      ),
+    });
+  } catch (error) {
+    const noTextReason = failureReason(error);
+    return deps.store.update((db) => {
+      const stored = db.messages.find((m) => m.id === message.id)!;
+      stored.noTextReason = noTextReason;
+      stored.textFailed = true;
+      return { ...stored };
+    });
+  }
 
   const textedAt = deps.clock().toISOString();
-  deps.store.update((db) => {
-    const stored = db.messages.find((m) => m.id === message.id);
-    if (stored) stored.textedAt = textedAt;
+  return deps.store.update((db) => {
+    const stored = db.messages.find((m) => m.id === message.id)!;
+    stored.textedAt = textedAt;
+    stored.noTextReason = null;
+    stored.textFailed = false;
+    return { ...stored };
   });
-  return { ...message, textedAt };
+}
+
+/** Retries a text-back that the provider refused. Only failed sends can be retried. */
+export async function retryTextBack(deps: Deps, id: string): Promise<Message> {
+  const message = deps.store.read().messages.find((m) => m.id === id);
+  if (!message) throw new ServiceError(404, 'not-found', 'No such message');
+  if (!message.textFailed) throw new ServiceError(409, 'not-retryable', 'This message has no failed text to retry');
+  return textBack(deps, message);
 }
 
 export function setMessageStatus(deps: Deps, id: string, status: Message['status']): Message {

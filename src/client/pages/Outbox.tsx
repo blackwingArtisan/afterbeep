@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import type { OutboxItem } from '../../domain/types';
 import { api } from '../api';
 import { ArrowIcon, OutboxIcon, PhoneIcon } from '../components/Icons';
-import { formatDay, formatTime } from '../lib/format';
+import { formatDay, formatPhone, formatTime } from '../lib/format';
 import { useMachine, useTitle } from '../lib/machine';
 
 function linkify(body: string, linkPath: string | null) {
@@ -14,12 +14,19 @@ function linkify(body: string, linkPath: string | null) {
   return (
     <>
       {body.slice(0, at)}
-      <Link to={linkPath} className="bubble-link">
-        {url}
+      <Link to={linkPath} className="bubble-link" title={url}>
+        {shortLink(url)}
       </Link>
       {body.slice(at + url.length)}
     </>
   );
+}
+
+/** "https://afterbeep.example.com/book/3f9c1d2e..." -> "afterbeep.example.com/book/3f9c1d…" */
+function shortLink(url: string): string {
+  const bare = url.replace(/^https?:\/\//, '');
+  const cut = bare.lastIndexOf('/') + 7;
+  return bare.length > cut + 1 ? `${bare.slice(0, cut)}\u2026` : bare;
 }
 
 export default function Outbox() {
@@ -44,14 +51,14 @@ export default function Outbox() {
           messages go out through Amazon End User Messaging SMS.
         </p>
       </section>
-      {items.length === 0 && <div className="empty panel">Nothing sent yet.</div>}
+      {items.length === 0 && <div className="empty panel">Nothing sent yet. The first text goes out the moment a caller leaves a message.</div>}
       <div className="outbox-grid">
         {items.map((item) => (
           <article key={item.id} className="phone" data-testid="outbox-item">
             <div className="phone-screen">
               <div className="phone-to">
                 {item.kind === 'sms' ? <PhoneIcon width={12} height={12} style={{ display: 'inline' }} /> : <OutboxIcon width={12} height={12} style={{ display: 'inline' }} />}{' '}
-                To {item.to} · {formatDay(item.createdAt, tz)} {formatTime(item.createdAt, tz)}
+                To {formatPhone(item.to)} · {formatDay(item.createdAt, tz)} {formatTime(item.createdAt, tz)}
               </div>
               <div className="bubble">{linkify(item.body, item.linkPath)}</div>
               {item.linkPath && (

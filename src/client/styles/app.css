@@ -105,9 +105,15 @@ textarea {
 .btn:active {
   transform: translateY(1px);
 }
-.btn:disabled {
-  opacity: 0.45;
+.btn:disabled,
+.btn:disabled:hover {
+  /* Locked, not just faded: diagonal stripes read as "not yet" in both themes. */
+  opacity: 1;
   cursor: not-allowed;
+  color: var(--ink-faint);
+  background: repeating-linear-gradient(-45deg, var(--panel-2) 0 8px, var(--panel-3) 8px 16px);
+  border-color: var(--edge);
+  box-shadow: none;
 }
 .btn-primary {
   background: var(--pumpkin);
@@ -179,7 +185,7 @@ textarea {
     0 1px 0 var(--shadow);
 }
 .key[aria-current='page'] {
-  color: var(--pumpkin);
+  color: var(--pumpkin-text);
 }
 
 /* ---------- LED and LCD ---------- */
@@ -270,7 +276,7 @@ textarea {
   font-size: 13px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--pumpkin);
+  color: var(--pumpkin-text);
 }
 
 h1,
@@ -340,6 +346,37 @@ p {
 .chip-info {
   color: var(--info);
 }
+.cassette-label .chip-emergency,
+.cassette-label .chip-hold,
+.paper .chip-emergency {
+  color: var(--label-emergency);
+}
+.cassette-label .chip-soon,
+.paper .chip-soon {
+  color: var(--label-soon);
+}
+.cassette-label .chip-routine,
+.paper .chip-routine {
+  color: var(--label-routine);
+}
+
+/* ---------- Skip link ---------- */
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--radius-s);
+  background: var(--pumpkin);
+  color: var(--pumpkin-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 12px;
+}
 
 /* ---------- Brand ---------- */
 
@@ -361,7 +398,7 @@ p {
   line-height: 1;
 }
 .brand-word b {
-  color: var(--pumpkin);
+  color: var(--pumpkin-text);
   font-weight: 400;
 }
 
@@ -422,6 +459,10 @@ p {
 }
 .cassette-stripe.routine {
   background: var(--routine);
+}
+/* Grey until the message has been read and its urgency is known. */
+.cassette-stripe.unknown {
+  background: repeating-linear-gradient(90deg, var(--ink-faint) 0 6px, transparent 6px 12px);
 }
 .cassette-side {
   font-family: var(--font-display);

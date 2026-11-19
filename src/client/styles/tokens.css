@@ -17,7 +17,7 @@
 
   --ink: #efe6d2;
   --ink-dim: #b3aa98;
-  --ink-faint: #7b7466;
+  --ink-faint: #8f887a;
 
   --led: #ff3b2f;
   --led-glow: rgba(255, 59, 47, 0.65);
@@ -27,6 +27,8 @@
   --pumpkin: #ff7a1a;
   --pumpkin-hi: #ff9a4a;
   --pumpkin-ink: #1c0c00;
+  /* Pumpkin used as text: at least 4.5:1 on every panel. */
+  --pumpkin-text: #ff7a1a;
   --ghost: #c9b8ff;
 
   --label: #f2e9cf;
@@ -40,6 +42,11 @@
   --ok: #5fd38d;
   --hold: #ff4a3d;
   --info: #8fb8ff;
+
+  /* Chips printed on cream cassette labels and paper use fixed dark inks in both themes (5:1 or better). */
+  --label-emergency: #b3261e;
+  --label-soon: #8a5200;
+  --label-routine: #1f6e42;
 
   --paper: #f6f0e1;
   --paper-ink: #24201a;
@@ -59,24 +66,25 @@
 
   --ink: #241d14;
   --ink-dim: #5b5040;
-  --ink-faint: #8a7d67;
+  --ink-faint: #675b46;
 
   --led: #e0261a;
   --led-glow: rgba(224, 38, 26, 0.45);
   --lcd: #1f4d12;
   --lcd-dim: rgba(31, 77, 18, 0.12);
   --lcd-bg: #b9c99a;
-  --pumpkin: #e2620a;
-  --pumpkin-hi: #f07a24;
+  --pumpkin: #b54e05;
+  --pumpkin-hi: #c75a0a;
   --pumpkin-ink: #fff8ef;
+  --pumpkin-text: #9a3d00;
   --ghost: #5a3fb0;
 
-  --emergency: #c8281e;
-  --soon: #b86e00;
-  --routine: #23804c;
-  --ok: #23804c;
-  --hold: #c8281e;
-  --info: #2f5fb8;
+  --emergency: #b3261e;
+  --soon: #8a5200;
+  --routine: #1f6e42;
+  --ok: #1f6e42;
+  --hold: #b3261e;
+  --info: #2a55a6;
 }
 
 :root {

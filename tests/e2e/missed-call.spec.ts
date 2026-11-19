@@ -51,3 +51,20 @@ test('a hang-up is filed but nobody is texted', async ({ page, request }) => {
   const outboxAfter = ((await (await request.get('/api/outbox')).json()) as { outbox: unknown[] }).outbox.length;
   expect(outboxAfter).toBe(outboxBefore);
 });
+
+test('new emergencies sit at the top of the inbox with a call-back strip', async ({ page, request }) => {
+  const res = await request.post('/api/calls', {
+    data: {
+      from: '+16145550188',
+      transcript: "This is Dana Whitfield at 40 Elm Street. Our furnace quit, it's twenty degrees out and we have a baby at home.",
+    },
+  });
+  expect(res.status()).toBe(201);
+
+  await page.goto('/machine');
+  await expect(page.getByTestId('call-now')).toContainText('Dana Whitfield');
+  await expect(page.getByTestId('call-now').getByRole('link', { name: /Dana Whitfield/ })).toHaveAttribute('href', 'tel:+16145550188');
+  await expect(page.getByTestId('cassette').first()).toContainText('Emergency');
+  const dana = page.getByTestId('cassette').filter({ hasText: 'Dana Whitfield' });
+  await expect(dana).toContainText('Heating: no heat, freezing');
+});

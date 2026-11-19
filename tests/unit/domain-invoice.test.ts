@@ -318,3 +318,18 @@ describe('prices against the usual rate', () => {
     expect(quote.totals.totalCents).toBe(12000);
   });
 });
+
+describe('sizes said before a part name', () => {
+  const parse = (speech: string) => parseInvoiceSpeech(speech, { laborTaxable: false, newId: counter() }).lines;
+
+  it('reads "forty gallon" as part of the name, not a quantity of forty', () => {
+    const [heater, labor] = parse('Forty gallon water heater twelve fifty, taxed. Three hours labor at eighty five.');
+    expect(heater).toMatchObject({ description: '40 gallon water heater', quantity: 1, unitPriceCents: 1250, unplacedNumbers: [] });
+    expect(labor).toMatchObject({ kind: 'labor', quantity: 3, unitPriceCents: 8500 });
+  });
+
+  it('reads amps and inches as sizes and still finds the quantity', () => {
+    expect(parse('Fifty amp breaker forty dollars')[0]).toMatchObject({ description: '50 amp breaker', quantity: 1, unitPriceCents: 4000 });
+    expect(parse('Two six inch flex lines at nineteen')[0]).toMatchObject({ description: '6 inch flex lines', quantity: 2, unitPriceCents: 1900 });
+  });
+});

@@ -44,6 +44,9 @@ export default function Machine() {
   return (
     <MachineContext.Provider value={{ business, newCount, refresh }}>
       <div className="machine">
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
         <header className="machine-top">
           <div className="wrap spread">
             <div className="row" style={{ gap: 16 }}>
@@ -69,7 +72,7 @@ export default function Machine() {
             ))}
           </div>
         </nav>
-        <main className="wrap machine-main">
+        <main id="main" className="wrap machine-main" tabIndex={-1}>
           <Outlet />
         </main>
       </div>

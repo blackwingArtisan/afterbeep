@@ -7,7 +7,11 @@ import { firstName, formatSlot } from './format';
 
 function findMessage(db: Db, token: string): Message {
   const message = db.messages.find((m) => m.bookingToken === token);
-  if (!message) throw new ServiceError(404, 'not-found', 'This booking link is not valid');
+  if (!message) {
+    // The caller still needs a way to reach the business, so the business card comes with the error.
+    const { name, phone } = db.business;
+    throw new ServiceError(404, 'not-found', 'This booking link is not valid', { business: { name, phone } });
+  }
   return message;
 }
 

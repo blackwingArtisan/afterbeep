@@ -52,3 +52,9 @@ const NUMBER_WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven
 export function countWord(n: number): string {
   return NUMBER_WORDS[n] ?? String(n);
 }
+
+/** "+16145550134" or "6145550134" -> "(614) 555-0134"; anything else is returned as given. */
+export function formatPhone(phone: string): string {
+  const d = phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : phone;
+}

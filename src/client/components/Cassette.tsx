@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Job, Message } from '../../domain/types';
-import { formatDay, formatDuration, formatRange, formatTime, telHref, timeAgo } from '../lib/format';
+import { formatDay, formatDuration, formatPhone, formatRange, formatTime, telHref, timeAgo } from '../lib/format';
 import { CheckIcon, PhoneIcon, PlayIcon, StopIcon } from './Icons';
 import { Reels } from './Reels';
 import { UrgencyChip } from './Urgency';
@@ -14,9 +14,10 @@ interface Props {
   onPlay: () => void;
   onStop: () => void;
   onCalledBack: () => void;
+  onRetryText: () => void;
 }
 
-export function Cassette({ message, side, timeZone, job, playing, onPlay, onStop, onCalledBack }: Props) {
+export function Cassette({ message, side, timeZone, job, playing, onPlay, onStop, onCalledBack, onRetryText }: Props) {
   const [showTranscript, setShowTranscript] = useState(false);
   const x = message.extraction;
   const isNew = message.status === 'new';
@@ -33,7 +34,7 @@ export function Cassette({ message, side, timeZone, job, playing, onPlay, onStop
               <UrgencyChip urgency={x.urgency} />
             </span>
           </div>
-          <div className="cassette-name">{x.callerName ?? 'Unknown caller'}</div>
+          <div className="cassette-name">{x.callerName ?? formatPhone(message.from)}</div>
           <div className="cassette-job">{x.job}</div>
         </div>
         <Reels spinning={playing} />
@@ -46,7 +47,7 @@ export function Cassette({ message, side, timeZone, job, playing, onPlay, onStop
             <dt>Call back</dt>
             <dd>
               <a href={telHref(x.callbackNumber ?? message.from)} className="mono">
-                {x.callbackNumber ?? message.from}
+                {x.callbackNumber ?? formatPhone(message.from)}
               </a>
             </dd>
           </div>
@@ -69,6 +70,13 @@ export function Cassette({ message, side, timeZone, job, playing, onPlay, onStop
                 </span>
               ) : message.textedAt ? (
                 <span className="muted">Texted a booking link at {formatTime(message.textedAt, timeZone)}. Waiting for a pick.</span>
+              ) : message.textFailed ? (
+                <span className="warn-text">
+                  {message.noTextReason}{' '}
+                  <button className="btn btn-small" type="button" onClick={onRetryText}>
+                    Retry the text
+                  </button>
+                </span>
               ) : (
                 <span className="muted">{message.noTextReason ?? 'Not texted'}</span>
               )}

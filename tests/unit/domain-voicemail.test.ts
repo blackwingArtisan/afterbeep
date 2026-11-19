@@ -151,3 +151,36 @@ describe('empty messages', () => {
     for (const s of simulatorScripts) expect(reason(s.transcript)).toBeNull();
   });
 });
+
+describe('urgency for lost heat, freezing weather and vulnerable people', () => {
+  it.each([
+    "Hi, this is Dana Whitfield at 40 Elm Street. Our furnace quit last night, it's twenty degrees out and we have a baby at home. Please call 614-555-0188.",
+    'The heat went out this morning. 12 Oak Street.',
+    "Our boiler won't turn on and the house is getting cold.",
+    'The furnace stopped working an hour ago.',
+    'Furnace is out and the pipes are frozen.',
+    "It's 15 degrees outside and the heat pump keeps blowing cold air.",
+    'The heater is acting up and my elderly mother lives with us.',
+    'No hot water and we have a newborn at home.',
+  ])('files "%s" as an emergency', (text) => {
+    expect(classifyUrgency(text)).toBe('emergency');
+  });
+
+  it('files no hot water as soon, never as no rush', () => {
+    expect(classifyUrgency('We have no hot water since yesterday.')).toBe('soon');
+    expect(classifyUrgency('The water heater is leaking a little.')).toBe('soon');
+  });
+
+  it('keeps a dryer that is not heating routine', () => {
+    expect(classifyUrgency('My dryer is not heating, no rush.')).toBe('routine');
+    expect(extract('slow-dryer').urgency).toBe('routine');
+  });
+
+  it('labels a lost-heat call as heating with no heat', () => {
+    const result = extractWithRules('The heat went out at 12 Oak Street, call me at 614-555-0101.', {
+      callerId: '+16145550101',
+      defaultAreaCode: '614',
+    });
+    expect(result).toMatchObject({ jobCategory: 'heating', job: 'Heating: no heat', urgency: 'emergency' });
+  });
+});

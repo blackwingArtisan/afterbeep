@@ -3,15 +3,16 @@ import { useParams } from 'react-router-dom';
 import type { Slot } from '../../domain/slots';
 import { api, ApiError, type BookingView } from '../api';
 import { BrandMark } from '../components/Brand';
-import { CheckIcon } from '../components/Icons';
+import { CheckIcon, GhostIcon, PhoneIcon } from '../components/Icons';
 import { UrgencyChip } from '../components/Urgency';
-import { dayKey, formatDay, formatLongDay, formatRange } from '../lib/format';
+import { dayKey, formatDay, formatLongDay, formatRange, telHref } from '../lib/format';
 import { useTitle } from '../lib/machine';
 
 export default function Booking() {
   const { token = '' } = useParams();
   const [view, setView] = useState<BookingView | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [badLinkBusiness, setBadLinkBusiness] = useState<{ name: string; phone: string } | null>(null);
   const [picked, setPicked] = useState<Slot | null>(null);
   const [address, setAddress] = useState('');
   const [saving, setSaving] = useState(false);
@@ -24,6 +25,8 @@ export default function Booking() {
       setAddress(v.caller.address ?? '');
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Could not load this booking link.');
+      const details = e instanceof ApiError ? (e.details as { business?: { name: string; phone: string } } | null) : null;
+      setBadLinkBusiness(details?.business ?? null);
     }
   }, [token]);
 
@@ -62,9 +65,28 @@ export default function Booking() {
   if (error && !view) {
     return (
       <div className="caller-page">
-        <div className="caller-card panel panel-pad">
-          <h1 className="caller-title">Link expired</h1>
-          <p className="muted">{error}</p>
+        <div className="caller-card panel" data-testid="bad-link">
+          {badLinkBusiness && (
+            <header className="caller-head">
+              <BrandMark />
+              <div>
+                <div className="caller-biz">{badLinkBusiness.name}</div>
+                <div className="faint" style={{ fontSize: 13 }}>
+                  {badLinkBusiness.phone}
+                </div>
+              </div>
+            </header>
+          )}
+          <section className="stack" style={{ gap: 14, justifyItems: 'center', textAlign: 'center' }}>
+            <GhostIcon width={56} height={56} />
+            <h1 className="caller-title">This link has given up the ghost.</h1>
+            <p className="muted">It may have been mistyped or already used. A quick call still gets you on the schedule.</p>
+            {badLinkBusiness && (
+              <a className="btn btn-primary caller-confirm" href={telHref(badLinkBusiness.phone)}>
+                <PhoneIcon /> Call {badLinkBusiness.phone}
+              </a>
+            )}
+          </section>
         </div>
       </div>
     );

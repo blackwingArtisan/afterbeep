@@ -83,6 +83,8 @@ export interface Message {
   textedAt: string | null;
   /** Why no booking link was texted (an empty message, or the caller was texted moments ago). */
   noTextReason: string | null;
+  /** True when the text provider refused the text-back; the owner can retry it. */
+  textFailed?: boolean;
   jobId: string | null;
 }
 

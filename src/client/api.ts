@@ -55,6 +55,7 @@ export const api = {
   messages: () => request<{ messages: Message[]; newCount: number }>('GET', '/messages'),
   setStatus: (id: string, status: 'new' | 'heard' | 'called-back') =>
     request<{ message: Message }>('POST', `/messages/${id}/status`, { status }),
+  retryText: (id: string) => request<{ message: Message }>('POST', `/messages/${id}/text`),
   call: (from: string, transcript: string, durationSec?: number) =>
     request<{ message: Message }>('POST', '/calls', { from, transcript, durationSec }),
   samples: () => request<{ voicemails: Sample[]; invoiceScripts: InvoiceScript[] }>('GET', '/samples'),

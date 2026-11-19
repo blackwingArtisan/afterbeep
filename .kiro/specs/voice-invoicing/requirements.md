@@ -23,6 +23,7 @@ After a job, the owner says the invoice out loud. AfterBeep turns the words into
 1.8 WHEN "and" is followed by a new item that has its own price, hours or fee name THE SYSTEM SHALL start a new line there, and SHALL keep "three hundred and twenty nine", "ninety dollars and fifty cents", "two and a half hours" and "an hour and fifteen minutes" whole.
 1.9 THE SYSTEM SHALL never read a number said like a price ("for forty", "forty dollars") as a quantity.
 1.10 WHEN a phrase holds a number that is neither its quantity nor its price THE SYSTEM SHALL keep it on the line as unplaced.
+1.11 WHEN a number is followed by a size unit (gallon, inch, amp, volt, ton, BTU, watt, PSI) THE SYSTEM SHALL keep it in the part name as a size ("40 gallon water heater") and SHALL NOT read it as a quantity.
 
 ## Requirement 2: Money in integer cents
 **User story:** As an owner, I want totals that are exactly right, so that I never send a bill that is off by a cent.

@@ -23,6 +23,10 @@ const PRICE_BEFORE = new Set(['at', '@', 'for', 'is', 'costs', 'cost', 'price', 
 const PRICE_AFTER = new Set(['each', 'apiece', 'ea']);
 const RATE_WORDS = new Set(['an', 'a', 'per']);
 const QTY_MARKERS = new Set(['x', 'times']);
+/** A number right before one of these is a size that belongs to the part name ("40 gallon", "50 amp"), not a quantity. */
+const SIZE_WORDS = new Set([
+  'gallon', 'gallons', 'gal', 'inch', 'inches', 'amp', 'amps', 'volt', 'volts', 'ton', 'tons', 'btu', 'watt', 'watts', 'psi', 'mm',
+]);
 const FILLER = new Set([
   'at', '@', 'for', 'each', 'apiece', 'ea', 'per', 'an', 'a', 'x', 'times', 'the', 'and', 'of', 'um', 'uh',
   'dollars', 'dollar', 'bucks', 'buck', 'cents', 'cent', 'is', 'costs', 'cost', 'price', 'priced', 'that', 'was',
@@ -189,6 +193,14 @@ function readSegment(segment: string): SegmentReading {
   let quantity: number | null = null;
   let hours = false;
   const used = new Set<number>();
+  const sizes = new Map<number, string>();
+  for (const { t, i } of nums) {
+    const next = wordAt(tokens, i + 1);
+    if (next && SIZE_WORDS.has(next) && t.count !== null && Number.isInteger(t.count)) {
+      sizes.set(i, String(t.count));
+      used.add(i);
+    }
+  }
 
   for (const { t, i } of nums) {
     const next = wordAt(tokens, i + 1);
@@ -247,15 +259,15 @@ function readSegment(segment: string): SegmentReading {
     description = fee[1];
   } else {
     const descWords = tokens
-      .filter((t, i) => t.type === 'word' && !used.has(i) && !FILLER.has(t.text))
-      .map((t) => (t as { text: string }).text);
+      .map((t, i) => (sizes.has(i) ? sizes.get(i)! : t.type === 'word' && !used.has(i) && !FILLER.has(t.text) ? t.text : null))
+      .filter((w): w is string => w !== null);
     const withoutPart = descWords.filter((w) => w !== 'part' && w !== 'parts');
     description = titleCase(withoutPart.length > 0 ? withoutPart : descWords) || (nums.length > 0 ? 'Part' : '');
   }
 
   const unit: LineUnit = kind === 'labor' ? (hours ? 'hour' : 'flat') : kind === 'fee' ? 'flat' : 'each';
   const unplaced = nums.filter(({ i }) => !used.has(i)).map(({ t }) => t.raw);
-  return { kind, description, quantity: quantity ?? 1, unit, price, taxable, hasNumbers: nums.length > 0, unplaced };
+  return { kind, description, quantity: quantity ?? 1, unit, price, taxable, hasNumbers: nums.length > sizes.size, unplaced };
 }
 
 export function parseInvoiceSpeech(text: string, options: ParseOptions): ParsedInvoice {
