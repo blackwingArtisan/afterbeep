@@ -78,8 +78,9 @@ export function Graveyard({ view, timeZone, onRaise, raise, story = false }: Pro
                 <div className="cassette-label">
                   <span className="cassette-stripe unknown" />
                   <div className="cassette-name">{formatPhone(g.from)}</div>
-                  <div className="cassette-job">
-                    {formatDay(g.receivedAt, timeZone)} · {formatTime(g.receivedAt, timeZone)}
+                  <div className="cassette-job ghost-when">
+                    <span>{formatDay(g.receivedAt, timeZone)}</span>
+                    <span>{formatTime(g.receivedAt, timeZone)}</span>
                   </div>
                 </div>
                 <Reels spinning={false} />

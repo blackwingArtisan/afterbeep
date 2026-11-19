@@ -250,6 +250,61 @@
   text-transform: uppercase;
   transform: rotate(-3deg);
 }
+/* VU meter: faint and still while idle, dancing while the machine rings or plays. */
+.vu {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 28px;
+}
+.vu > span {
+  flex: 1;
+  height: 30%;
+  border-radius: 2px;
+  background: #6fd36b;
+  opacity: 0.22;
+}
+.vu.live > span {
+  opacity: 0.9;
+  animation: vu-bounce 0.6s ease-in-out infinite alternate;
+}
+@keyframes vu-bounce {
+  from {
+    height: 18%;
+  }
+  to {
+    height: 100%;
+  }
+}
+/* Cold open: the old machine's tape is full. */
+.device-tapefull {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  color: #b3aa98;
+  font-size: 14px;
+}
+.tapefull-lcd {
+  font-family: var(--font-lcd);
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ff4d3a;
+  text-shadow: 0 0 12px rgba(255, 77, 58, 0.6);
+  animation: tapefull-blink 0.45s steps(1, end) infinite;
+}
+@keyframes tapefull-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vu.live > span,
+  .tapefull-lcd {
+    animation: none;
+  }
+}
 @keyframes slide-in {
   from {
     opacity: 0;
@@ -812,6 +867,9 @@
   display: grid;
   gap: 8px;
 }
+.sample-more {
+  justify-self: start;
+}
 .sample {
   display: grid;
   gap: 4px;
@@ -1306,11 +1364,26 @@
   gap: 18px;
   padding: 28px var(--gutter) 48px;
 }
+.caller-page-center {
+  min-height: 100dvh;
+  align-content: center;
+}
 .caller-card {
   width: min(100%, 560px);
   display: grid;
   gap: 22px;
   padding: 22px;
+}
+/* On a desktop the caller's booking page sits in a phone frame, since that is where the caller sees it. */
+@media (min-width: 900px) {
+  .caller-card.booking-card {
+    width: 400px;
+    border: 12px solid #18161c;
+    border-radius: 40px;
+    box-shadow:
+      0 0 0 1px #3a3442,
+      0 40px 80px -40px rgba(0, 0, 0, 0.85);
+  }
 }
 .caller-head {
   display: flex;
@@ -1580,7 +1653,7 @@
   background: var(--panel);
 }
 .caller-page .story-bar {
-  width: min(100%, 520px);
+  width: min(100%, 1040px);
   margin: 0 auto 16px;
 }
 .story-title {
@@ -2210,6 +2283,9 @@
     animation: none;
   }
 }
+.ghost-when {
+  display: grid;
+}
 .graveyard-pitch strong {
   color: var(--ghost);
 }
@@ -2251,6 +2327,12 @@
     display: block;
   }
 }
+.machine-actions {
+  min-width: 0;
+}
+.more-story {
+  display: none;
+}
 @media (max-width: 599px) {
   .machine-actions {
     flex-wrap: nowrap;
@@ -2261,6 +2343,16 @@
   }
   .story-short {
     display: inline;
+  }
+}
+
+/* The narrowest phones (390px and below) move Demo into the overflow menu too, so nothing spills off the row. */
+@media (max-width: 399px) {
+  .machine-actions .story-btn {
+    display: none;
+  }
+  .more-story {
+    display: inline-flex;
   }
 }
 

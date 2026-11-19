@@ -69,7 +69,7 @@ export default function Booking() {
 
   if (error && !view) {
     return (
-      <div className="caller-page">
+      <main className="caller-page caller-page-center">
         <div className="caller-card panel" data-testid="bad-link">
           {badLinkBusiness && (
             <header className="caller-head">
@@ -93,16 +93,16 @@ export default function Booking() {
             )}
           </section>
         </div>
-      </div>
+      </main>
     );
   }
-  if (!view) return <div className="caller-page empty">Loading...</div>;
+  if (!view) return <main className="caller-page empty">Loading...</main>;
 
   const owner = view.business.ownerName.split(' ')[0];
   const first = view.caller.name?.split(' ')[0];
 
   return (
-    <div className="caller-page">
+    <main className="caller-page">
       {story && (
         <StoryBar
           step={view.booked ? 4 : 3}
@@ -113,7 +113,7 @@ export default function Booking() {
           }
         />
       )}
-      <div className="caller-card panel">
+      <div className="caller-card panel booking-card">
         <header className="caller-head">
           <BrandMark />
           <div>
@@ -186,6 +186,6 @@ export default function Booking() {
         )}
       </div>
       <p className="caller-foot faint">Scheduling by AfterBeep</p>
-    </div>
+    </main>
   );
 }

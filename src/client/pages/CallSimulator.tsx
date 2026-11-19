@@ -31,6 +31,8 @@ export default function CallSimulator() {
   const [params] = useSearchParams();
   const story = params.get('story') === '1';
   const [samples, setSamples] = useState<Sample[]>([]);
+  // In the story only June's call matters, so the other samples fold away and the result lands above the fold.
+  const [showAllSamples, setShowAllSamples] = useState(false);
   const [mode, setMode] = useState<Mode>('sample');
   const [sampleId, setSampleId] = useState(story ? 'story-dryer' : 'no-heat');
   const [typed, setTyped] = useState('');
@@ -189,7 +191,7 @@ export default function CallSimulator() {
 
           {mode === 'sample' && (
             <div className="sample-list" role="radiogroup" aria-label="Sample voicemails">
-              {samples.map((s) => (
+              {(story && !showAllSamples ? samples.filter((s) => s.id === sampleId) : samples).map((s) => (
                 <button
                   key={s.id}
                   type="button"
@@ -203,6 +205,11 @@ export default function CallSimulator() {
                   <span className="sample-text">{s.transcript}</span>
                 </button>
               ))}
+              {story && !showAllSamples && samples.length > 1 && (
+                <button type="button" className="btn btn-small sample-more" onClick={() => setShowAllSamples(true)} disabled={busy}>
+                  Show all {samples.length} samples
+                </button>
+              )}
             </div>
           )}
           {mode === 'voice' && (

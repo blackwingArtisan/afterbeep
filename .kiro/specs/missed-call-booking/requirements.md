@@ -90,7 +90,7 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 7.6 THE SYSTEM SHALL turn demo mode on by default only while every adapter is local, and SHALL let `AFTERBEEP_DEMO=on|off` override it.
 7.7 WHEN an evaluator starts "the whole story" THE SYSTEM SHALL place a sample call on its own, skip the ring and greeting, show the exact text sent, and guide the evaluator through booking as the caller and billing the booked job by voice.
 7.8 THE SYSTEM SHALL let the landing page machine play a missed call, show the price check, and open a real booking page.
-7.9 WHEN the landing page first loads in a browser session THE SYSTEM SHALL play the landing machine's missed call once with the sound off, unless the visitor prefers reduced motion.
+7.9 WHEN a visitor opens the landing page for the first time in a session and has not asked for reduced motion THE SYSTEM SHALL play the hero machine once, muted: a TAPE FULL cold open from the old machine, then the missed call typed in and texted back within about three seconds, then the price-check slip; WHILE reduced motion is requested THE SYSTEM SHALL never play it by itself, and the readout SHALL never be an empty box.
 7.10 WHEN "the whole story" sends its invoice THE SYSTEM SHALL mark every story step done and show a finale with the jobs booked, the amount billed and the amount caught, and a way to pay as the customer.
 
 ## Requirement 8: Raise the dead

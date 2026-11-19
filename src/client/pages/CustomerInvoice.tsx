@@ -31,7 +31,7 @@ export default function CustomerInvoice() {
   if (error) {
     const biz = error.business;
     return (
-      <div className="caller-page">
+      <main className="caller-page caller-page-center">
         <div className="caller-card panel" data-testid="bad-invoice">
           {biz && (
             <header className="caller-head">
@@ -55,15 +55,15 @@ export default function CustomerInvoice() {
             )}
           </section>
         </div>
-      </div>
+      </main>
     );
   }
   if (!data) {
     return (
-      <div className="caller-page reel-loading" role="status">
+      <main className="caller-page reel-loading">
         <Reels spinning />
-        <span>Finding your invoice...</span>
-      </div>
+        <span role="status">Finding your invoice...</span>
+      </main>
     );
   }
   const { invoice, business } = data;
@@ -84,7 +84,7 @@ export default function CustomerInvoice() {
   const due = invoiceDay(invoice.dueDate);
 
   return (
-    <div className="caller-page">
+    <main className="caller-page">
       <article className="paper customer-invoice" data-testid="customer-invoice">
         <header className="paper-head">
           <div>
@@ -183,6 +183,6 @@ export default function CustomerInvoice() {
       <p className="caller-foot faint">
         <BrandMark className="brand-mark inline-mark" /> Invoicing by AfterBeep
       </p>
-    </div>
+    </main>
   );
 }

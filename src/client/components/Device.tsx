@@ -10,7 +10,7 @@ const VOICEMAIL =
 const TEXT_BACK =
   "Hi Priya, it's Morgan at Hollow Creek Plumbing & Appliance. Got your message about your water heater. I'll call you back the minute I'm off this job. Grab the earliest visit here: afterbeep.example.com/book/...";
 
-type Mode = 'idle' | 'ringing' | 'playing' | 'texted' | 'bill';
+type Mode = 'idle' | 'tapefull' | 'ringing' | 'playing' | 'texted' | 'bill';
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -27,6 +27,17 @@ function firstVisitThisSession(): boolean {
   }
 }
 
+/** A VU meter: bars that dance while the machine rings or plays, and sit faint and still when idle. */
+function Waveform({ live }: { live: boolean }) {
+  return (
+    <span className={`vu ${live ? 'live' : ''}`} aria-hidden="true" data-testid="device-vu">
+      {Array.from({ length: 28 }, (_, i) => (
+        <span key={i} style={{ animationDelay: `${(i * 97) % 600}ms` }} />
+      ))}
+    </span>
+  );
+}
+
 /**
  * The hero: a 1980s answering machine, back from the dead. Play runs a real-looking missed
  * call (ring, beep, the words typed across the label, the text back), Bill prints the price-book
@@ -40,22 +51,32 @@ export function Device({ count = 3 }: { count?: number }) {
 
   useEffect(() => () => void run.current++, []);
 
-  // The first five seconds should move: play the missed call once per session, silently, unless
-  // the visitor asked for less motion or has already pressed a key.
+  // The first five seconds should move, once per session and silently, unless the visitor asked for
+  // less motion: the old machine flashes TAPE FULL, AfterBeep picks up, the message types in, the
+  // text goes back, and then the carbon copies hold a misheard price.
   useEffect(() => {
     if (reducedMotion()) return;
     const timer = setTimeout(() => {
-      if (run.current === 0 && firstVisitThisSession()) void play({ muted: true });
-    }, 800);
+      if (run.current === 0 && firstVisitThisSession()) void coldOpen();
+    }, 0);
     return () => clearTimeout(timer);
   }, []);
 
-  async function play({ muted = false }: { muted?: boolean } = {}) {
+  async function coldOpen() {
     const token = ++run.current;
+    setMode('tapefull');
+    await wait(800);
+    if (run.current !== token) return;
+    await play({ muted: true, fast: true, token });
+    await wait(2600);
+    if (run.current === token) setMode('bill');
+  }
+
+  async function play({ muted = false, fast = false, token = ++run.current }: { muted?: boolean; fast?: boolean; token?: number } = {}) {
     setTyped('');
     setMode('ringing');
     if (!muted) ring(1);
-    await wait(reducedMotion() ? 0 : 1400);
+    await wait(reducedMotion() ? 0 : fast ? 400 : 1400);
     if (run.current !== token) return;
     if (!muted) beep();
     setMode('playing');
@@ -63,13 +84,14 @@ export function Device({ count = 3 }: { count?: number }) {
     if (reducedMotion()) {
       setTyped(VOICEMAIL);
     } else {
-      for (let i = 1; i <= words.length; i++) {
+      const step = fast ? 3 : 1;
+      for (let i = step; i < words.length + step; i += step) {
         if (run.current !== token) return;
         setTyped(words.slice(0, i).join(' '));
-        await wait(55);
+        await wait(fast ? 35 : 55);
       }
     }
-    await wait(reducedMotion() ? 0 : 500);
+    await wait(reducedMotion() ? 0 : fast ? 300 : 500);
     if (run.current === token) setMode('texted');
   }
 
@@ -90,6 +112,7 @@ export function Device({ count = 3 }: { count?: number }) {
   }
 
   const spinning = mode === 'ringing' || mode === 'playing' || mode === 'idle';
+  const live = mode === 'ringing' || mode === 'playing';
   return (
     <div className="device" role="group" aria-label="AfterBeep answering machine demo" data-testid="device">
       <div className="device-top">
@@ -128,8 +151,15 @@ export function Device({ count = 3 }: { count?: number }) {
         </button>
       </div>
       <div className="device-readout" aria-live="polite" data-testid="device-readout">
+        {(mode === 'idle' || live) && <Waveform live={live} />}
         {mode === 'idle' && <p className="device-hint">Press Play to hear a missed call. Bill shows the price check.</p>}
-        {mode === 'ringing' && <p className="device-hint">Ring... ring... beep.</p>}
+        {mode === 'tapefull' && (
+          <div className="device-tapefull" data-testid="device-tapefull">
+            <span className="tapefull-lcd">Tape full</span>
+            <p>The old machine. The tape is full, so the caller hangs up. On plain voicemail, 69% of callers never leave a word.</p>
+          </div>
+        )}
+        {mode === 'ringing' && <p className="device-hint">Ring... AfterBeep picks up. Beep.</p>}
         {(mode === 'playing' || mode === 'texted') && <p className="device-words">"{typed}"</p>}
         {mode === 'texted' && (
           <div className="device-text">

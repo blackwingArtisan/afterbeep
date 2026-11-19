@@ -42,3 +42,4 @@
   - [x] 31.1 Unit tests for detection, extraction and the Bedrock field; an API test for the Spanish text-back and confirmation (Req 3.10, 4.9)
 - [x] 32. The phone webhook ignores a retried contact ID, checked again inside the write, and compares its secret in constant time (Req 1.5, 1.6)
   - [x] 32.1 API tests for a retry, two reports at once, and wrong, missing and near-miss secrets (Req 1.2, 1.5, 1.6)
+- [x] 33. Hero cold open: TAPE FULL on the old machine, AfterBeep picks up with a VU meter, the message and text back by about three seconds, then the price-check slip; a still VU meter when idle (Req 7.9)

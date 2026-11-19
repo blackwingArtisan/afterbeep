@@ -39,6 +39,8 @@ test('[MC 7.9] the hero machine plays itself once a session, and never under red
   await page.goto('/');
   const readout = page.getByTestId('device-readout');
   await expect(readout).toContainText('Texted back to (614) 555-0134', { timeout: 15_000 });
+  // The cold open ends on the carbon copies holding "fifteen" at the usual $50.
+  await expect(page.getByTestId('device-slip')).toContainText('On hold', { timeout: 10_000 });
   await page.reload();
   await page.waitForTimeout(1_500);
   await expect(readout).toContainText('Press Play');
@@ -47,5 +49,6 @@ test('[MC 7.9] the hero machine plays itself once a session, and never under red
   await still.goto('/');
   await still.waitForTimeout(1_500);
   await expect(still.getByTestId('device-readout')).toContainText('Press Play');
+  await expect(still.getByTestId('device-vu')).toBeVisible();
   await still.close();
 });

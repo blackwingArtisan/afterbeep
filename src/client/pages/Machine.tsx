@@ -74,6 +74,9 @@ export default function Machine() {
                   <span aria-hidden="true">&middot;&middot;&middot;</span>
                 </summary>
                 <div className="more-panel panel">
+                  <NavLink className="btn btn-small more-story" to="/machine/call?story=1">
+                    Demo the whole story
+                  </NavLink>
                   <ThemeToggle />
                   <button className="btn btn-ghost btn-small" type="button" onClick={() => void resetDemo()}>
                     Reset demo
