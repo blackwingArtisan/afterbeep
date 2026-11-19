@@ -3,16 +3,16 @@
 Each task is one commit and leaves `npm run check` and `npm run test:e2e` passing. Every test title names its criteria, such as `[RR 2.3]`. Test titles may name `RR` ids before task 24; that task turns the coverage check on once every criterion has a test.
 
 ## The call script (`src/domain/remote-retrieval.ts`)
-- [ ] 1. Types, prompt table and queue order: `Key`, `RemoteMessage`, `RemoteState`, `RemoteEvent`, `RemoteEffect`, `Prompt`, `startState`, and `remoteQueue(messages)` (new, not erased, not a hang-up, emergency then soon then routine, oldest first) (Req 3.2, 3.3, 9.2, 10.2, 10.3)
-  - [ ] 1.1 Unit tests in `tests/unit/remote-retrieval.test.ts`: queue order and filtering, every prompt under 30 words, every effect survives a JSON round trip (Req 3.2, 3.3, 9.2, 10.2)
-- [ ] 2. `step` for the code phases: opening prompt naming the business, digits, auto-check on the third digit, `*` clears, other keys ignored, wrong code with three tries, goodbye, silence once then hang-up (Req 1.1-1.7, 9.1, 9.3, 10.1, 10.4)
-  - [ ] 2.1 Unit tests: each row of the code-phase table, and no message data in any prompt or state before `code-checked` (Req 1.8)
-- [ ] 3. `step` for the announcements: "You have N new messages" with singular and zero forms, position, urgency, caller name or "an unknown caller", job, the key list, `*` repeats, an empty queue goes to the invoice prompt (Req 3.1, 3.4-3.7)
-- [ ] 4. `step` for play, skip and stray keys: key 1 emits `play-message` and `mark-heard`, announcing alone emits neither, `#` moves on or asks for the invoice, unknown keys and message silence (Req 4.1, 4.2, 4.4, 7.1-7.4)
-- [ ] 5. `step` for texting: key 2 emits `text-booking-link` for the current message only, one prompt per outcome, no second effect while one is pending (Req 5.1-5.7, 10.6)
-- [ ] 6. `step` for erasing: 9 asks, a second 9 emits `erase-message` and moves on, any other key keeps the message (Req 6.1-6.3)
-- [ ] 7. `step` for the invoice and for failures: "After the beep, say your invoice." with `start-invoice`, words emit `draft-invoice` and the draft prompt then `hang-up`, empty words make no draft, `effect-failed` keeps the message, no prompt speaks an amount (Req 8.1, 8.4, 8.5, 8.6, 12.8)
-- [ ] 8. Seeded random-key run: the script never throws, never emits after `ended`, and gives the same output for the same input (Req 10.1, 10.3, 10.5)
+- [x] 1. Types, prompt table and queue order: `Key`, `RemoteMessage`, `RemoteState`, `RemoteEvent`, `RemoteEffect`, `Prompt`, `startState`, and `remoteQueue(messages)` (new, not erased, not a hang-up, emergency then soon then routine, oldest first) (Req 3.2, 3.3, 9.2, 10.2, 10.3)
+  - [x] 1.1 Unit tests in `tests/unit/remote-retrieval.test.ts`: queue order and filtering, every prompt under 30 words, every effect survives a JSON round trip (Req 3.2, 3.3, 9.2, 10.2)
+- [x] 2. `step` for the code phases: opening prompt naming the business, digits, auto-check on the third digit, `*` clears, other keys ignored, wrong code with three tries, goodbye, silence once then hang-up (Req 1.1-1.7, 9.1, 9.3, 10.1, 10.4)
+  - [x] 2.1 Unit tests: each row of the code-phase table, and no message data in any prompt or state before `code-checked` (Req 1.8)
+- [x] 3. `step` for the announcements: "You have N new messages" with singular and zero forms, position, urgency, caller name or "an unknown caller", job, the key list, `*` repeats, an empty queue goes to the invoice prompt (Req 3.1, 3.4-3.7)
+- [x] 4. `step` for play, skip and stray keys: key 1 emits `play-message` and `mark-heard`, announcing alone emits neither, `#` moves on or asks for the invoice, unknown keys and message silence (Req 4.1, 4.2, 4.4, 7.1-7.4)
+- [x] 5. `step` for texting: key 2 emits `text-booking-link` for the current message only, one prompt per outcome, no second effect while one is pending (Req 5.1-5.7, 10.6)
+- [x] 6. `step` for erasing: 9 asks, a second 9 emits `erase-message` and moves on, any other key keeps the message (Req 6.1-6.3)
+- [x] 7. `step` for the invoice and for failures: "After the beep, say your invoice." with `start-invoice`, words emit `draft-invoice` and the draft prompt then `hang-up`, empty words make no draft, `effect-failed` keeps the message, no prompt speaks an amount (Req 8.1, 8.4, 8.5, 8.6, 12.8)
+- [x] 8. Seeded random-key run: the script never throws, never emits after `ended`, and gives the same output for the same input (Req 10.1, 10.3, 10.5)
 
 ## Code, messages and routes
 - [ ] 9. `Business.remoteCode` and `db.remoteFailures`, the demo code 427 in the seed, and the pure `checkRemoteCode(db, digits, now)` in `src/domain/remote-code.ts`: constant-time compare, five wrong codes in 15 minutes lock it, a right code clears the count, expiry after 15 minutes (Req 2.1, 2.2, 2.4, 2.6)

@@ -55,6 +55,7 @@ interface RemoteMessage {
 }
 
 type Phase =
+  | 'ringing'            // before the call is answered
   | 'ask-code' | 'checking-code'
   | 'message'            // announced, waiting for a key
   | 'confirm-erase'      // 9 pressed once
