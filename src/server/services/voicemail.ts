@@ -62,7 +62,7 @@ export async function receiveVoicemail(deps: Deps, call: IncomingCall): Promise<
     throw error;
   }
 
-  const { business, jobs, messages } = deps.store.read();
+  const { business, messages } = deps.store.read();
   const extraction = await deps.adapters.extractor.extract(text, { callerId, business });
   const now = deps.clock();
   const message: Message = {

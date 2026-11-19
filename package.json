@@ -20,6 +20,7 @@
     "test:e2e": "playwright test",
     "spec:coverage": "tsx scripts/spec-coverage.ts",
     "eval": "tsx scripts/eval-extractor.ts --misses",
+    "test:aws": "vitest run --config vitest.aws.config.ts",
     "check": "npm run typecheck && npm run spec:coverage && npm test"
   },
   "dependencies": {

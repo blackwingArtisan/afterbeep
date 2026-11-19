@@ -54,6 +54,8 @@ export interface VoicemailExtraction {
   summary: string;
   /** Which extractor produced this result. */
   source: 'rules' | 'bedrock';
+  /** Why a model extractor's answer was not used and the rules answered instead (for logs and the eval). */
+  fallbackReason?: string;
 }
 
 export type JobCategory =

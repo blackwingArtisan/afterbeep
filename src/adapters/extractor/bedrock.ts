@@ -7,6 +7,7 @@ import {
 import { spokenDigitsToText } from '../../domain/spoken-numbers';
 import { formatPhone } from '../../domain/voicemail-rules';
 import type { VoicemailExtraction } from '../../domain/types';
+import { ZodError } from 'zod';
 import { RuleExtractor } from './local';
 import { extractionToolJsonSchema, ModelExtractionSchema } from './schema';
 import type { ExtractionContext, Extractor } from './types';
@@ -20,6 +21,26 @@ export interface BedrockExtractorOptions {
   region: string;
   modelId: string;
   client?: ConverseClient;
+  /** Where a fallback is reported; defaults to console.warn so the server log says why. */
+  log?: (line: string) => void;
+}
+
+/** Thrown when the model answered without calling the forced tool. */
+class NoToolUseError extends Error {
+  override readonly name = 'NoToolUse';
+}
+
+/** A short, log-safe reason for a fallback: the AWS error name, a schema failure, or a missing tool call. */
+export function fallbackReason(error: unknown): string {
+  if (error instanceof ZodError) {
+    const paths = [...new Set(error.issues.map((i) => i.path.join('.') || '(root)'))].slice(0, 4);
+    return `InvalidToolInput: ${paths.join(', ')}`;
+  }
+  if (error instanceof Error) {
+    const message = error.message.replace(/\s+/g, ' ').slice(0, 120);
+    return message ? `${error.name}: ${message}` : error.name;
+  }
+  return 'UnknownError';
 }
 
 const STREET_WORDS = new Set([
@@ -91,6 +112,7 @@ export class BedrockExtractor implements Extractor {
         }),
       );
       const toolUse = response.output?.message?.content?.find((block) => block.toolUse)?.toolUse;
+      if (!toolUse) throw new NoToolUseError('the model answered without the extraction tool');
       const parsed = ModelExtractionSchema.parse(toolUse?.input);
       // The model may only report what the caller said. Anything it cannot point to in the
       // transcript is dropped rather than texted to a stranger or driven to.
@@ -100,8 +122,11 @@ export class BedrockExtractor implements Extractor {
           : ctx.callerId;
       const address = parsed.address && addressIsGrounded(parsed.address, transcript) ? parsed.address : null;
       return { ...parsed, callbackNumber: formatPhone(callback), address, source: 'bedrock' };
-    } catch {
-      return this.fallback.extract(transcript, ctx);
+    } catch (error) {
+      // The caller is still texted from the rules answer; the reason goes to the log and onto the message.
+      const reason = fallbackReason(error);
+      (this.options.log ?? console.warn)(`[bedrock] fell back to rules: ${reason}`);
+      return { ...(await this.fallback.extract(transcript, ctx)), fallbackReason: reason };
     }
   }
 }

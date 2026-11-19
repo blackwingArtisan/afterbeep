@@ -1,7 +1,7 @@
 import type { ConverseCommand, ConverseCommandOutput } from '@aws-sdk/client-bedrock-runtime';
 import { describe, expect, it } from 'vitest';
 import { adaptersFromEnv, isDemoMode } from '../../src/adapters';
-import { addressIsGrounded, BedrockExtractor, numberIsGrounded } from '../../src/adapters/extractor/bedrock';
+import { addressIsGrounded, BedrockExtractor, fallbackReason, numberIsGrounded } from '../../src/adapters/extractor/bedrock';
 import { MemoryStore } from '../../src/adapters/store/local';
 import { emptyDb } from '../../src/server/seed-db';
 import { demoBusiness } from '../../src/server/seed';
@@ -107,11 +107,35 @@ describe('Bedrock extractor (stubbed client)', () => {
 
   it('[MC 3.5] falls back to the rules when the call fails or the answer is malformed', async () => {
     for (const stub of [stubClient(modelAnswer, true), stubClient({ callerName: 'Priya' })]) {
-      const x = new BedrockExtractor({ region: 'us-east-1', modelId: 'm', client: stub.client });
+      const x = new BedrockExtractor({ region: 'us-east-1', modelId: 'm', client: stub.client, log: () => {} });
       const result = await x.extract(transcript, { callerId, business: demoBusiness });
       expect(result.source).toBe('rules');
       expect(result.callbackNumber).toBe('(614) 555-0134');
     }
+  });
+
+  it('[MC 3.5] says why it fell back, on the message and in the log', async () => {
+    const logged: string[] = [];
+    const log = (line: string) => logged.push(line);
+    const throttled = new BedrockExtractor({ region: 'us-east-1', modelId: 'm', client: stubClient(modelAnswer, true).client, log });
+    expect((await throttled.extract(transcript, { callerId, business: demoBusiness })).fallbackReason).toBe('Error: throttled');
+
+    const malformed = new BedrockExtractor({ region: 'us-east-1', modelId: 'm', client: stubClient({ callerName: 'Priya' }).client, log });
+    expect((await malformed.extract(transcript, { callerId, business: demoBusiness })).fallbackReason).toMatch(/^InvalidToolInput: callbackNumber/);
+
+    const noTool = {
+      async send(): Promise<ConverseCommandOutput> {
+        return { output: { message: { role: 'assistant', content: [{ text: 'Sure, here it is.' }] } } } as ConverseCommandOutput;
+      },
+    };
+    const chatty = new BedrockExtractor({ region: 'us-east-1', modelId: 'm', client: noTool, log });
+    expect((await chatty.extract(transcript, { callerId, business: demoBusiness })).fallbackReason).toMatch(/^NoToolUse/);
+    expect(logged).toHaveLength(3);
+    expect(logged[0]).toBe('[bedrock] fell back to rules: Error: throttled');
+
+    const ok = new BedrockExtractor({ region: 'us-east-1', modelId: 'm', client: stubClient(modelAnswer).client, log });
+    expect((await ok.extract(transcript, { callerId, business: demoBusiness })).fallbackReason).toBeUndefined();
+    expect(fallbackReason('odd')).toBe('UnknownError');
   });
 
   it('[MC 3.6] grounds numbers and addresses against the transcript', () => {

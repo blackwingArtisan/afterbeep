@@ -42,3 +42,28 @@ The second column is no longer held out, since those two fixes were made after s
 | Running toilet | Category drain, labelled general | A judgment call |
 
 The phone number and address are the fields that send a tech to the right house, and both scored 24 of 24 with no invented addresses. The Bedrock extractor exists for the cases the rules miss; it drops any number or address the caller never said and falls back to these rules on any failure. It was not scored here because calling it costs money.
+
+## Scoring the Bedrock extractor
+
+The same script scores Amazon Bedrock (Nova Lite by default) side by side with the rules, on the same 24 voicemails and the same comparison:
+
+```bash
+AFTERBEEP_EVAL_PAID=1 npx tsx scripts/eval-extractor.ts --bedrock --misses
+```
+
+It makes one model call per voicemail, about 24 small calls in all, so it refuses to run without `AFTERBEEP_EVAL_PAID=1` and AWS credentials. Set `AFTERBEEP_BEDROCK_MODEL` to score a different model. Besides the five fields it reports how many answers **fell back** to the rules, and why each one did: the extractor now records a `fallbackReason` (the AWS error name, a schema failure, or a reply without the forced tool call) on the message and in the server log.
+
+| Field | Rules | Nova Lite |
+|---|---|---|
+| Caller name | 21 of 24 | not run yet |
+| Callback number | 24 of 24 | not run yet |
+| Address | 24 of 24 | not run yet |
+| Job category | 18 of 24 | not run yet |
+| Urgency | 21 of 24 | not run yet |
+| Every field right | 16 of 24 | not run yet |
+| Address the caller never gave | 0 | not run yet |
+
+Two more paid checks sit behind the same kind of switch:
+
+- `AFTERBEEP_AWS_TEST=1 npm run test:aws` runs two live Bedrock extractions (an emergency with a spoken number and address, and a caller who gave no address) and fails on any fallback or invented address. Without the variable both tests are skipped, so `npm test` and CI never spend money.
+- `AFTERBEEP_EVAL_PAID=1 npx tsx scripts/transcribe-sample.ts s3://bucket/voicemail.wav` runs one Amazon Transcribe batch job on a real recording and prints the transcript, how long it took, and what the rules read from it.
