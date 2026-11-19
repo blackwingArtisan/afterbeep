@@ -8,7 +8,7 @@ Where to find the proof for each submission check and each judging criterion. Ev
 |---|---|
 | A working app | `npm ci && npm run build && npm start`, then http://localhost:3111. Runs with no accounts or keys; every external service has a free local adapter ([src/adapters/index.ts](../src/adapters/index.ts)). Steps in the [README](../README.md#try-it-in-60-seconds). |
 | Open source license | [LICENSE](../LICENSE), MIT, at the repository root. |
-| `/.kiro` at the root | [.kiro/](../.kiro): 6 steering files, 2 specs, 6 hooks, 3 MCP servers (2 pinned, 1 the project's own) and a tracked custom agent, [.kiro/agents/afterbeep-builder.json](../.kiro/agents/afterbeep-builder.json). Not ignored by git. |
+| `/.kiro` at the root | [.kiro/](../.kiro): 6 steering files, 3 specs (remote retrieval written and built by Kiro), 6 hooks, 3 MCP servers (2 pinned, 1 the project's own) and a tracked custom agent, [.kiro/agents/afterbeep-builder.json](../.kiro/agents/afterbeep-builder.json). Not ignored by git. |
 | Demo video | Under 3 minutes, following the beat sheet in [.kiro/steering/demo.md](../.kiro/steering/demo.md). Linked from the README. |
 | How Kiro was used | [KIRO-LOG.md](../KIRO-LOG.md): a feature checklist with proof links, how Kiro and the coding assistant split the work (it matches `git log`), a "Caught by Kiro" table and a record of each Kiro session. |
 
@@ -36,8 +36,8 @@ Where to find the proof for each submission check and each judging criterion. Ev
 | All money in integer cents; the server sends an invoice only when its recomputed total equals the exact total the owner approved | [src/domain/money.ts](../src/domain/money.ts), [src/server/services/invoicing.ts](../src/server/services/invoicing.ts), [.kiro/steering/money.md](../.kiro/steering/money.md) |
 | The price check: "dryer belt, fifteen" is held when the usual price is $50 (more than 15% under or 25% over) | [src/domain/price-book.ts](../src/domain/price-book.ts) |
 | Bedrock is forced to answer through one tool, and any number or address the caller never said is dropped; a failure falls back to the rules and records why | [src/adapters/extractor/bedrock.ts](../src/adapters/extractor/bedrock.ts) |
-| 201 Vitest unit and API tests, 23 Playwright tests against the production build (desktop and Pixel 7) | `npm run check`, `npm run test:e2e`, CI in [.github/workflows/check.yml](../.github/workflows/check.yml) |
-| 119 EARS criteria; 115 are named by test titles and the build fails if one is not, the other 4 are on the real AWS and Stripe path | `npm run spec:coverage`, [scripts/spec-coverage.ts](../scripts/spec-coverage.ts) |
+| 305 Vitest unit and API tests, 25 Playwright tests against the production build (desktop and Pixel 7) | `npm run check`, `npm run test:e2e`, CI in [.github/workflows/check.yml](../.github/workflows/check.yml) |
+| 202 EARS criteria; 198 are named by test titles and the build fails if one is not, the other 4 are on the real AWS and Stripe path | `npm run spec:coverage`, [scripts/spec-coverage.ts](../scripts/spec-coverage.ts) |
 | The extractor is measured, not assumed: on its first, held-out run over 24 labelled voicemails it got every phone number and address right and invented no address | [docs/eval.md](eval.md), `npm run eval` |
 
 ### Quality of the idea
