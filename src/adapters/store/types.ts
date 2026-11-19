@@ -10,6 +10,8 @@ export interface Db {
   invoices: Invoice[];
   pastInvoices: PastInvoice[];
   nextInvoiceNumber: number;
+  /** Numbers (E.164) that replied STOP. Optional so data saved before texting rules still loads. */
+  optOuts?: string[];
 }
 
 export interface Store {

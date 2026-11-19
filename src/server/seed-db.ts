@@ -16,6 +16,7 @@ export function emptyDb(): Db {
     invoices: [],
     pastInvoices: structuredClone(pastInvoices),
     nextInvoiceNumber: FIRST_NEW_INVOICE_NUMBER,
+    optOuts: [],
   };
 }
 

@@ -79,11 +79,15 @@ interface SmsSender   { name: string; send(msg: { to: string; body: string; link
 |---|---|---|---|
 | POST | `/api/calls` | `{ from, transcript, durationSec? }` | 201 `{ message }` |
 | POST | `/api/hooks/connect-voicemail` | `{ contactId, callerNumber, recordingUri, durationSec? }` + `Authorization: Bearer <secret>` | 201 `{ messageId }` |
+| POST | `/api/hooks/inbound-text` | `{ from, body }` + `Authorization: Bearer <secret>` | 200 `{ keyword, replied }` |
 | GET | `/api/messages` | | `{ messages, newCount }` |
 | POST | `/api/messages/:id/status` | `{ status }` | `{ message }` |
 | GET | `/api/book/:token` | | `{ business, caller, slots, booked }` |
 | POST | `/api/book/:token` | `{ start, end, address? }` | 201 `{ job }` |
 | GET | `/api/jobs`, `/api/outbox`, `/api/samples` | | lists |
+
+## Texting rules
+Every text the machine starts goes through `sendText`, which refuses a number on the opt-out list (`Db.optOuts`, E.164). The first texts (text-back and raise) end with the opt-out line in the caller's language. A reply that is only a keyword is handled by `receiveText`: STOP-type words add the number, START and UNSTOP remove it, HELP-type words get the business name and phone; each sends one confirmation, which is the one text an opted-out number still gets. Ordinary replies change nothing. AWS End User Messaging also keeps an opt-out list per phone number, so production has two locks.
 
 ## Slot rules
 Slots are generated per day from the business's weekly hours in its IANA time zone (wall time converted with `Intl`, so daylight saving is handled). A slot is offered when it starts at least 60 minutes from now, fits before closing and overlaps no job. Emergencies search from today, others from tomorrow, up to 14 days. Booking re-runs the same check inside the store transaction, so two callers cannot take one slot.

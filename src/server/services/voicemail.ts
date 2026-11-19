@@ -1,9 +1,11 @@
 import { TranscriptionError } from '../../adapters/transcriber/types';
 import { openSlots } from '../../domain/slots';
+import { optOutLine } from '../../domain/texting';
 import type { Message, VoicemailExtraction } from '../../domain/types';
 import { emptyMessageReason, toE164 } from '../../domain/voicemail-rules';
 import { ServiceError, type Deps } from './deps';
 import { firstName, formatSlot } from './format';
+import { OptedOutError, sendText } from './texting';
 
 export interface IncomingCall {
   /** Caller ID as received from the phone network. */
@@ -27,10 +29,10 @@ function textBackBody(
   const noun = jobNoun(extraction);
   const about = noun ? ` about your ${noun}` : '';
   if (extraction.urgency === 'emergency') {
-    return `${hi} Got your message${about}. I'll call you back the minute I'm off this job. Grab the earliest visit here: ${url}`;
+    return `${hi} Got your message${about}. I'll call you back the minute I'm off this job. Grab the earliest visit here: ${url} ${optOutLine()}`;
   }
   const opening = firstOpening ? ` The first opening is ${firstOpening}.` : '';
-  return `${hi} Sorry I missed your call${about}.${opening} Pick a time that works for you: ${url}`;
+  return `${hi} Sorry I missed your call${about}.${opening} Pick a time that works for you: ${url} ${optOutLine()}`;
 }
 
 /** The same text back for a caller who left the message in Spanish. */
@@ -44,10 +46,10 @@ function textBackBodySpanish(
   const hola = extraction.callerName ? `Hola ${firstName(extraction.callerName)}` : 'Hola';
   const hi = `${hola}, soy ${owner} de ${businessName}.`;
   if (extraction.urgency === 'emergency') {
-    return `${hi} Recibí su mensaje. Le llamo en cuanto termine este trabajo. Reserve la primera visita aquí: ${url}`;
+    return `${hi} Recibí su mensaje. Le llamo en cuanto termine este trabajo. Reserve la primera visita aquí: ${url} ${optOutLine('es')}`;
   }
   const opening = firstOpening ? ` La primera cita libre es el ${firstOpening.replace(/\.$/, '')}.` : '';
-  return `${hi} Disculpe que no contesté su llamada.${opening} Elija la hora que le convenga: ${url}`;
+  return `${hi} Disculpe que no contesté su llamada.${opening} Elija la hora que le convenga: ${url} ${optOutLine('es')}`;
 }
 
 /** What the text calls the job ("your heat", "your water heater", "your dryer"), or null when it is unknown. */
@@ -147,7 +149,7 @@ async function textBack(deps: Deps, message: Message): Promise<Message> {
   });
   const linkPath = `/book/${message.bookingToken}`;
   try {
-    await deps.adapters.sms.send({
+    await sendText(deps, {
       to: textBackNumber(extraction, message.from),
       linkPath,
       body: textBackBody(
@@ -159,11 +161,12 @@ async function textBack(deps: Deps, message: Message): Promise<Message> {
       ),
     });
   } catch (error) {
-    const noTextReason = failureReason(error);
+    const optedOut = error instanceof OptedOutError;
+    const noTextReason = optedOut ? 'Not texted: this number replied STOP. Call them back instead.' : failureReason(error);
     return deps.store.update((db) => {
       const stored = db.messages.find((m) => m.id === message.id)!;
       stored.noTextReason = noTextReason;
-      stored.textFailed = true;
+      stored.textFailed = !optedOut;
       return { ...stored };
     });
   }

@@ -23,6 +23,7 @@ Then import `contact-flow.json` in the Connect flow designer, point the number a
 ## Files
 - `contact-flow.json`: the voicemail flow in Amazon Connect flow language. Import it in the flow designer, then point the number at it.
 - `recording-to-webhook.mjs`: Lambda for S3 `ObjectCreated` events on the call-recordings prefix. It reads the caller number that the flow stored as a contact attribute and posts the recording location to AfterBeep.
+- `inbound-text-to-webhook.mjs`: Lambda for replies. Turn on two-way SMS for the origination number with an SNS topic as the destination, subscribe this Lambda, and it posts each reply to `POST /api/hooks/inbound-text`, where STOP, HELP and START are handled. It is not in `template.yaml` yet; the topic and subscription are made by hand.
 
 ## Server settings for this path
 ```

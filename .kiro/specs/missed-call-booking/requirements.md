@@ -103,3 +103,14 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 8.5 THE SYSTEM SHALL show the graveyard with each call's number and day, and the work the calls might win back at the owner's typical job price.
 8.6 WHEN a raised caller books THE SYSTEM SHALL count the booking in "Kept this week".
 8.7 WHERE the viewer prefers reduced motion THE SYSTEM SHALL show the graveyard without the rising and fog animations.
+
+## Requirement 9: Texting rules
+**User story:** As a caller, I want to stop the texts with one word, so that a business I called once cannot keep texting me; as an owner, I want the machine to follow the carriers' texting rules, so that my number is not blocked.
+
+9.1 THE SYSTEM SHALL end every text-back and raise text with how to opt out, in the caller's language.
+9.2 WHEN a caller replies with an opt-out keyword (STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT, OPTOUT, REVOKE or PARAR) as the whole message THE SYSTEM SHALL record the number as opted out and send one confirmation that names the business and how to opt back in.
+9.3 WHILE a number is opted out THE SYSTEM SHALL send it no text-back, booking confirmation or raise text, SHALL file its voicemails with the reason and without a retry, and SHALL leave it out of the graveyard.
+9.4 WHEN a caller replies HELP, INFO or AYUDA THE SYSTEM SHALL reply with the business name, its phone number and how to opt out.
+9.5 WHEN an opted-out caller replies START or UNSTOP THE SYSTEM SHALL opt the number back in and confirm.
+9.6 WHEN a reply is not a keyword on its own THE SYSTEM SHALL send nothing back and change nothing.
+9.7 THE SYSTEM SHALL accept replies only on the inbound-text webhook with the shared secret, compared in constant time.

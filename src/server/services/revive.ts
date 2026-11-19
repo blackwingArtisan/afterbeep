@@ -1,6 +1,8 @@
 import { GRAVEYARD_MAX_AGE_DAYS, graveyard, type GraveyardView, type RaiseResult } from '../../domain/graveyard';
 import { typicalJobCents } from '../../domain/kept';
+import { optOutLine } from '../../domain/texting';
 import type { Deps } from './deps';
+import { sendText } from './texting';
 import { failureReason } from './voicemail';
 
 export function graveyardView(deps: Deps): GraveyardView {
@@ -18,7 +20,7 @@ export function graveyardView(deps: Deps): GraveyardView {
 
 function raiseBody(ownerFirstName: string, businessName: string, receivedAt: string, timeZone: string, url: string): string {
   const day = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'long' }).format(new Date(receivedAt));
-  return `Hi, it's ${ownerFirstName} at ${businessName}. Sorry I missed your call on ${day}. If you still need a hand, pick a time here: ${url}`;
+  return `Hi, it's ${ownerFirstName} at ${businessName}. Sorry I missed your call on ${day}. If you still need a hand, pick a time here: ${url} ${optOutLine()}`;
 }
 
 /**
@@ -36,7 +38,7 @@ export async function raiseTheDead(deps: Deps): Promise<RaiseResult> {
     const message = db.messages.find((m) => m.id === ghost.id)!;
     const linkPath = `/book/${message.bookingToken}`;
     try {
-      await deps.adapters.sms.send({
+      await sendText(deps, {
         to: ghost.from,
         linkPath,
         body: raiseBody(ownerFirstName, business.name, ghost.receivedAt, business.timezone, `${deps.publicBaseUrl}${linkPath}`),

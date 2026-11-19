@@ -181,7 +181,7 @@ describe('Spanish callers', () => {
     const outbox = () => ctx.call<{ outbox: OutboxItem[] }>('GET', '/api/outbox').then((r) => r.body.outbox);
     const text = (await outbox()).find((o) => o.to === '+16145550185')!;
     expect(text.body).toBe(
-      `Hola Rosa, soy Morgan de Hollow Creek Plumbing & Appliance. Recibí su mensaje. Le llamo en cuanto termine este trabajo. Reserve la primera visita aquí: ${BASE}/book/${body.message.bookingToken}`,
+      `Hola Rosa, soy Morgan de Hollow Creek Plumbing & Appliance. Recibí su mensaje. Le llamo en cuanto termine este trabajo. Reserve la primera visita aquí: ${BASE}/book/${body.message.bookingToken} Responda STOP para no recibir más textos.`,
     );
 
     const view = await ctx.call<{ slots: Array<{ start: string; end: string }> }>('GET', `/api/book/${body.message.bookingToken}`);

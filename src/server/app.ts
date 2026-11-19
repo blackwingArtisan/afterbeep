@@ -9,6 +9,7 @@ import { bookingView, bookSlot } from './services/booking';
 import { ServiceError, type Deps } from './services/deps';
 import { draftInvoice, InvoiceLineSchema, payDemoInvoice, publicInvoice, quoteInvoice, SendInvoiceSchema, sendInvoice } from './services/invoicing';
 import { graveyardView, raiseTheDead } from './services/revive';
+import { receiveText } from './services/texting';
 import { receiveVoicemail, retryTextBack, setMessageStatus } from './services/voicemail';
 
 export interface AppOptions {
@@ -24,6 +25,11 @@ const CallSchema = z.object({
   from: z.string().trim().min(7).max(32),
   transcript: z.string().trim().min(1).max(4000),
   durationSec: z.number().int().min(1).max(600).optional(),
+});
+
+const InboundTextSchema = z.object({
+  from: z.string().trim().min(7).max(20),
+  body: z.string().max(1600),
 });
 
 const ConnectHookSchema = z.object({
@@ -116,6 +122,17 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
       durationSec: hook.durationSec,
     });
     return c.json({ messageId: message.id }, 201);
+  });
+
+  // Replies to the machine's texts. In production AWS End User Messaging publishes each inbound
+  // text to an SNS topic, and a small Lambda posts it here with the same shared secret.
+  api.post('/hooks/inbound-text', async (c) => {
+    if (!options.webhookSecret) throw new ServiceError(503, 'webhook-disabled', 'The phone webhook is not configured');
+    if (!bearerMatches(c.req.header('authorization'), options.webhookSecret)) {
+      return c.json({ error: 'unauthorized', message: 'Bad webhook credentials', details: null }, 401);
+    }
+    const text = InboundTextSchema.parse(await c.req.json());
+    return c.json(await receiveText(deps, text), 200);
   });
 
   api.get('/samples', (c) => c.json({ voicemails: simulatorScripts, invoiceScripts: sampleInvoiceScripts }));

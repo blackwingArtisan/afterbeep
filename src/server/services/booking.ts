@@ -1,9 +1,11 @@
 import { openSlots, slotIsOpen, type Slot } from '../../domain/slots';
+import { isOptedOut } from '../../domain/texting';
 import type { Job, Message } from '../../domain/types';
 import { toE164 } from '../../domain/voicemail-rules';
 import type { Db } from '../../adapters/store/types';
 import { ServiceError, type Deps } from './deps';
 import { firstName, formatSlot } from './format';
+import { sendText } from './texting';
 
 function findMessage(db: Db, token: string): Message {
   const message = db.messages.find((m) => m.bookingToken === token);
@@ -87,7 +89,9 @@ export async function bookSlot(deps: Deps, token: string, slot: Slot, address: s
   const { business } = db;
   const owner = business.ownerName.split(' ')[0];
   const spanish = db.messages.find((m) => m.id === job.messageId)?.extraction.language === 'es';
-  await deps.adapters.sms.send({
+  // A caller who replied STOP still books on the page, which confirms it; they get no text.
+  if (isOptedOut(db, job.phone)) return job;
+  await sendText(deps, {
     to: toE164(job.phone) ?? job.phone,
     linkPath: null,
     body: spanish

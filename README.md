@@ -28,7 +28,7 @@ Requires Node 24 or later. No accounts or keys.
 
 > **Built with Kiro**
 > - **6 steering files:** 3 always included, 2 loaded by file match (money rules with `src/domain`, AWS rules with `src/adapters`), 1 manual demo script
-> - **2 specs, 106 EARS criteria:** 102 named by test titles and enforced in CI by `npm run spec:coverage`, 4 on the real AWS and Stripe path
+> - **2 specs, 113 EARS criteria:** 109 named by test titles and enforced in CI by `npm run spec:coverage`, 4 on the real AWS and Stripe path
 > - **6 IDE hooks** (4 on file save, 2 on agent stop) and **1 custom agent** with 3 hooks of its own: a guard that blocks `.env` writes, live Stripe keys and float money, and tests after every source write
 > - **2 MCP servers**, pinned: AWS documentation and Context7
 > - How Kiro and the coding assistant split the work, and every time Kiro caught something: [KIRO-LOG.md](KIRO-LOG.md)
@@ -75,7 +75,7 @@ A one-truck business used to run on three machines: an answering machine on the 
 - **First 12 months:** 10 techs at one supply house, then that metro, then three metros.
 - **Go to market:** no new number (conditional call forwarding on the phone they already carry), supply-house counter cards with a "call this and leave a message" QR code, trade forums, and a free month per referral.
 
-Sources, the full model and the texting rules: [docs/business.md](docs/business.md).
+Sources and the full model: [docs/business.md](docs/business.md). Opt-outs, 10DLC and Raise the dead: see "Texting rules" further down.
 
 **Text-back is table stakes. Of the tools below, only AfterBeep checks a spoken price against your own carbon copies, at $39 flat on your own number.**
 
@@ -126,12 +126,23 @@ Everything runs on a laptop with no accounts. Each item is covered by the tests 
 - The inbox shows each message as a cassette, emergencies first under a "Call back now" strip, with a seven-segment counter and a "Kept this week" readout.
 - **Raise the dead.** Unreturned hang-ups from the last 30 days wait in a graveyard, one per number. One owner press texts each a single booking link that names the day they called; nothing goes out without the press, and a raised call is never texted twice.
 - The phone webhook compares its secret in constant time and files a retried call only once.
+- **Texting rules.** Every first text ends "Reply STOP to opt out." A caller who replies STOP (or UNSUBSCRIBE, CANCEL, PARAR and the rest of the common set) gets one confirmation and is never texted again until they reply START; HELP gets the business name and phone. Replies arrive on a signed webhook, and an ordinary reply such as "please don't stop by before 5" changes nothing.
 
 **The Dictaphone and the carbon copies**
 - "Dryer belt fifteen, taxed. One hour labor at eighty-five. Trip charge." becomes three lines. Code does every multiplication, the tax and the total in integer cents.
 - The carbon copies, a price book built from past invoices, hold a price more than 15% below or 25% above the usual one, fill a missing price from history, read "twelve fifty" as $1,250 for a water heater, and keep "forty gallon" as a size, not a quantity.
 - Quantities are checked too, and a price with two readings and no history waits for the owner to pick one.
 - The server recomputes the total and sends only when it equals the exact total the owner approved. The invoice number and the job are reserved before the send, so two sends at once cannot share a number, and invoices are dated in the business's own time zone.
+
+</details>
+
+<details>
+<summary>Texting rules: opt-outs, 10DLC and Raise the dead</summary>
+
+- **Opt-out on every number.** Each first text names the business and ends with how to opt out, in the caller's language. STOP-type replies go on an opt-out list that every send checks first: the text-back, the booking confirmation and Raise the dead. AWS End User Messaging keeps its own opt-out list per number as well, so production has two locks.
+- **Registered sending.** In the US, business texts from a local number go through A2P 10DLC registration: a registered brand and a campaign that says what the texts are for. AfterBeep's are customer care: replies to people who called the business first, with no marketing content.
+- **Raise the dead is a one-time reply.** It texts only numbers that called the business in the last 30 days and never heard back. The owner presses it; each number gets one text, never a second, and numbers that opted out are left out.
+- **Nothing on autopilot to strangers.** The machine never texts a number that did not call, and never sends a follow-up sequence.
 
 </details>
 
@@ -176,12 +187,12 @@ The phone wiring is in [infra/connect/README.md](infra/connect/README.md), and [
 ## Tests and spec traceability
 
 ```bash
-npm run check             # typecheck, spec coverage, 177 Vitest unit and API tests
+npm run check             # typecheck, spec coverage, 188 Vitest unit and API tests
 npx playwright install chromium
 npm run test:e2e          # 22 Playwright tests (one is phone-only) against the production build on port 3112
 ```
 
-Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 102 of 106 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
+Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 109 of 113 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
 
 `npm run eval` scores the rules extractor on 24 hand-labelled voicemails it had not seen: on the first run it got every phone number and address right, never invented an address, and read urgency right in 19 of 24. The two missed emergencies it found are fixed, and urgency is now 21 of 24. Details and the remaining misses: [docs/eval.md](docs/eval.md). The same script scores Bedrock side by side with `--bedrock`, and `npm run test:aws` checks the live Bedrock path; both are paid, so both stay off unless you switch them on, and neither has been run for these numbers.
 
