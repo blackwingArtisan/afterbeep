@@ -237,6 +237,9 @@ export default function CallSimulator() {
             <input type="checkbox" checked={skipIntro} onChange={(e) => setSkipIntro(e.target.checked)} disabled={busy} />
             Skip the ring and greeting
           </label>
+          <Link className="link-btn ogm-link" to="/machine/greeting">
+            Change the greeting
+          </Link>
 
           {error && <div className="error-box" role="alert">{error}</div>}
 

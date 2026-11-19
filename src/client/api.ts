@@ -56,6 +56,7 @@ export interface PublicInvoice {
 
 export const api = {
   business: () => request<{ business: Business; taxRateMilli: number }>('GET', '/business'),
+  saveGreeting: (greeting: string) => request<{ business: Business }>('PUT', '/business/greeting', { greeting }),
   messages: () => request<{ messages: Message[]; newCount: number }>('GET', '/messages'),
   setStatus: (id: string, status: 'new' | 'heard' | 'called-back') =>
     request<{ message: Message }>('POST', `/messages/${id}/status`, { status }),

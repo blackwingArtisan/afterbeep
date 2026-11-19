@@ -28,7 +28,7 @@ Requires Node 24 or later. No accounts or keys.
 
 > **Built with Kiro**
 > - **6 steering files:** 3 always included, 2 loaded by file match (money rules with `src/domain`, AWS rules with `src/adapters`), 1 manual demo script
-> - **2 specs, 114 EARS criteria:** 110 named by test titles and enforced in CI by `npm run spec:coverage`, 4 on the real AWS and Stripe path
+> - **2 specs, 119 EARS criteria:** 115 named by test titles and enforced in CI by `npm run spec:coverage`, 4 on the real AWS and Stripe path
 > - **6 IDE hooks** (4 on file save, 2 on agent stop) and **1 custom agent** with 3 hooks of its own: a guard that blocks `.env` writes, live Stripe keys and float money, and tests after every source write
 > - **2 MCP servers**, pinned: AWS documentation and Context7
 > - How Kiro and the coding assistant split the work, and every time Kiro caught something: [KIRO-LOG.md](KIRO-LOG.md)
@@ -122,6 +122,7 @@ Everything runs on a laptop with no accounts. Each item is covered by the tests 
 - Reads each voicemail for the caller's name, callback number (a spoken number beats caller ID), address, job and urgency. A furnace that quit at twenty degrees with a baby at home is an emergency; no hot water is "soon".
 - Texts every real caller a booking link at once. Emergencies are promised a call back; everyone else sees the first open slot. Hang-ups get no text, a repeat caller gets one text per 10 minutes, and a text the carrier refuses is filed with a retry button.
 - **Spanish callers.** A message left in Spanish is read for the same details, filed with an English job and summary and an ES chip, and the caller's text back and booking confirmation go out in Spanish. Try the "Burst water heater, in Spanish" sample in the call simulator. About 1 in 8 US residents speak Spanish at home, and in 2025 30% of plumbers were Hispanic or Latino ([sources](docs/business.md#why-now)).
+- **The outgoing message.** The owner types or says the greeting, plays it back with the ring and the beep, and sees live checks: says it is a machine, promises a text, asks for name, address and the problem, under 25 seconds. A greeting that claims a person is on the line is refused. The next call plays the saved greeting.
 - The booking page offers real open slots in the business's time zone, lets the caller correct the address, and texts a confirmation.
 - The inbox shows each message as a cassette, emergencies first under a "Call back now" strip, with a seven-segment counter and a "Kept this week" readout.
 - **Raise the dead.** Unreturned hang-ups from the last 30 days wait in a graveyard, one per number. One owner press texts each a single booking link that names the day they called; nothing goes out without the press, and a raised call is never texted twice.
@@ -187,12 +188,12 @@ The phone wiring is in [infra/connect/README.md](infra/connect/README.md), and [
 ## Tests and spec traceability
 
 ```bash
-npm run check             # typecheck, spec coverage, 188 Vitest unit and API tests
+npm run check             # typecheck, spec coverage, 195 Vitest unit and API tests
 npx playwright install chromium
-npm run test:e2e          # 22 Playwright tests (one is phone-only) against the production build on port 3112
+npm run test:e2e          # 23 Playwright tests (one is phone-only) against the production build on port 3112
 ```
 
-Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 110 of 114 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
+Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 115 of 119 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
 
 `npm run eval` scores the rules extractor on 24 hand-labelled voicemails it had not seen: on the first run it got every phone number and address right, never invented an address, and read urgency right in 19 of 24. The two missed emergencies it found are fixed, and urgency is now 21 of 24. Details and the remaining misses: [docs/eval.md](docs/eval.md). The same script scores Bedrock side by side with `--bedrock`, and `npm run test:aws` checks the live Bedrock path; both are paid, so both stay off unless you switch them on, and neither has been run for these numbers.
 

@@ -2505,3 +2505,66 @@
     animation: none;
   }
 }
+
+/* ---------- Outgoing message (greeting) ---------- */
+
+.ogm-cassette {
+  max-width: 320px;
+}
+.cassette-stripe.ogm {
+  background: var(--pumpkin);
+}
+.ogm-input {
+  min-height: 132px;
+}
+.ogm-meta {
+  font-size: 13px;
+}
+.ogm-saved {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--ok);
+  font-weight: 600;
+}
+.ogm-checks-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.ogm-checks {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ogm-checks li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-weight: 600;
+}
+.ogm-checks li.miss {
+  color: var(--ink-faint);
+}
+.ogm-tick {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  font-size: 13px;
+}
+.ogm-checks li.pass .ogm-tick {
+  color: var(--ok);
+}
+.ogm-note {
+  font-size: 14px;
+}
+.ogm-link {
+  justify-self: start;
+}

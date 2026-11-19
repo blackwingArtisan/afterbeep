@@ -80,6 +80,7 @@ interface SmsSender   { name: string; send(msg: { to: string; body: string; link
 | POST | `/api/calls` | `{ from, transcript, durationSec? }` | 201 `{ message }` |
 | POST | `/api/hooks/connect-voicemail` | `{ contactId, callerNumber, recordingUri, durationSec? }` + `Authorization: Bearer <secret>` | 201 `{ messageId }` |
 | POST | `/api/hooks/inbound-text` | `{ from, body }` + `Authorization: Bearer <secret>` | 200 `{ keyword, replied }` |
+| PUT | `/api/business/greeting` | `{ greeting }` | `{ business }`, or 422 `bad-greeting` |
 | GET | `/api/messages` | | `{ messages, newCount }` |
 | POST | `/api/messages/:id/status` | `{ status }` | `{ message }` |
 | GET | `/api/book/:token` | | `{ business, caller, slots, booked }` |

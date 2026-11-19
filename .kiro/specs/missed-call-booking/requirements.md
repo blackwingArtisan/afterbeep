@@ -114,3 +114,12 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 9.5 WHEN an opted-out caller replies START or UNSTOP THE SYSTEM SHALL opt the number back in and confirm.
 9.6 WHEN a reply is not a keyword on its own THE SYSTEM SHALL send nothing back and change nothing.
 9.7 THE SYSTEM SHALL accept replies only on the inbound-text webhook with the shared secret, compared in constant time.
+
+## Requirement 10: Outgoing message
+**User story:** As an owner, I want to write or say my own greeting and hear it the way a caller does, so that callers stay on the line long enough to leave a message.
+
+10.1 THE SYSTEM SHALL let the owner type or dictate the greeting, play it back with the ring and the beep, and save it.
+10.2 WHEN the owner saves a greeting THE SYSTEM SHALL play that greeting to the next caller.
+10.3 THE SYSTEM SHALL show, as the owner types, whether the greeting says it is a machine, promises a text, asks for the name, address and problem, and runs under 25 seconds.
+10.4 IF a greeting claims that a person is on the line THEN THE SYSTEM SHALL refuse to save it and say why.
+10.5 IF a greeting is under 10 or over 400 characters THEN THE SYSTEM SHALL refuse to save it and say why.

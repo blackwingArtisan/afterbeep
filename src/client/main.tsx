@@ -14,6 +14,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Booking from './pages/Booking';
+import Greeting from './pages/Greeting';
 import CallSimulator from './pages/CallSimulator';
 import CustomerInvoice from './pages/CustomerInvoice';
 import Inbox from './pages/Inbox';
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Inbox /> },
       { path: 'call', element: <CallSimulator /> },
+      { path: 'greeting', element: <Greeting /> },
       { path: 'schedule', element: <Schedule /> },
       { path: 'invoice', element: <VoiceInvoice /> },
       { path: 'outbox', element: <Outbox /> },

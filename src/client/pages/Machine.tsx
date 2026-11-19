@@ -43,7 +43,7 @@ export default function Machine() {
   }
 
   return (
-    <MachineContext.Provider value={{ business, newCount, refresh }}>
+    <MachineContext.Provider value={{ business, newCount, refresh, setBusiness }}>
       <div className="machine">
         <a className="skip-link" href="#main">
           Skip to content

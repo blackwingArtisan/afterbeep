@@ -10,6 +10,7 @@ import { ServiceError, type Deps } from './services/deps';
 import { draftInvoice, InvoiceLineSchema, payDemoInvoice, publicInvoice, quoteInvoice, SendInvoiceSchema, sendInvoice } from './services/invoicing';
 import { graveyardView, raiseTheDead } from './services/revive';
 import { receiveText } from './services/texting';
+import { saveGreeting } from './services/greeting';
 import { receiveVoicemail, retryTextBack, setMessageStatus } from './services/voicemail';
 
 export interface AppOptions {
@@ -26,6 +27,8 @@ const CallSchema = z.object({
   transcript: z.string().trim().min(1).max(4000),
   durationSec: z.number().int().min(1).max(600).optional(),
 });
+
+const GreetingSchema = z.object({ greeting: z.string().max(2000) });
 
 const InboundTextSchema = z.object({
   from: z.string().trim().min(7).max(20),
@@ -81,6 +84,11 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
       adapters: Object.fromEntries(Object.entries(deps.adapters).map(([k, v]) => [k, v.name])),
     }),
   );
+
+  api.put('/business/greeting', async (c) => {
+    const { greeting } = GreetingSchema.parse(await c.req.json());
+    return c.json({ business: saveGreeting(deps, greeting) });
+  });
 
   api.get('/business', (c) => {
     const { business } = deps.store.read();

@@ -46,3 +46,5 @@
 - [x] 34. Texting rules: STOP, HELP and START replies on `POST /api/hooks/inbound-text`, an opt-out list checked before every text, and the opt-out line on the first text (Req 9.1-9.7)
   - [x] 34.1 Unit tests for the keywords, and API tests for opting out, help, opting back in, ordinary replies, the graveyard and the webhook secret (Req 9.1-9.7)
 - [x] 35. Raise the dead climax: the cassettes rise 150 ms apart as the fog blur clears, and each takes a TEXTED (or BOOKED) stamp over its reels; all still under reduced motion (Req 8.2, 8.7)
+- [x] 36. Outgoing message screen at `/machine/greeting`: an OGM cassette, type or dictate the greeting, play it back with the ring and the beep, live checks, and `PUT /api/business/greeting` (Req 10.1-10.5)
+  - [x] 36.1 Unit tests for the checks and the honest-machine rule, API tests for saving and refusing, and Playwright for the screen and the next call (Req 10.1-10.5)
