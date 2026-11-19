@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Plain-spoken copy",
+      "description": "When a screen changes, reviews its words for the owner and the caller: short, plain, no jargon, and invented sample data only.",
+      "trigger": "PostFileSave",
+      "matcher": "^src/client/(pages|components)/.*\\.tsx$",
+      "action": {
+        "type": "agent",
+        "prompt": "You just edited a screen. Read its user-facing text the way a plumber on a ladder or a caller on a phone would. Keep sentences short and words plain; name things the way a trades owner does (job, visit, call back, invoice), not the way the code does. Every person, business, address and phone number in sample data must be invented, with 555-01xx numbers and example.com emails. Do not change data-testid values or text the Playwright tests rely on without updating those tests."
+      }
+    }
+  ]
+}

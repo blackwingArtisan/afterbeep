@@ -4,7 +4,9 @@ inclusion: always
 # Project structure
 
 ```
-.kiro/                 steering, specs and hooks (this folder)
+.kiro/                 steering, specs, hooks and MCP settings (this folder)
+.github/workflows/      CI: typecheck, spec coverage, unit and end-to-end tests
+scripts/               spec-coverage.ts: every EARS criterion must be named by a test
 src/
   domain/              pure business logic, fully unit tested
     money.ts           cents, formatting, rounding
@@ -14,6 +16,7 @@ src/
     tax.ts             state base rates, invoice totals
     voicemail-rules.ts rule-based extraction of name, number, address, job, urgency
     slots.ts           open appointment slots from hours and booked jobs
+    kept.ts            "Kept this week": calls, texts, bookings and amounts caught
     types.ts           shared domain types
   adapters/
     transcriber/  extractor/  sms/  invoices/  store/

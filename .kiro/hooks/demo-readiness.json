@@ -1,0 +1,12 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Demo readiness",
+      "description": "Before the agent hands work back, confirms the production build still compiles and every requirement is still traced to a test, so the demo can be started from a clean checkout.",
+      "trigger": "Stop",
+      "action": { "type": "command", "command": "npm run spec:coverage && npm run build" },
+      "timeout": 240
+    }
+  ]
+}

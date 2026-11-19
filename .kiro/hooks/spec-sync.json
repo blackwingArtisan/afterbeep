@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Keep the specs in step with the code",
+      "description": "When server or domain code changes, checks that the EARS requirements and task lists still describe what the code does, and that every requirement is still named by a test.",
+      "trigger": "PostFileSave",
+      "matcher": "^src/(domain|server|adapters)/.*\\.ts$",
+      "action": {
+        "type": "agent",
+        "prompt": "You just changed behavior under src/. Compare the change with .kiro/specs/missed-call-booking/requirements.md and .kiro/specs/voice-invoicing/requirements.md. If the code now does something no EARS criterion describes, add a numbered criterion (WHEN/IF/WHILE ... THE SYSTEM SHALL ...) and a checked task in that spec's tasks.md. Name the criterion in the title of the test that proves it, as [MC x.y] or [VI x.y]. Then run `npm run spec:coverage` and fix anything it reports."
+      }
+    }
+  ]
+}
