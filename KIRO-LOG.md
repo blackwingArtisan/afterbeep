@@ -22,14 +22,14 @@ The hook files use Kiro's standalone JSON hook format (`version`, `hooks[]` with
 
 ## How Kiro and the coding assistant split the work
 
-This repository was built by one developer working with two AI tools. `git log` shows it plainly: all 32 commits so far carry a `Co-Authored-By: Claude` trailer, because Claude Code, a coding assistant, wrote most of the code and documents. Kiro's part is different in kind.
+This repository was built by one developer working with two AI tools. `git log` shows it plainly: every commit carries a `Co-Authored-By: Claude` trailer, because Claude Code, a coding assistant, wrote most of the code and documents. Kiro's part is different in kind.
 
 | Who | What they did | Where it shows |
 |---|---|---|
 | **Kiro (the configuration)** | The rules every agent in this repo works under: steering that loads with the files it governs, specs in Kiro's EARS format, hooks on save and on stop, MCP servers, and a custom agent that blocks unsafe writes | `.kiro/` |
 | **Kiro (kiro-cli sessions)** | Session 2 reviewed both specs against the code, found four built behaviors with no criterion and wrote them, and rewrote two hooks to the canonical format | Commit `22a9c64`, "Kiro pass: spec criteria for four built behaviors, canonical hooks" |
 | **Claude Code (coding assistant)** | Wrote the specs in Kiro's format, then the code, tests and docs task by task against the Kiro steering and specs, keeping each test title tied to the criteria it proves | Every other commit |
-| **The developer** | Product decisions, review and every commit | Commit author on all 32 commits |
+| **The developer** | Product decisions, review and every commit | Commit author on every commit |
 
 **Next:** the remote retrieval feature (call your own machine from the truck, play messages with the keypad, then say the invoice) is planned as a spec that kiro-cli writes and builds itself under `afterbeep-builder`, one commit per task with a `Built-with: Kiro` trailer and session excerpts in `docs/kiro-sessions/`. It has not been run yet.
 
