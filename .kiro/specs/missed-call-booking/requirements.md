@@ -73,6 +73,7 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 6.3 WHEN the owner presses Play THE SYSTEM SHALL read the message aloud and mark it heard.
 6.4 THE SYSTEM SHALL offer a one-tap call back link to the callback number.
 6.5 THE SYSTEM SHALL list new emergencies first, under a "Call back now" strip with a call button for each, and number tapes in the order the calls arrived.
+6.6 THE SYSTEM SHALL show what the machine kept over the last seven days: calls answered, callers texted, callers booked, booked value at the invoiced or typical job price, and misheard amounts the owner corrected before sending.
 
 ## Requirement 7: Local call simulator and outbox
 **User story:** As an evaluator, I want to run the whole flow on a laptop with no accounts, so that I can see it work.
@@ -83,3 +84,5 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 7.4 THE SYSTEM SHALL select every external service by environment variable and default to the free local implementation.
 7.5 WHILE demo mode is off THE SYSTEM SHALL refuse simulated calls and the demo reset.
 7.6 THE SYSTEM SHALL turn demo mode on by default only while every adapter is local, and SHALL let `AFTERBEEP_DEMO=on|off` override it.
+7.7 WHEN an evaluator starts "the whole story" THE SYSTEM SHALL place a sample call on its own, skip the ring and greeting, show the exact text sent, and guide the evaluator through booking as the caller and billing the booked job by voice.
+7.8 THE SYSTEM SHALL let the landing page machine play a missed call, show the price check, and open a real booking page.

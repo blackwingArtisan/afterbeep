@@ -29,3 +29,8 @@
 - [x] 22. A refused text-back is filed with its reason and can be retried from the inbox (Req 4.8)
 - [x] 23. Inbox puts new emergencies first under a "Call back now" strip and numbers tapes by arrival (Req 6.5)
 - [x] 24. The link-expired page shows the business and a call button (Req 5.8)
+- [x] 25. "Kept this week" readout in the inbox, backed by `GET /api/kept` (Req 6.6)
+  - [x] 25.1 Unit tests for the typical job price, caught amounts and the seven-day window (Req 6.6)
+- [x] 26. "Demo the whole story" from the landing page and the machine header: auto-run call, phone mock with the real text, booking, and the voice invoice opening on the job just booked (Req 7.7)
+- [x] 27. Working hero machine: Play, Book and Bill (Req 7.8)
+  - [x] 27.1 Playwright: the whole story end to end, and the hero machine keys (Req 6.6, 7.7, 7.8)

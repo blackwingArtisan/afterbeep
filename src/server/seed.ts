@@ -125,6 +125,15 @@ export const simulatorScripts: SampleVoicemail[] = [
       '41 Lantern Hill Drive. Call me back at 614-555-0163.',
   },
   {
+    id: 'story-dryer',
+    label: 'Squealing dryer (the whole story)',
+    from: '+16145550152',
+    durationSec: 15,
+    transcript:
+      "Hi, this is June Calloway at 27 Larkspur Lane. My dryer is squealing and it won't spin, I think it's the belt. " +
+      'Today or tomorrow would be great. Thanks.',
+  },
+  {
     id: 'washer-noise',
     label: 'Noisy washer (routine)',
     from: '+16145550188',

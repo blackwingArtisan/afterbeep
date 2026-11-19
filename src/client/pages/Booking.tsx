@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import type { Slot } from '../../domain/slots';
 import { api, ApiError, type BookingView } from '../api';
 import { BrandMark } from '../components/Brand';
 import { CheckIcon, GhostIcon, PhoneIcon } from '../components/Icons';
+import { StoryBar } from '../components/StoryBar';
 import { UrgencyChip } from '../components/Urgency';
 import { dayKey, formatDay, formatLongDay, formatRange, telHref } from '../lib/format';
 import { useTitle } from '../lib/machine';
 
 export default function Booking() {
   const { token = '' } = useParams();
+  const [params] = useSearchParams();
+  const story = params.get('story') === '1';
+  const [bookedJobId, setBookedJobId] = useState<string | null>(null);
   const [view, setView] = useState<BookingView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [badLinkBusiness, setBadLinkBusiness] = useState<{ name: string; phone: string } | null>(null);
@@ -49,7 +53,8 @@ export default function Booking() {
     setSaving(true);
     setError(null);
     try {
-      await api.book(token, picked, address.trim() || null);
+      const { job } = await api.book(token, picked, address.trim() || null);
+      setBookedJobId(job.id);
       await load();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Booking failed. Please try again.');
@@ -98,6 +103,16 @@ export default function Booking() {
 
   return (
     <div className="caller-page">
+      {story && (
+        <StoryBar
+          step={view.booked ? 4 : 3}
+          next={
+            view.booked
+              ? { to: `/machine/invoice?script=slip&story=1${bookedJobId ? `&job=${bookedJobId}` : ''}`, label: `Back to ${owner}: bill it by voice` }
+              : undefined
+          }
+        />
+      )}
       <div className="caller-card panel">
         <header className="caller-head">
           <BrandMark />

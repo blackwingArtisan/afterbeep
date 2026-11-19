@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import type { Message } from '../../domain/types';
+import { Link, useSearchParams } from 'react-router-dom';
+import type { Message, OutboxItem } from '../../domain/types';
 import { api, ApiError, type Sample } from '../api';
 import { ArrowIcon, CheckIcon, MicIcon, PhoneIcon, StopIcon } from '../components/Icons';
 import { Reels } from '../components/Reels';
+import { StoryBar, storyCallerId } from '../components/StoryBar';
 import { UrgencyChip } from '../components/Urgency';
 import { useMachine, useTitle } from '../lib/machine';
 import { beep, ring } from '../lib/sound';
@@ -26,11 +27,18 @@ const ORDER: Phase[] = ['compose', 'ringing', 'greeting', 'recording', 'processi
 export default function CallSimulator() {
   useTitle('Call simulator');
   const { business, refresh } = useMachine();
+  const [params] = useSearchParams();
+  const story = params.get('story') === '1';
   const [samples, setSamples] = useState<Sample[]>([]);
   const [mode, setMode] = useState<Mode>('sample');
-  const [sampleId, setSampleId] = useState('no-heat');
+  const [sampleId, setSampleId] = useState(story ? 'story-dryer' : 'no-heat');
   const [typed, setTyped] = useState('');
-  const [from, setFrom] = useState('(614) 555-0163');
+  const [from, setFrom] = useState(story ? storyCallerId() : '(614) 555-0163');
+  const [skipIntro, setSkipIntro] = useState(true);
+  const [side, setSide] = useState('A');
+  const [text, setText] = useState<OutboxItem | null>(null);
+  const machineRef = useRef<HTMLElement>(null);
+  const autoStarted = useRef(false);
   const [phase, setPhase] = useState<Phase>('compose');
   const [shown, setShown] = useState('');
   const [result, setResult] = useState<Message | null>(null);
@@ -41,8 +49,18 @@ export default function CallSimulator() {
 
   useEffect(() => {
     void api.samples().then((r) => setSamples(r.voicemails));
+    void api.messages().then((r) => setSide(`A${r.messages.length + 1}`)).catch(() => {});
     return () => stopSpeaking();
   }, []);
+
+  // The whole story starts on its own once the sample has loaded.
+  useEffect(() => {
+    if (story && !autoStarted.current && samples.some((s) => s.id === sampleId)) {
+      autoStarted.current = true;
+      void callMachine();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [story, samples, sampleId]);
 
   const sample = samples.find((s) => s.id === sampleId);
 
@@ -67,6 +85,11 @@ export default function CallSimulator() {
       const [{ message }] = await Promise.all([api.call(from, transcript), wait(900)]);
       setResult(message);
       setPhase('done');
+      setSide((s) => `A${Number(s.slice(1)) + 1}`);
+      if (message.textedAt) {
+        const { outbox } = await api.outbox();
+        setText(outbox.find((o) => o.linkPath === `/book/${message.bookingToken}`) ?? null);
+      }
       await refresh();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'The call dropped. Try again.');
@@ -77,18 +100,23 @@ export default function CallSimulator() {
   async function callMachine() {
     setError(null);
     setResult(null);
+    setText(null);
     setShown('');
     const script = mode === 'sample' ? (sample?.transcript ?? '') : mode === 'type' ? typed.trim() : '';
     if (mode !== 'voice' && !script) {
       setError('Pick a sample or type what the caller says.');
       return;
     }
+    // On a phone the machine sits below the form, so bring it into view as the call starts.
+    if (window.matchMedia?.('(max-width: 959px)').matches) machineRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setPhase('ringing');
-    ring(2);
-    await skippable(2800);
-    setPhase('greeting');
-    await Promise.race([speak(business?.greeting ?? 'Leave a message after the beep.', 1.05), skippable(7000)]);
-    stopSpeaking();
+    ring(skipIntro ? 1 : 2);
+    await skippable(skipIntro ? 700 : 2800);
+    if (!skipIntro) {
+      setPhase('greeting');
+      await Promise.race([speak(business?.greeting ?? 'Leave a message after the beep.', 1.05), skippable(7000)]);
+      stopSpeaking();
+    }
     beep();
     setPhase('recording');
     if (mode === 'voice') {
@@ -122,6 +150,12 @@ export default function CallSimulator() {
 
   return (
     <div className="stack" style={{ gap: 24 }}>
+      {story && (
+        <StoryBar
+          step={phase === 'done' && result?.textedAt ? 2 : 1}
+          next={phase === 'done' && result?.textedAt ? { to: `/book/${result.bookingToken}?story=1`, label: 'Open the text as June' } : undefined}
+        />
+      )}
       <section>
         <p className="eyebrow">Call simulator</p>
         <h1 className="page-title">Ring the machine</h1>
@@ -191,6 +225,11 @@ export default function CallSimulator() {
             </div>
           )}
 
+          <label className="check">
+            <input type="checkbox" checked={skipIntro} onChange={(e) => setSkipIntro(e.target.checked)} disabled={busy} />
+            Skip the ring and greeting
+          </label>
+
           {error && <div className="error-box" role="alert">{error}</div>}
 
           <div className="row">
@@ -205,7 +244,7 @@ export default function CallSimulator() {
           </div>
         </section>
 
-        <section className="panel panel-pad sim-machine" aria-live="polite" aria-label="Answering machine">
+        <section ref={machineRef} className="panel panel-pad sim-machine" aria-live="polite" aria-label="Answering machine">
           <ol className="steps">
             {STEPS.map((s) => {
               const idx = ORDER.indexOf(s.phase[0]!);
@@ -222,9 +261,9 @@ export default function CallSimulator() {
 
           <div className="cassette sim-cassette">
             <div className="cassette-label">
-              <span className={`cassette-stripe ${x?.urgency ?? 'routine'}`} />
+              <span className={`cassette-stripe ${x?.urgency ?? 'unknown'}`} />
               <div className="spread" style={{ marginTop: 6 }}>
-                <span className="cassette-side">{phase === 'recording' ? 'REC' : 'A'}</span>
+                <span className="cassette-side">{phase === 'recording' ? `REC ${side}` : phase === 'done' ? `A${Number(side.slice(1)) - 1}` : side}</span>
                 {phase === 'recording' && <span className="led blink" />}
                 {x && <UrgencyChip urgency={x.urgency} />}
               </div>
@@ -270,9 +309,17 @@ export default function CallSimulator() {
                 </div>
               </dl>
               {result.textedAt ? (
-                <p className="ok-text">
-                  <CheckIcon width={16} height={16} /> Texted back with a booking link
-                </p>
+                <div className="sim-text">
+                  <div className="phone sim-phone" data-testid="sim-phone">
+                    <div className="phone-screen">
+                      <div className="phone-to">Text to {x.callbackNumber}</div>
+                      <div className="bubble sim-bubble">{text?.body ?? 'Texted back with a booking link.'}</div>
+                    </div>
+                  </div>
+                  <span className="texted-stamp" data-testid="texted-stamp">
+                    <CheckIcon width={18} height={18} /> Texted
+                  </span>
+                </div>
               ) : (
                 <p className="muted" data-testid="no-text-reason">
                   {result.noTextReason}
@@ -280,7 +327,7 @@ export default function CallSimulator() {
               )}
               <div className="row">
                 {result.textedAt && (
-                  <Link className="btn btn-primary" to={`/book/${result.bookingToken}`}>
+                  <Link className="btn btn-primary" to={`/book/${result.bookingToken}${story ? '?story=1' : ''}`}>
                     Open the text as the caller <ArrowIcon />
                   </Link>
                 )}

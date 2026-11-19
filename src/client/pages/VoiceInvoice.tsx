@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { CheckOption, PriceCheck, PriceCheckStatus } from '../../domain/price-book';
 import { formatCents, formatQuantity, formatRateMilli, lineAmountCents } from '../../domain/money';
-import type { Customer, Invoice, InvoiceLine, InvoiceTotals, Job } from '../../domain/types';
+import type { Customer, Invoice, InvoiceLine, InvoiceTotals, Job, OutboxItem } from '../../domain/types';
 import { api, ApiError, type InvoiceScript } from '../api';
 import { AlertIcon, ArrowIcon, CheckIcon, MicIcon, StopIcon } from '../components/Icons';
+import { StoryBar } from '../components/StoryBar';
 import { useMachine, useTitle } from '../lib/machine';
 import { speechSupported, useDictation } from '../lib/speech';
 
@@ -53,6 +54,8 @@ export default function VoiceInvoice() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState<Invoice | null>(null);
+  const [sentText, setSentText] = useState<OutboxItem | null>(null);
+  const story = params.get('story') === '1';
   const dictation = useDictation();
 
   useEffect(() => {
@@ -63,7 +66,11 @@ export default function VoiceInvoice() {
       const pick = open.find((j) => j.id === wanted) ?? open.find((j) => j.status === 'done') ?? open[0];
       setJobId(pick?.id ?? '');
     });
-    void api.samples().then((r) => setScripts(r.invoiceScripts));
+    void api.samples().then((r) => {
+      setScripts(r.invoiceScripts);
+      const wantedScript = r.invoiceScripts.find((s) => s.id === params.get('script'));
+      if (wantedScript) setSpeech(wantedScript.speech);
+    });
   }, [params]);
 
   useEffect(() => {
@@ -133,6 +140,8 @@ export default function VoiceInvoice() {
       });
       setSent(invoice);
       setJobs((all) => all.filter((j) => j.id !== jobId));
+      const { outbox } = await api.outbox();
+      setSentText(outbox.find((o) => o.kind === 'invoice' && o.linkPath === invoice.customerUrl) ?? null);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Sending failed. Nothing was sent.');
       if (e instanceof ApiError && e.code === 'total-mismatch') await requote(work.title, work.lines);
@@ -148,7 +157,39 @@ export default function VoiceInvoice() {
   if (sent) {
     return (
       <div className="stack" style={{ gap: 24 }}>
+        {story && <StoryBar step={4} />}
         <section className="panel panel-pad sent-card" data-testid="invoice-sent">
+          <div className="sent-show">
+            <div className="paper sent-paper" aria-hidden="true">
+              <div className="sent-paper-head">
+                <strong>{business?.name}</strong>
+                <span>Invoice {sent.number}</span>
+              </div>
+              <ul className="sent-paper-lines">
+                {sent.lines.map((l) => (
+                  <li key={l.id}>
+                    <span>{l.description}</span>
+                    <span>{formatCents(lineAmountCents(l.quantity, l.unitPriceCents))}</span>
+                  </li>
+                ))}
+                <li className="sent-paper-total">
+                  <span>Total</span>
+                  <span>{formatCents(sent.totals.totalCents)}</span>
+                </li>
+              </ul>
+              <span className="sent-stamp" data-testid="sent-stamp">
+                Sent
+              </span>
+            </div>
+            {sentText && (
+              <div className="phone sent-phone">
+                <div className="phone-screen">
+                  <div className="phone-to">To {sent.customer.name}</div>
+                  <div className="bubble sim-bubble">{sentText.body}</div>
+                </div>
+              </div>
+            )}
+          </div>
           <p className="eyebrow">Sent</p>
           <h1 className="page-title">
             Invoice {sent.number} is out: {formatCents(sent.totals.totalCents)}
@@ -174,8 +215,9 @@ export default function VoiceInvoice() {
 
   return (
     <div className="stack" style={{ gap: 24 }}>
+      {story && <StoryBar step={4} />}
       <section>
-        <p className="eyebrow">Voice invoice</p>
+        <p className="eyebrow">The Dictaphone</p>
         <h1 className="page-title">Say the invoice. Code does the math.</h1>
         <p className="muted page-lede">
           Talk it out like you would to the office. AfterBeep lines it up, checks every price against your own past invoices, and sends

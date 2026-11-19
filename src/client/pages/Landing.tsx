@@ -108,8 +108,11 @@ export default function Landing() {
             you miss, texts the caller a booking link, and turns your spoken invoice into a checked, approved bill.
           </p>
           <div className="row">
-            <Link className="btn btn-primary" to="/machine">
-              Hear it work <ArrowIcon />
+            <Link className="btn btn-primary" to="/machine/call?story=1">
+              Demo the whole story <ArrowIcon />
+            </Link>
+            <Link className="btn" to="/machine">
+              Open the machine
             </Link>
             <a className="btn" href="#pricing">
               $39/month, flat

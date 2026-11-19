@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import type { Business } from '../../domain/types';
 import { api } from '../api';
 import { Brand } from '../components/Brand';
@@ -21,6 +21,7 @@ export default function Machine() {
   const [business, setBusiness] = useState<Business | null>(null);
   const [newCount, setNewCount] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const refresh = useCallback(async () => {
     const { newCount: count } = await api.messages();
@@ -56,6 +57,9 @@ export default function Machine() {
             <div className="row">
               <MessageCounter count={newCount} />
               <ThemeToggle />
+              <NavLink className="btn btn-small story-btn" to="/machine/call?story=1">
+                Demo the whole story
+              </NavLink>
               <button className="btn btn-ghost btn-small reset-btn" type="button" onClick={() => void resetDemo()} title="Restore the demo data">
                 Reset demo
               </button>
@@ -73,7 +77,8 @@ export default function Machine() {
           </div>
         </nav>
         <main id="main" className="wrap machine-main" tabIndex={-1}>
-          <Outlet />
+          {/* A new query (such as starting the whole story) starts the screen fresh. */}
+          <Outlet key={location.search} />
         </main>
       </div>
     </MachineContext.Provider>
