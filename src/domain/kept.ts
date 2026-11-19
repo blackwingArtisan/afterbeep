@@ -1,5 +1,5 @@
 import { parseInvoiceSpeech } from './invoice-parser';
-import { lineAmountCents } from './money';
+import { formatCents, lineAmountCents } from './money';
 import type { Cents, Invoice, Job, Message, PastInvoice } from './types';
 
 /**
@@ -38,11 +38,33 @@ export function typicalJobCents(pastInvoices: readonly PastInvoice[]): Cents {
  * the words it was built from, so the first reading is re-parsed here rather than trusted from the client.
  */
 export function caughtOnLine(line: Invoice['lines'][number]): Cents {
+  const heard = heardAmountCents(line);
+  return heard === null ? 0 : Math.abs(heard - lineAmountCents(line.quantity, line.unitPriceCents));
+}
+
+/** The line amount as first heard, or null when no price was spoken. */
+export function heardAmountCents(line: Invoice['lines'][number]): Cents | null {
   const [first] = parseInvoiceSpeech(line.heard, { laborTaxable: false, newId: () => 'heard' }).lines;
-  if (!first || first.unitPriceCents === 0) return 0;
-  const heard = lineAmountCents(first.quantity, first.unitPriceCents);
+  if (!first || first.unitPriceCents === 0) return null;
+  return lineAmountCents(first.quantity, first.unitPriceCents);
+}
+
+/** The stamp a line gets on the printed office copy: what the price check did with it. */
+export interface CarbonStamp {
+  tone: 'caught' | 'ok' | 'info';
+  label: string;
+  detail: string | null;
+}
+
+export function carbonStamp(line: Invoice['lines'][number]): CarbonStamp {
+  const heard = heardAmountCents(line);
   const sent = lineAmountCents(line.quantity, line.unitPriceCents);
-  return Math.abs(heard - sent);
+  if (heard !== null && heard !== sent) {
+    return { tone: 'caught', label: 'Caught', detail: `heard ${formatCents(heard)}, billed ${formatCents(sent)}` };
+  }
+  if (line.priceSource === 'price-book') return { tone: 'info', label: 'From your copies', detail: null };
+  if (line.confirmedPriceCents !== null) return { tone: 'ok', label: 'Owner confirmed', detail: null };
+  return { tone: 'ok', label: 'Price checked', detail: null };
 }
 
 export function keptThisWeek(

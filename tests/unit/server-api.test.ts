@@ -4,6 +4,7 @@ import { MemoryStore } from '../../src/adapters/store/local';
 import { lineAmountCents } from '../../src/domain/money';
 import type { Invoice, InvoiceLine, Job, Message, OutboxItem } from '../../src/domain/types';
 import { createApp } from '../../src/server/app';
+import { payDemoInvoice } from '../../src/server/services/invoicing';
 import { sampleInvoiceScripts, simulatorScripts } from '../../src/server/seed';
 import { seedDb } from '../../src/server/seed-db';
 
@@ -114,7 +115,7 @@ describe('missed call to booked job', () => {
     expect((await ctx.call('POST', '/api/calls', { from: 'not a phone', transcript: 'hi there' })).status).toBe(400);
   });
 
-  it('answers an unknown invoice link with the business card, not a blank page', async () => {
+  it('[VI 5.8] answers an unknown invoice link with the business card, not a blank page', async () => {
     const bad = await ctx.call<{ error: string; details: { business: { name: string; phone: string } } }>('GET', '/api/invoices/nope');
     expect(bad.status).toBe(404);
     expect(bad.body.error).toBe('not-found');
@@ -224,6 +225,37 @@ describe('spoken invoice to approved bill', () => {
     expect(jobAfter).toMatchObject({ status: 'invoiced', invoiceId: sent.body.invoice.id });
     const twice = await ctx.call<{ error: string }>('POST', '/api/invoices/send', { ...base, lines: fixed, approvedTotalCents: 18288 });
     expect(twice).toMatchObject({ status: 409, body: { error: 'already-invoiced' } });
+  });
+
+  it('[VI 5.7] takes a demo payment on a local invoice and refuses it outside demo mode', async () => {
+    async function sendOne(on: typeof ctx) {
+      const speech = sampleInvoiceScripts.find((s) => s.id === 'clean')!.speech;
+      const { body } = await on.call<Draft>('POST', '/api/invoices/draft', { speech });
+      const customer = { name: 'Ada Pemberton', phone: '(614) 555-0177', email: null, address: null };
+      const input = { jobId: null, title: 'Repair', customer, lines: body.draft.lines, approvedTotalCents: body.draft.totals.totalCents };
+      return (await on.call<{ invoice: Invoice }>('POST', '/api/invoices/send', input)).body.invoice;
+    }
+    const sent = await sendOne(ctx);
+    expect((await ctx.call<{ demoPay: boolean }>('GET', `/api/invoices/${sent.id}`)).body.demoPay).toBe(true);
+    const paid = await ctx.call<{ invoice: Invoice }>('POST', `/api/invoices/${sent.id}/demo-pay`);
+    expect(paid).toMatchObject({ status: 200, body: { invoice: { status: 'paid' } } });
+    expect((await ctx.call<{ invoice: Invoice }>('GET', `/api/invoices/${sent.id}`)).body.invoice.status).toBe('paid');
+    expect((await ctx.call('POST', '/api/invoices/nope/demo-pay')).status).toBe(404);
+
+    const live = await setup(false);
+    const liveSent = await sendOne(live);
+    expect((await live.call<{ demoPay: boolean }>('GET', `/api/invoices/${liveSent.id}`)).body.demoPay).toBe(false);
+    expect((await live.call('POST', `/api/invoices/${liveSent.id}/demo-pay`)).status).toBe(404);
+    expect((await live.call<{ invoice: Invoice }>('GET', `/api/invoices/${liveSent.id}`)).body.invoice.status).toBe('sent');
+  });
+
+  it('[VI 5.7] never marks an invoice paid through a real payment provider', async () => {
+    const store = ctx.store;
+    const adapters = localAdapters({ store, clock: () => NOW, newId: () => 'x', publicBaseUrl: BASE });
+    const stripeLike = { ...adapters, invoices: { ...adapters.invoices, name: 'stripe' } };
+    expect(() => payDemoInvoice({ store, adapters: stripeLike, clock: () => NOW, newId: () => 'x', publicBaseUrl: BASE }, 'any')).toThrow(
+      /payment provider/,
+    );
   });
 
   it('[VI 1.7, 4.5] ignores totals the client tries to inject and recomputes from lines', async () => {

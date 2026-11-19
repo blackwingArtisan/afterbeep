@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { caughtOnLine, keptThisWeek, typicalJobCents } from '../../src/domain/kept';
+import { carbonStamp, caughtOnLine, keptThisWeek, typicalJobCents } from '../../src/domain/kept';
 import type { Invoice, InvoiceLine, Job, Message } from '../../src/domain/types';
 import { pastInvoices } from '../../src/server/seed';
 
@@ -52,6 +52,13 @@ describe('kept this week', () => {
     expect(caughtOnLine(line('forty water heater elements at eighty nine', 1, 8900))).toBe(39 * 8900);
     expect(caughtOnLine(line('One hour labor at eighty-five', 1, 8500))).toBe(0);
     expect(caughtOnLine(line('Trip charge', 1, 4500))).toBe(0);
+  });
+
+  it('[VI 5.9] stamps each office-copy line with what the price check did', () => {
+    expect(carbonStamp(line('Dryer belt fifteen, taxed', 1, 5000))).toEqual({ tone: 'caught', label: 'Caught', detail: 'heard $15.00, billed $50.00' });
+    expect(carbonStamp(line('One hour labor at eighty-five', 1, 8500))).toMatchObject({ tone: 'ok', label: 'Price checked' });
+    expect(carbonStamp({ ...line('Trip charge', 1, 4500), priceSource: 'price-book' })).toMatchObject({ tone: 'info', label: 'From your copies' });
+    expect(carbonStamp({ ...line('Anode rod ninety', 1, 9000), confirmedPriceCents: 9000 })).toMatchObject({ label: 'Owner confirmed' });
   });
 
   it('[MC 6.6] adds up calls, text-backs, bookings and corrections from the last seven days only', () => {

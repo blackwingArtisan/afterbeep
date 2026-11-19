@@ -34,3 +34,5 @@
 - [x] 26. "Demo the whole story" from the landing page and the machine header: auto-run call, phone mock with the real text, booking, and the voice invoice opening on the job just booked (Req 7.7)
 - [x] 27. Working hero machine: Play, Book and Bill (Req 7.8)
   - [x] 27.1 Playwright: the whole story end to end, and the hero machine keys (Req 6.6, 7.7, 7.8)
+- [x] 28. The landing machine plays itself once a session, muted, never under reduced motion (Req 7.9)
+- [x] 29. Story finale: every step done, a count-up of what the story kept, and "Pay as" the customer (Req 7.10)

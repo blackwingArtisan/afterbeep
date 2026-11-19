@@ -6,7 +6,7 @@ import { businessTaxRateMilli } from '../domain/tax';
 import { sampleInvoiceScripts, simulatorScripts } from './seed';
 import { bookingView, bookSlot } from './services/booking';
 import { ServiceError, type Deps } from './services/deps';
-import { draftInvoice, InvoiceLineSchema, publicInvoice, quoteInvoice, SendInvoiceSchema, sendInvoice } from './services/invoicing';
+import { draftInvoice, InvoiceLineSchema, payDemoInvoice, publicInvoice, quoteInvoice, SendInvoiceSchema, sendInvoice } from './services/invoicing';
 import { receiveVoicemail, retryTextBack, setMessageStatus } from './services/voicemail';
 
 export interface AppOptions {
@@ -150,7 +150,14 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
     return c.json({ invoices: [...invoices].reverse().sort((a, b) => b.createdAt.localeCompare(a.createdAt)) });
   });
 
-  api.get('/invoices/:id', (c) => c.json(publicInvoice(deps, c.req.param('id'))));
+  api.get('/invoices/:id', (c) =>
+    c.json({ ...publicInvoice(deps, c.req.param('id')), demoPay: Boolean(options.simulator) && deps.adapters.invoices.name === 'local' }),
+  );
+
+  api.post('/invoices/:id/demo-pay', (c) => {
+    if (!options.simulator) throw new ServiceError(404, 'not-found', 'Demo payment is turned off');
+    return c.json({ invoice: payDemoInvoice(deps, c.req.param('id')) });
+  });
 
   api.post('/demo/reset', async (c) => {
     if (!options.resetDemo) throw new ServiceError(404, 'not-found', 'Demo reset is disabled');

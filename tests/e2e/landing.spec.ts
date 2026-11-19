@@ -32,7 +32,7 @@ test('theme toggle switches between graveyard shift and daylight', async ({ page
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 });
 
-test('the hero machine plays itself once a session, and never under reduced motion', async ({ page, browser }) => {
+test('[MC 7.9] the hero machine plays itself once a session, and never under reduced motion', async ({ page, browser }) => {
   await page.goto('/');
   const readout = page.getByTestId('device-readout');
   await expect(readout).toContainText('Texted back to (614) 555-0134', { timeout: 15_000 });

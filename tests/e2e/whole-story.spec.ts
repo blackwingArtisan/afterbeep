@@ -7,7 +7,7 @@ test.afterEach(async ({ request }) => {
   await request.post('/api/demo/reset');
 });
 
-test('[MC 6.6, 7.7] the whole story runs from a missed call to a sent invoice', async ({ page }) => {
+test('[MC 6.6, 7.7, 7.10] [VI 5.7, 5.9] the whole story runs from a missed call to a paid invoice', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: /Demo the whole story/ }).click();
   await expect(page).toHaveURL(/\/machine\/call\?story=1$/);
@@ -42,6 +42,23 @@ test('[MC 6.6, 7.7] the whole story runs from a missed call to a sent invoice', 
   await expect(sent).toContainText(/Invoice HC-\d+ is out/);
   await expect(page.getByTestId('sent-stamp')).toBeVisible();
   await expect(sent).toContainText('Hi June, here is invoice');
+
+  // The finale counts up what the story kept, and the carbon copies print with their price checks.
+  await expect(page.getByTestId('story-bar')).toContainText('complete');
+  const finale = page.getByTestId('story-finale');
+  await expect(finale.getByTestId('finale-booked')).toHaveText('01');
+  await expect(finale.getByTestId('finale-billed')).toHaveText('$182.88');
+  await expect(finale.getByTestId('finale-caught')).toHaveText('$35.00');
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.getByTestId('carbon-set')).toBeVisible();
+  await expect(page.getByTestId('carbon-stamp').first()).toHaveText('Caught: heard $15.00, billed $50.00');
+  await page.emulateMedia({ media: 'screen' });
+
+  // June pays, and PAID slams down.
+  await finale.getByTestId('pay-as-customer').click();
+  await page.getByRole('button', { name: 'Pay $182.88' }).click();
+  await expect(page.getByTestId('paid-stamp')).toBeVisible();
+  await expect(page.getByTestId('customer-invoice')).toContainText('Paid in full');
 
   await page.goto('/machine');
   await expect(page.getByTestId('kept-booked')).toHaveText('01');

@@ -1793,3 +1793,192 @@
 .reel-loading .cassette-window {
   width: 160px;
 }
+
+/* ---------- Story finale and payment ---------- */
+
+.story-bar.complete {
+  border-style: solid;
+  border-color: var(--ok);
+}
+.story-bar.complete .story-title {
+  color: var(--ok);
+}
+.story-finale {
+  display: grid;
+  gap: 18px;
+  border-color: var(--ok);
+  animation: slide-in 0.5s ease-out both;
+}
+@media (min-width: 900px) {
+  .story-finale {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+  .story-finale > .row {
+    grid-column: 1 / -1;
+  }
+}
+.finale-title {
+  font-size: clamp(22px, 3vw, 30px);
+}
+.finale-lcd {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 4px 26px;
+  margin: 0;
+  padding: 14px 20px;
+}
+.finale-lcd > div {
+  display: grid;
+}
+.finale-lcd dt {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.finale-lcd dd {
+  margin: 0;
+  font-family: var(--font-lcd);
+  font-size: clamp(34px, 5vw, 52px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 14px var(--lcd-dim);
+}
+.customer-invoice {
+  position: relative;
+}
+.paid-stamp {
+  position: absolute;
+  left: 30%;
+  bottom: 96px;
+  padding: 6px 18px;
+  border: 5px solid #1f8a4c;
+  border-radius: 8px;
+  color: #1f8a4c;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(40px, 9vw, 64px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transform: rotate(-14deg);
+  mix-blend-mode: multiply;
+  opacity: 0.88;
+  pointer-events: none;
+}
+.paid-stamp.slam {
+  animation: stamp 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+.paid-note {
+  font-weight: 700;
+  color: #1f6e42;
+}
+
+/* ---------- Carbon copies (print only) ---------- */
+
+.carbon-set {
+  display: none;
+}
+@media print {
+  @page {
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .carbon-set,
+  .carbon-set * {
+    visibility: visible;
+  }
+  .carbon-set {
+    display: grid;
+    gap: 10mm;
+    position: absolute;
+    inset: 0 0 auto 0;
+    color: #2a2216;
+    font-family: var(--font-type);
+    font-size: 11pt;
+  }
+  .carbon-copy {
+    padding: 8mm 9mm;
+    border: 1px solid #b9ad94;
+    break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .carbon-copy.customer {
+    background: #fff4b8;
+  }
+  .carbon-copy.office {
+    background: #ffd9e2;
+  }
+  .carbon-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8mm;
+    margin-bottom: 5mm;
+  }
+  .carbon-meta {
+    display: grid;
+    text-align: right;
+  }
+  .carbon-which {
+    font-family: var(--font-display);
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .carbon-lines {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .carbon-lines td {
+    padding: 2mm 0;
+    border-bottom: 1px dashed #a39478;
+    vertical-align: top;
+  }
+  .carbon-amt {
+    text-align: right;
+    white-space: nowrap;
+  }
+  .carbon-math {
+    color: #6b5f48;
+    font-size: 9pt;
+  }
+  .carbon-total td {
+    font-weight: 700;
+    border-bottom: 0;
+  }
+  .carbon-stamp {
+    display: inline-block;
+    margin-left: 3mm;
+    padding: 0 2mm;
+    border: 2px solid;
+    border-radius: 3px;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 8pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transform: rotate(-3deg);
+  }
+  .carbon-stamp.caught {
+    color: #b3261e;
+  }
+  .carbon-stamp.ok {
+    color: #1f6e42;
+  }
+  .carbon-stamp.info {
+    color: #3d4fb3;
+  }
+  .carbon-foot {
+    margin-top: 4mm;
+    font-size: 9pt;
+  }
+}

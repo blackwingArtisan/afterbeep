@@ -49,6 +49,8 @@ export interface BookingView {
 export interface PublicInvoice {
   invoice: Invoice;
   business: { name: string; phone: string; email: string; address: Business['address'] };
+  /** True when Pay marks the invoice paid on the spot (demo mode with the local invoice provider). */
+  demoPay?: boolean;
 }
 
 export const api = {
@@ -74,5 +76,6 @@ export const api = {
     request<{ invoice: Invoice }>('POST', '/invoices/send', input),
   invoices: () => request<{ invoices: Invoice[] }>('GET', '/invoices'),
   invoice: (id: string) => request<PublicInvoice>('GET', `/invoices/${id}`),
+  demoPay: (id: string) => request<{ invoice: Invoice }>('POST', `/invoices/${id}/demo-pay`),
   reset: () => request<{ ok: true }>('POST', '/demo/reset'),
 };

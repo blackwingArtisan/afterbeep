@@ -70,3 +70,6 @@ After a job, the owner says the invoice out loud. AfterBeep turns the words into
 5.4 IF Stripe's invoice total differs from the approved total THEN THE SYSTEM SHALL void the Stripe invoice and report a provider error.
 5.5 IF the Stripe key is not a test-mode key THEN THE SYSTEM SHALL refuse to start the Stripe provider.
 5.6 WHEN an invoice is sent THE SYSTEM SHALL set its due date 14 days after the invoice date and show that due date on the customer invoice page.
+5.7 WHILE demo mode is on and the local invoice provider is selected, WHEN the customer presses Pay THE SYSTEM SHALL mark the invoice paid and stamp the customer page PAID; IF demo mode is off or another provider is selected THEN THE SYSTEM SHALL refuse the demo payment.
+5.8 IF the invoice link is unknown THEN THE SYSTEM SHALL show the business name and a one-tap call button instead of a blank page.
+5.9 THE SYSTEM SHALL let the owner print a sent invoice as a carbon-copy set: a yellow customer copy and a pink office copy that shows each price check.

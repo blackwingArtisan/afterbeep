@@ -179,3 +179,23 @@ export function publicInvoice(deps: Deps, id: string): PublicInvoice {
   if (!invoice) throw new ServiceError(404, 'not-found', 'Invoice not found', { business: { name, phone } });
   return { invoice, business: { name, phone, email, address } };
 }
+
+/**
+ * Demo payment: marks a local invoice paid so the story can end on the customer's side. Only the
+ * local invoice provider is ever paid this way; a Stripe invoice is paid on Stripe's own page.
+ */
+export function payDemoInvoice(deps: Deps, id: string): Invoice {
+  if (deps.adapters.invoices.name !== 'local') {
+    throw new ServiceError(409, 'not-demo', 'This invoice is paid through its payment provider');
+  }
+  let paid: Invoice | undefined;
+  deps.store.update((db) => {
+    const invoice = db.invoices.find((i) => i.id === id);
+    if (!invoice) return;
+    if (invoice.status === 'sent') invoice.status = 'paid';
+    paid = invoice;
+  });
+  if (!paid) throw new ServiceError(404, 'not-found', 'Invoice not found');
+  if (paid.status !== 'paid') throw new ServiceError(409, 'not-payable', 'This invoice can no longer be paid');
+  return paid;
+}

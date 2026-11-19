@@ -5,7 +5,10 @@ import { formatCents, formatQuantity, formatRateMilli, lineAmountCents } from '.
 import type { Customer, Invoice, InvoiceLine, InvoiceTotals, Job, OutboxItem } from '../../domain/types';
 import { api, ApiError, type InvoiceScript } from '../api';
 import { AlertIcon, ArrowIcon, CheckIcon, MicIcon, StopIcon } from '../components/Icons';
+import { caughtOnLine } from '../../domain/kept';
+import { CarbonCopies } from '../components/CarbonCopies';
 import { StoryBar } from '../components/StoryBar';
+import { StoryFinale } from '../components/StoryFinale';
 import { useMachine, useTitle } from '../lib/machine';
 import { speechSupported, useDictation } from '../lib/speech';
 
@@ -157,7 +160,17 @@ export default function VoiceInvoice() {
   if (sent) {
     return (
       <div className="stack" style={{ gap: 24 }}>
-        {story && <StoryBar step={4} />}
+        {story && <StoryBar step={5} />}
+        {story && sent.customerUrl.startsWith('/') && (
+          <StoryFinale
+            booked={sent.jobId ? 1 : 0}
+            billedCents={sent.totals.totalCents}
+            caughtCents={sent.lines.reduce((sum, l) => sum + caughtOnLine(l), 0)}
+            customerName={sent.customer.name}
+            customerUrl={sent.customerUrl}
+          />
+        )}
+        <CarbonCopies invoice={sent} business={business ? { name: business.name, phone: business.phone } : null} />
         <section className="panel panel-pad sent-card" data-testid="invoice-sent">
           <div className="sent-show">
             <div className="paper sent-paper" aria-hidden="true">
@@ -204,6 +217,9 @@ export default function VoiceInvoice() {
             <Link className="btn" to="/machine/outbox">
               Outbox
             </Link>
+            <button className="btn" type="button" onClick={() => window.print()}>
+              Print carbon copies
+            </button>
             <button className="btn btn-ghost" type="button" onClick={() => { setSent(null); setWork(null); setSpeech(''); }}>
               Another invoice
             </button>

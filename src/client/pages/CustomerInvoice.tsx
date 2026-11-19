@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { formatCents, formatQuantity, formatRateMilli, lineAmountCents } from '../../domain/money';
 import { api, ApiError, type PublicInvoice } from '../api';
 import { BrandMark } from '../components/Brand';
@@ -10,7 +10,11 @@ import { useTitle } from '../lib/machine';
 
 export default function CustomerInvoice() {
   const { id = '' } = useParams();
+  const [params] = useSearchParams();
+  const story = params.get('story') === '1';
   const [data, setData] = useState<PublicInvoice | null>(null);
+  const [paying, setPaying] = useState(false);
+  const [justPaid, setJustPaid] = useState(false);
   const [error, setError] = useState<{ business: { name: string; phone: string } | null } | null>(null);
   useTitle(data ? `Invoice ${data.invoice.number}` : 'Invoice');
 
@@ -63,6 +67,19 @@ export default function CustomerInvoice() {
     );
   }
   const { invoice, business } = data;
+  const paid = invoice.status === 'paid';
+
+  async function pay() {
+    setPaying(true);
+    try {
+      const { invoice: updated } = await api.demoPay(id);
+      setData((d) => (d ? { ...d, invoice: updated } : d));
+      setJustPaid(true);
+    } finally {
+      setPaying(false);
+    }
+  }
+
   const created = new Date(invoice.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const due = new Date(`${invoice.dueDate}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
@@ -78,7 +95,7 @@ export default function CustomerInvoice() {
               {business.phone} · {business.email}
             </div>
           </div>
-          <div className="paper-stamp ok">{invoice.status === 'paid' ? 'Paid' : 'Due'}</div>
+          {!paid && <div className="paper-stamp ok">Due</div>}
         </header>
         <div className="paper-meta">
           <div>
@@ -129,13 +146,40 @@ export default function CustomerInvoice() {
             <dd data-testid="amount-due">{formatCents(invoice.totals.totalCents)}</dd>
           </div>
         </dl>
-        <button className="btn btn-primary approve" type="button" disabled title="Card payment opens on Stripe when the Stripe adapter is on">
-          Pay {formatCents(invoice.totals.totalCents)}
-        </button>
-        <p className="faint approve-note">
-          Demo invoice. With the Stripe adapter switched on, this button opens Stripe's hosted payment page.
-        </p>
+        {paid && (
+          <div className={`paid-stamp ${justPaid ? 'slam' : ''}`} data-testid="paid-stamp">
+            Paid
+          </div>
+        )}
+        {paid ? (
+          <p className="paid-note" role="status">
+            Paid in full. Thank you from {business.name}.
+          </p>
+        ) : data.demoPay ? (
+          <>
+            <button className="btn btn-primary approve" type="button" onClick={() => void pay()} disabled={paying}>
+              Pay {formatCents(invoice.totals.totalCents)}
+            </button>
+            <p className="faint approve-note">Demo payment: no card is charged. With the Stripe adapter on, Pay opens Stripe's hosted page.</p>
+          </>
+        ) : (
+          <>
+            <button className="btn btn-primary approve" type="button" disabled title="Card payment opens on Stripe when the Stripe adapter is on">
+              Pay {formatCents(invoice.totals.totalCents)}
+            </button>
+            <p className="faint approve-note">
+              With the Stripe adapter switched on, this button opens Stripe's hosted payment page.
+            </p>
+          </>
+        )}
       </article>
+      {story && paid && (
+        <p className="row" style={{ justifyContent: 'center' }}>
+          <Link className="btn" to="/machine">
+            Back to the machine
+          </Link>
+        </p>
+      )}
       <p className="caller-foot faint">
         <BrandMark className="brand-mark inline-mark" /> Invoicing by AfterBeep
       </p>

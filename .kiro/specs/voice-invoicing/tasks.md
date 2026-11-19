@@ -22,3 +22,6 @@
 - [x] 18. Invoice title falls back to the job's description when the spoken invoice has no title (Req 4.9)
 - [x] 19. Sent invoices get a due date 14 days after the invoice date, shown on the customer page (Req 5.6)
 - [x] 20. Sizes said before a part name stay in the name, with unit tests for gallons, amps and inches (Req 1.11)
+- [x] 21. Demo payment on the customer page with a PAID stamp, refused outside demo mode or off the local provider (Req 5.7)
+- [x] 22. Dead invoice links show a ghost card with the business and a call button (Req 5.8)
+- [x] 23. Printable carbon-copy set with price-check stamps (Req 5.9)
