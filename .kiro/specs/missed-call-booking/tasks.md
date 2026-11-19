@@ -40,3 +40,5 @@
   - [x] 30.1 Unit tests for the graveyard rules, a refused text and a raised caller booking; Playwright for the strip, the press and reduced motion (Req 8.1-8.7)
 - [x] 31. Spanish callers: detect Spanish, read it through a trade glossary, keep the job and summary in English, and text back and confirm in Spanish; the Bedrock tool reports the language too (Req 3.10, 4.9)
   - [x] 31.1 Unit tests for detection, extraction and the Bedrock field; an API test for the Spanish text-back and confirmation (Req 3.10, 4.9)
+- [x] 32. The phone webhook ignores a retried contact ID, checked again inside the write, and compares its secret in constant time (Req 1.5, 1.6)
+  - [x] 32.1 API tests for a retry, two reports at once, and wrong, missing and near-miss secrets (Req 1.2, 1.5, 1.6)

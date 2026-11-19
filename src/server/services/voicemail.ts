@@ -11,6 +11,8 @@ export interface IncomingCall {
   transcript?: string;
   audioUri?: string;
   durationSec?: number;
+  /** The phone platform's ID for this call (Amazon Connect ContactId), used to ignore retried webhooks. */
+  contactId?: string;
 }
 
 function textBackBody(
@@ -95,6 +97,7 @@ export async function receiveVoicemail(deps: Deps, call: IncomingCall): Promise<
     textedAt: null,
     noTextReason: null,
     jobId: null,
+    ...(call.contactId ? { contactId: call.contactId } : {}),
   };
   const to = textBackNumber(extraction, callerId);
   const cooldownStart = now.getTime() - TEXT_BACK_COOLDOWN_MINUTES * 60_000;
@@ -109,9 +112,13 @@ export async function receiveVoicemail(deps: Deps, call: IncomingCall): Promise<
   message.noTextReason =
     empty ??
     (textedRecently ? `No text sent: this number was already texted in the last ${TEXT_BACK_COOLDOWN_MINUTES} minutes.` : null);
-  deps.store.update((db) => {
-    db.messages.push(message);
+  // Checked again inside the write: a retried webhook can arrive while the first is still transcribing.
+  const duplicate = deps.store.update((db) => {
+    const filed = call.contactId ? db.messages.find((m) => m.contactId === call.contactId) : undefined;
+    if (!filed) db.messages.push(message);
+    return filed ?? null;
   });
+  if (duplicate) return duplicate;
   if (message.noTextReason) return message;
   return textBack(deps, message);
 }

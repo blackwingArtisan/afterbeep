@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { Hono } from 'hono';
 import { z, ZodError } from 'zod';
 import { keptThisWeek } from '../domain/kept';
@@ -41,6 +42,12 @@ const SlotSchema = z.object({
 const StatusSchema = z.object({ status: z.enum(['new', 'heard', 'called-back']) });
 const DraftSchema = z.object({ speech: z.string().trim().min(1).max(2000), jobId: z.string().nullable().optional() });
 const QuoteSchema = z.object({ lines: z.array(InvoiceLineSchema).max(40) });
+
+/** Compares a request's Authorization header with the shared secret in constant time. */
+export function bearerMatches(header: string | undefined, secret: string): boolean {
+  const digest = (value: string) => createHash('sha256').update(value).digest();
+  return timingSafeEqual(digest(header ?? ''), digest(`Bearer ${secret}`));
+}
 
 export function createApp(deps: Deps, options: AppOptions = {}) {
   const app = new Hono();
@@ -95,11 +102,15 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
 
   api.post('/hooks/connect-voicemail', async (c) => {
     if (!options.webhookSecret) throw new ServiceError(503, 'webhook-disabled', 'The phone webhook is not configured');
-    if (c.req.header('authorization') !== `Bearer ${options.webhookSecret}`) {
+    if (!bearerMatches(c.req.header('authorization'), options.webhookSecret)) {
       return c.json({ error: 'unauthorized', message: 'Bad webhook credentials', details: null }, 401);
     }
     const hook = ConnectHookSchema.parse(await c.req.json());
+    // Connect and the hand-off Lambda can retry; a contact already filed is never filed or texted twice.
+    const known = deps.store.read().messages.find((m) => m.contactId === hook.contactId);
+    if (known) return c.json({ messageId: known.id, duplicate: true }, 200);
     const message = await receiveVoicemail(deps, {
+      contactId: hook.contactId,
       from: hook.callerNumber,
       audioUri: hook.recordingUri,
       durationSec: hook.durationSec,

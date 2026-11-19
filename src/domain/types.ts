@@ -93,6 +93,8 @@ export interface Message {
   hangUp?: boolean;
   /** When the owner raised this call from the graveyard with one booking-link text. */
   raisedAt?: string | null;
+  /** The phone platform's contact ID (Amazon Connect), so a retried webhook is filed only once. */
+  contactId?: string;
   jobId: string | null;
 }
 
@@ -200,6 +202,9 @@ export interface Invoice {
   totals: InvoiceTotals;
   status: InvoiceStatus;
   createdAt: string;
+  /** The invoice date, YYYY-MM-DD in the business's time zone. Older invoices may lack it. */
+  issueDate?: string;
+  /** YYYY-MM-DD, 14 days after the invoice date. */
   dueDate: string;
   provider: string;
   providerRef: string | null;

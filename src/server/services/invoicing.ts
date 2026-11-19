@@ -3,6 +3,7 @@ import { InvoiceProviderError } from '../../adapters/invoices/types';
 import type { Db } from '../../adapters/store/types';
 import { draftFromSpeech, quoteLines, type InvoiceDraft, type Quote } from '../../domain/invoice-draft';
 import { buildPriceBook } from '../../domain/price-book';
+import { wallClock } from '../../domain/slots';
 import { businessTaxRateMilli } from '../../domain/tax';
 import type { Customer, Invoice, InvoiceLine, Job, PastInvoice } from '../../domain/types';
 import { ServiceError, type Deps } from './deps';
@@ -90,8 +91,16 @@ function invoicePrefix(businessName: string): string {
   );
 }
 
-function addDays(date: Date, days: number): string {
-  return new Date(date.getTime() + days * 86_400_000).toISOString().slice(0, 10);
+/** The calendar date of `instant` in the business's own time zone, as YYYY-MM-DD. */
+export function localDate(instant: Date, timeZone: string): string {
+  const { year, month, day } = wallClock(instant, timeZone);
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+/** Adds whole calendar days to a YYYY-MM-DD date. */
+export function addDays(date: string, days: number): string {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(Date.UTC(y!, m! - 1, d! + days)).toISOString().slice(0, 10);
 }
 
 /**
@@ -111,12 +120,24 @@ export async function sendInvoice(deps: Deps, input: SendInvoiceInput): Promise<
   }
   const job = input.jobId ? db.jobs.find((j) => j.id === input.jobId) : undefined;
   if (input.jobId && !job) throw new ServiceError(404, 'not-found', 'No such job');
-  if (job?.invoiceId) throw new ServiceError(409, 'already-invoiced', 'This job already has an invoice');
 
   const now = deps.clock();
+  const id = deps.newId();
+  // Reserve the invoice number and the job in one store update before the provider is called, so
+  // two sends racing for the same job cannot both pass the already-invoiced check or share a number.
+  const number = deps.store.update((state) => {
+    const storedJob = job ? state.jobs.find((j) => j.id === job.id) : undefined;
+    if (storedJob?.invoiceId) throw new ServiceError(409, 'already-invoiced', 'This job already has an invoice');
+    if (storedJob) storedJob.invoiceId = id;
+    const reserved = state.nextInvoiceNumber;
+    state.nextInvoiceNumber += 1;
+    return reserved;
+  });
+
+  const invoiceDate = localDate(now, db.business.timezone);
   const invoice: Invoice = {
-    id: deps.newId(),
-    number: `${invoicePrefix(db.business.name)}-${db.nextInvoiceNumber}`,
+    id,
+    number: `${invoicePrefix(db.business.name)}-${number}`,
     jobId: job?.id ?? null,
     title: input.title,
     customer: input.customer,
@@ -124,7 +145,8 @@ export async function sendInvoice(deps: Deps, input: SendInvoiceInput): Promise<
     totals: quote.totals,
     status: 'sent',
     createdAt: now.toISOString(),
-    dueDate: addDays(now, 14),
+    issueDate: invoiceDate,
+    dueDate: addDays(invoiceDate, 14),
     provider: deps.adapters.invoices.name,
     providerRef: null,
     customerUrl: '',
@@ -134,6 +156,12 @@ export async function sendInvoice(deps: Deps, input: SendInvoiceInput): Promise<
   try {
     sent = await deps.adapters.invoices.send(invoice, db.business);
   } catch (error) {
+    // Release the reservation: free the job, and hand the number back unless a later send took the next one.
+    deps.store.update((state) => {
+      const storedJob = invoice.jobId ? state.jobs.find((j) => j.id === invoice.jobId) : undefined;
+      if (storedJob?.invoiceId === id) storedJob.invoiceId = null;
+      if (state.nextInvoiceNumber === number + 1) state.nextInvoiceNumber = number;
+    });
     if (error instanceof InvoiceProviderError) throw new ServiceError(503, 'provider-failed', error.message);
     throw error;
   }
@@ -141,7 +169,6 @@ export async function sendInvoice(deps: Deps, input: SendInvoiceInput): Promise<
 
   deps.store.update((state) => {
     state.invoices.push(final);
-    state.nextInvoiceNumber += 1;
     const storedJob = final.jobId ? state.jobs.find((j) => j.id === final.jobId) : undefined;
     if (storedJob) {
       storedJob.status = 'invoiced';
@@ -150,7 +177,7 @@ export async function sendInvoice(deps: Deps, input: SendInvoiceInput): Promise<
     const history: PastInvoice = {
       id: final.id,
       number: final.number,
-      date: final.createdAt.slice(0, 10),
+      date: invoiceDate,
       customerName: final.customer.name,
       lines: final.lines.map(({ description, kind, quantity, unit, unitPriceCents, taxable }) => ({
         description,

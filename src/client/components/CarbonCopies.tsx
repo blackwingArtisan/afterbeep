@@ -1,5 +1,5 @@
 import { carbonStamp } from '../../domain/kept';
-import { formatCents, formatQuantity, formatRateMilli, lineAmountCents } from '../../domain/money';
+import { formatCents, invoiceDay, formatQuantity, formatRateMilli, lineAmountCents } from '../../domain/money';
 import type { Invoice } from '../../domain/types';
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 }
 
 function Copy({ invoice, business, office }: Props & { office: boolean }) {
-  const created = new Date(invoice.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const created = invoiceDay(invoice.issueDate ?? invoice.createdAt.slice(0, 10));
   return (
     <section className={`carbon-copy ${office ? 'office' : 'customer'}`} aria-label={office ? 'Office copy' : 'Customer copy'}>
       <header className="carbon-head">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { formatCents, formatQuantity, formatRateMilli, lineAmountCents } from '../../domain/money';
+import { formatCents, invoiceDay, formatQuantity, formatRateMilli, lineAmountCents } from '../../domain/money';
 import { api, ApiError, type PublicInvoice } from '../api';
 import { BrandMark } from '../components/Brand';
 import { GhostIcon, PhoneIcon } from '../components/Icons';
@@ -80,8 +80,8 @@ export default function CustomerInvoice() {
     }
   }
 
-  const created = new Date(invoice.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  const due = new Date(`${invoice.dueDate}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const created = invoiceDay(invoice.issueDate ?? invoice.createdAt.slice(0, 10));
+  const due = invoiceDay(invoice.dueDate);
 
   return (
     <div className="caller-page">

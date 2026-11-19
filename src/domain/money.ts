@@ -50,3 +50,8 @@ export function formatRateMilli(rateMilli: number): string {
 export function formatQuantity(quantity: number): string {
   return Number.isInteger(quantity) ? String(quantity) : quantity.toFixed(2).replace(/0$/, '');
 }
+
+/** Formats a YYYY-MM-DD calendar date as "November 30, 2026", with no time-zone shift. */
+export function invoiceDay(date: string): string {
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}

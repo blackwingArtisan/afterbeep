@@ -18,6 +18,8 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 1.2 WHEN the phone platform reports a finished recording THE SYSTEM SHALL accept it only with a valid shared secret on the webhook.
 1.3 IF the webhook secret is not configured THEN THE SYSTEM SHALL refuse webhook calls with a "not configured" error.
 1.4 THE SYSTEM SHALL reject a caller ID that is not a valid US phone number.
+1.5 IF the phone platform reports a recording whose contact ID was already received THEN THE SYSTEM SHALL return the message already filed for it, and file and text nothing new, even when the two reports arrive at the same time.
+1.6 THE SYSTEM SHALL compare the webhook's shared secret in constant time, so response timing does not reveal how much of a guess was right.
 
 ## Requirement 2: Transcribe
 **User story:** As an owner, I want every message written down, so that I can read it between jobs.
