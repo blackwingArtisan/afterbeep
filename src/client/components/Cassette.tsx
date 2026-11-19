@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { Job, Message } from '../../domain/types';
 import { formatDay, formatDuration, formatPhone, formatRange, formatTime, telHref, timeAgo } from '../lib/format';
 import { CheckIcon, PhoneIcon, PlayIcon, StopIcon } from './Icons';
@@ -67,6 +68,14 @@ export function Cassette({ message, side, timeZone, job, playing, onPlay, onStop
               {job ? (
                 <span className="ok-text">
                   <CheckIcon width={16} height={16} /> Booked {formatDay(job.start, timeZone)}, {formatRange(job.start, job.end, timeZone)}
+                  {job.status !== 'invoiced' && (
+                    <>
+                      {' '}
+                      <Link className="btn btn-small" to={`/machine/invoice?job=${job.id}`} data-testid="bill-it">
+                        Bill it
+                      </Link>
+                    </>
+                  )}
                 </span>
               ) : message.textedAt ? (
                 <span className="muted">Texted a booking link at {formatTime(message.textedAt, timeZone)}. Waiting for a pick.</span>

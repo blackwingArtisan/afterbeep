@@ -35,6 +35,8 @@ test('[MC 5.9, 6.2, 7.1, 7.2, 7.3] a missed call becomes a booked job', async ({
   await expect(page.getByTestId('lcd-count')).toHaveText(String(before + 1).padStart(2, '0'));
   const tape = page.getByTestId('cassette').filter({ hasText: 'Hector Alvarez' });
   await expect(tape.getByTestId('booking-status')).toContainText('Booked');
+  await tape.getByTestId('bill-it').click();
+  await expect(page.getByLabel('Job')).toContainText('Hector Alvarez');
 
   await page.goto('/machine/outbox');
   await expect(page.getByTestId('outbox-item').first()).toContainText("You're booked, Hector");
