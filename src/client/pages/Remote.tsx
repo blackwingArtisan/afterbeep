@@ -57,6 +57,13 @@ export default function Remote() {
     if (dictation.listening) setWords(dictation.text);
   }, [dictation.listening, dictation.text]);
 
+  // Keep the newest prompt in view as the call goes on.
+  const tapeRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const tape = tapeRef.current;
+    if (tape) tape.scrollTop = tape.scrollHeight;
+  }, [lines]);
+
   const dispatchRef = useRef<(event: RemoteEvent) => void>(() => {});
 
   const run = useCallback((effect: RemoteEffect) => {
@@ -227,10 +234,10 @@ export default function Remote() {
 
         <section className="panel panel-pad stack" aria-label="The call">
           <h2 className="ogm-checks-title">What the machine says</h2>
-          <div className="remote-tape" data-testid="remote-tape" aria-live="polite">
+          <div ref={tapeRef} className="remote-tape" data-testid="remote-tape" aria-live="polite">
             {lines.length === 0 && <p className="remote-empty">Press Call your machine. It answers and asks for your code.</p>}
             {lines.map((line) => (
-              <div key={line.id} className={`remote-line ${line.who}`} data-who={line.who}>
+              <div key={line.id} className={`remote-line is-${line.who}`} data-who={line.who}>
                 {line.who === 'caller' && <span className="faint">Caller: </span>}
                 {line.text}
               </div>

@@ -74,6 +74,10 @@ test('[RR 1.1, 1.2, 3.1, 4.1, 5.1, 5.4, 6.2, 8.1, 8.3, 12.1, 12.2, 12.4, 12.9] k
   await key(page, '9').click();
   await expect(tape(page)).toContainText('Erased.');
   await expect(tape(page)).toContainText('After the beep, say your invoice.');
+  // Each line is sized to its text, and the transcript is scrolled to the newest prompt.
+  const lineHeights = await tape(page).locator('.remote-line').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height));
+  expect(Math.max(...lineHeights)).toBeLessThan(200);
+  await expect.poll(() => tape(page).evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop)).toBeLessThan(2);
 
   const { messages } = (await (await request.get('/api/messages')).json()) as { messages: { from: string; status: string }[] };
   expect(messages.find((m) => m.from === '+16145550166')).toBeUndefined();

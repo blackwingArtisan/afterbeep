@@ -2671,12 +2671,12 @@
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
-.remote-line.caller {
+.remote-line.is-caller {
   border-style: dashed;
   font-family: var(--font-type);
   color: var(--ink-dim);
 }
-.remote-line.you {
+.remote-line.is-you {
   justify-self: end;
   border-radius: 14px 14px 4px 14px;
   background: transparent;
