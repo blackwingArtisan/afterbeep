@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('a missed call becomes a booked job', async ({ page, request }) => {
+test('[MC 5.9, 6.2, 7.1, 7.2, 7.3] a missed call becomes a booked job', async ({ page, request }) => {
   const before = ((await (await request.get('/api/messages')).json()) as { newCount: number }).newCount;
   await page.goto('/machine/call');
   await page.getByRole('radio', { name: /Furnace out overnight/ }).click();
@@ -40,7 +40,7 @@ test('a missed call becomes a booked job', async ({ page, request }) => {
   await expect(page.getByTestId('outbox-item').first()).toContainText("You're booked, Hector");
 });
 
-test('a hang-up is filed but nobody is texted', async ({ page, request }) => {
+test('[MC 4.6] a hang-up is filed but nobody is texted', async ({ page, request }) => {
   const outboxBefore = ((await (await request.get('/api/outbox')).json()) as { outbox: unknown[] }).outbox.length;
   const res = await request.post('/api/calls', { data: { from: '+16145550191', transcript: 'uh hello? hello? nobody there' } });
   expect(res.status()).toBe(201);
@@ -52,7 +52,7 @@ test('a hang-up is filed but nobody is texted', async ({ page, request }) => {
   expect(outboxAfter).toBe(outboxBefore);
 });
 
-test('new emergencies sit at the top of the inbox with a call-back strip', async ({ page, request }) => {
+test('[MC 6.4, 6.5] new emergencies sit at the top of the inbox with a call-back strip', async ({ page, request }) => {
   const res = await request.post('/api/calls', {
     data: {
       from: '+16145550188',

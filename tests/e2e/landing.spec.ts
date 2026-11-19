@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('landing page sells the product and opens the machine', async ({ page }) => {
+test('[MC 6.2] landing page sells the product and opens the machine', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('AfterBeep got the job');
   await expect(page.getByText('Why now')).toBeVisible();

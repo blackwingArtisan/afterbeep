@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('the caller booking page works on a phone', async ({ page, request }) => {
+test('[MC 5.1, 5.9] the caller booking page works on a phone', async ({ page, request }) => {
   const res = await request.post('/api/calls', {
     data: { from: '+16145550110', transcript: 'Hi, this is Sam Rowe at 12 Willow Street. The upstairs toilet keeps running. No rush.' },
   });
@@ -16,7 +16,7 @@ test('the caller booking page works on a phone', async ({ page, request }) => {
   await expect(page.getByTestId('booked')).toBeVisible();
 });
 
-test('a bad booking link still shows the business and a call button', async ({ page }) => {
+test('[MC 5.8] a bad booking link still shows the business and a call button', async ({ page }) => {
   await page.goto('/book/not-a-real-token');
   const card = page.getByTestId('bad-link');
   await expect(card).toContainText('Hollow Creek Plumbing & Appliance');

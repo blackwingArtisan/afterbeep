@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "check": "npm run typecheck && npm test"
+    "spec:coverage": "tsx scripts/spec-coverage.ts",
+    "check": "npm run typecheck && npm run spec:coverage && npm test"
   },
   "dependencies": {
     "@fontsource/big-shoulders-display": "5.3.0",

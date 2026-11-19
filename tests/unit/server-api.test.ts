@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { localAdapters } from '../../src/adapters';
 import { MemoryStore } from '../../src/adapters/store/local';
+import { lineAmountCents } from '../../src/domain/money';
 import type { Invoice, InvoiceLine, Job, Message, OutboxItem } from '../../src/domain/types';
 import { createApp } from '../../src/server/app';
 import { sampleInvoiceScripts, simulatorScripts } from '../../src/server/seed';
@@ -36,7 +37,7 @@ beforeEach(async () => {
 });
 
 describe('seeded machine', () => {
-  it('starts with three new messages, each already texted back', async () => {
+  it('[MC 4.1, 4.5, 6.1] starts with three new messages, each already texted back', async () => {
     const { body } = await ctx.call<{ messages: Message[]; newCount: number }>('GET', '/api/messages');
     expect(body.newCount).toBe(3);
     expect(body.messages.map((m) => m.extraction.callerName)).toEqual(['Gus Lindqvist', 'Edith Marsh', 'Priya Natarajan']);
@@ -46,14 +47,14 @@ describe('seeded machine', () => {
     expect(outbox.find((o) => o.to === '+16145550179')?.body).toContain(`${BASE}/book/`);
   });
 
-  it('reports local adapters', async () => {
+  it('[MC 7.4] reports local adapters', async () => {
     const { body } = await ctx.call<{ adapters: Record<string, string> }>('GET', '/api/health');
     expect(body.adapters).toEqual({ transcriber: 'local', extractor: 'rules', sms: 'outbox', invoices: 'local' });
   });
 });
 
 describe('missed call to booked job', () => {
-  it('runs the whole pipeline', async () => {
+  it('[MC 2.2, 4.1, 4.2, 4.3, 5.1, 5.4, 5.6, 5.7] runs the whole pipeline', async () => {
     const sample = simulatorScripts.find((s) => s.id === 'no-heat')!;
     const created = await ctx.call<{ message: Message }>('POST', '/api/calls', { from: '614-555-0163', transcript: sample.transcript });
     expect(created.status).toBe(201);
@@ -63,6 +64,9 @@ describe('missed call to booked job', () => {
     const text = (await ctx.call<{ outbox: OutboxItem[] }>('GET', '/api/outbox')).body.outbox[0]!;
     expect(text).toMatchObject({ kind: 'sms', to: '+16145550163', linkPath: `/book/${message.bookingToken}` });
     expect(text.body).toMatch(/^Hi Hector, it's Morgan at Hollow Creek/);
+    // An emergency text promises a call back and still carries the booking link.
+    expect(text.body).toContain("I'll call you back the minute I'm off this job");
+    expect(text.body).toContain(`${BASE}/book/${message.bookingToken}`);
 
     const view = await ctx.call<{ slots: { start: string; end: string }[]; booked: unknown }>('GET', text.linkPath!.replace('/book', '/api/book'));
     expect(view.status).toBe(200);
@@ -83,7 +87,17 @@ describe('missed call to booked job', () => {
     expect(confirm.body).toContain("You're booked, Hector: Tue, Nov 17, 8:00 AM-10:00 AM");
   });
 
-  it('refuses a slot someone else just took', async () => {
+  it('[MC 5.10] offers no times and gives the business phone when the calendar is full', async () => {
+    const db = ctx.store.read();
+    ctx.store.replace({ ...db, business: { ...db.business, hours: [null, null, null, null, null, null, null] } });
+    const message = db.messages.find((m) => m.textedAt && !m.jobId)!;
+    const view = await ctx.call<{ slots: unknown[]; business: { phone: string } }>('GET', `/api/book/${message.bookingToken}`);
+    expect(view.status).toBe(200);
+    expect(view.body.slots).toEqual([]);
+    expect(view.body.business.phone).toBe(db.business.phone);
+  });
+
+  it('[MC 5.5] refuses a slot someone else just took', async () => {
     const msgs = (await ctx.call<{ messages: Message[] }>('GET', '/api/messages')).body.messages;
     const [a, b] = msgs;
     const slots = (await ctx.call<{ slots: { start: string; end: string }[] }>('GET', `/api/book/${a!.bookingToken}`)).body.slots;
@@ -92,7 +106,7 @@ describe('missed call to booked job', () => {
     expect(taken).toMatchObject({ status: 409, body: { error: 'slot-taken' } });
   });
 
-  it('rejects unknown tokens, bad caller IDs and empty bodies', async () => {
+  it('[MC 1.4, 5.8] rejects unknown tokens, bad caller IDs and empty bodies', async () => {
     const bad = await ctx.call<{ details: { business: { name: string; phone: string } } }>('GET', '/api/book/nope');
     expect(bad.status).toBe(404);
     expect(bad.body.details.business).toEqual({ name: 'Hollow Creek Plumbing & Appliance', phone: '(614) 555-0142' });
@@ -100,7 +114,7 @@ describe('missed call to booked job', () => {
     expect((await ctx.call('POST', '/api/calls', { from: 'not a phone', transcript: 'hi there' })).status).toBe(400);
   });
 
-  it('marks a message heard', async () => {
+  it('[MC 6.3] marks a message heard', async () => {
     const [m] = (await ctx.call<{ messages: Message[] }>('GET', '/api/messages')).body.messages;
     const res = await ctx.call<{ message: Message }>('POST', `/api/messages/${m!.id}/status`, { status: 'heard' });
     expect(res.body.message.status).toBe('heard');
@@ -110,7 +124,7 @@ describe('missed call to booked job', () => {
 describe('text-back guards', () => {
   const outboxCount = async () => (await ctx.call<{ outbox: OutboxItem[] }>('GET', '/api/outbox')).body.outbox.length;
 
-  it('files a hang-up without texting anyone', async () => {
+  it('[MC 4.6] files a hang-up without texting anyone', async () => {
     const before = await outboxCount();
     const res = await ctx.call<{ message: Message }>('POST', '/api/calls', { from: '614-555-0190', transcript: 'uh hello? hello? nobody there' });
     expect(res.status).toBe(201);
@@ -119,7 +133,7 @@ describe('text-back guards', () => {
     expect(await outboxCount()).toBe(before);
   });
 
-  it('texts a repeat caller only once per cooldown', async () => {
+  it('[MC 4.7] texts a repeat caller only once per cooldown', async () => {
     const sample = simulatorScripts.find((s) => s.id === 'no-heat')!;
     const first = await ctx.call<{ message: Message }>('POST', '/api/calls', { from: sample.from, transcript: sample.transcript });
     const second = await ctx.call<{ message: Message }>('POST', '/api/calls', { from: sample.from, transcript: sample.transcript });
@@ -129,7 +143,7 @@ describe('text-back guards', () => {
     expect(messages.filter((m) => m.from === first.body.message.from)).toHaveLength(2);
   });
 
-  it('turns off the simulator and reset outside demo mode', async () => {
+  it('[MC 7.5] turns off the simulator and reset outside demo mode', async () => {
     const live = await setup(false);
     const call = await live.call<{ error: string }>('POST', '/api/calls', { from: '614-555-0163', transcript: 'My furnace is out.' });
     expect(call).toMatchObject({ status: 404, body: { error: 'not-found' } });
@@ -140,10 +154,21 @@ describe('text-back guards', () => {
 
 describe('phone webhook (real path entry point)', () => {
   const hook = { contactId: 'c-1', callerNumber: '+16145550150', recordingUri: 's3://bucket/recording.wav' };
-  it('requires the shared secret', async () => {
+  it('[MC 1.2] requires the shared secret', async () => {
     expect((await ctx.call('POST', '/api/hooks/connect-voicemail', hook)).status).toBe(401);
   });
-  it('reports that the local transcriber cannot read audio', async () => {
+  it('[MC 1.3] refuses every webhook call while no secret is configured', async () => {
+    const store = new MemoryStore(await seedDb(NOW, () => 'x', BASE));
+    const app = createApp({ store, adapters: localAdapters({ store, clock: () => NOW, newId: () => 'x', publicBaseUrl: BASE }), clock: () => NOW, newId: () => 'x', publicBaseUrl: BASE }, {});
+    const res = await app.request('/api/hooks/connect-voicemail', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer anything' },
+      body: JSON.stringify(hook),
+    });
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ error: 'webhook-disabled' });
+  });
+  it('[MC 2.3] reports that the local transcriber cannot read audio', async () => {
     const res = await ctx.call<{ error: string }>('POST', '/api/hooks/connect-voicemail', hook, { authorization: 'Bearer test-secret' });
     expect(res).toMatchObject({ status: 422, body: { error: 'transcription-failed' } });
   });
@@ -157,11 +182,12 @@ describe('spoken invoice to approved bill', () => {
     return jobs.find((j) => j.status === 'done')!;
   }
 
-  it('drafts, holds a bad price, and sends only the approved exact total', async () => {
+  it('[VI 4.4, 4.6, 4.7, 4.8, 4.9, 5.1, 5.6] drafts, holds a bad price, and sends only the approved exact total', async () => {
     const job = await finishedJob();
     const speech = sampleInvoiceScripts.find((s) => s.id === 'slip')!.speech;
     const { body } = await ctx.call<Draft>('POST', '/api/invoices/draft', { speech, jobId: job.id });
     expect(body.customer?.name).toBe('Wendell Ashgrove');
+    // The spoken invoice has no title, so the job's description is used.
     expect(body.draft.title).toBe('Dryer');
     expect(body.draft.blocked).toBe(true);
 
@@ -179,6 +205,7 @@ describe('spoken invoice to approved bill', () => {
     const sent = await ctx.call<{ invoice: Invoice }>('POST', '/api/invoices/send', { ...base, lines: fixed, approvedTotalCents: 18288 });
     expect(sent.status).toBe(201);
     expect(sent.body.invoice).toMatchObject({ number: 'HC-1016', customerUrl: `/i/${sent.body.invoice.id}`, totals: { totalCents: 18288, taxCents: 288 } });
+    expect(sent.body.invoice.dueDate).toBe('2026-11-30');
 
     const page = await ctx.call<{ invoice: Invoice; business: { name: string } }>('GET', `/api/invoices/${sent.body.invoice.id}`);
     expect(page.body.business.name).toBe('Hollow Creek Plumbing & Appliance');
@@ -192,7 +219,7 @@ describe('spoken invoice to approved bill', () => {
     expect(twice).toMatchObject({ status: 409, body: { error: 'already-invoiced' } });
   });
 
-  it('ignores totals the client tries to inject and recomputes from lines', async () => {
+  it('[VI 1.7, 4.5] ignores totals the client tries to inject and recomputes from lines', async () => {
     const speech = sampleInvoiceScripts.find((s) => s.id === 'clean')!.speech;
     const { body } = await ctx.call<Draft>('POST', '/api/invoices/draft', { speech });
     const tampered = { lines: body.draft.lines, totals: { totalCents: 1 } };
@@ -200,7 +227,7 @@ describe('spoken invoice to approved bill', () => {
     expect(quote.totals.totalCents).toBe(56292);
   });
 
-  it('grows the price book with every sent invoice', async () => {
+  it('[VI 3.8] grows the price book with every sent invoice', async () => {
     const before = (await ctx.call<{ entries: { key: string; count: number }[] }>('GET', '/api/price-book')).body.entries;
     const speech = sampleInvoiceScripts.find((s) => s.id === 'clean')!.speech;
     const { body } = await ctx.call<Draft>('POST', '/api/invoices/draft', { speech });
@@ -216,7 +243,7 @@ describe('spoken invoice to approved bill', () => {
     expect(count(after)).toBe(count(before) + 1);
   });
 
-  it('holds the misheard "for forty" quantity case and sends the corrected invoice', async () => {
+  it('[VI 1.9, 3.10] holds the misheard "for forty" quantity case and sends the corrected invoice', async () => {
     const speech = 'water heater element ninety nine dollars and a thermostat for forty, one hour labor at eighty five';
     const { body } = await ctx.call<Draft>('POST', '/api/invoices/draft', { speech });
     expect(body.draft.lines.map((l) => l.quantity)).toEqual([1, 1, 1]);
@@ -237,14 +264,30 @@ describe('spoken invoice to approved bill', () => {
     expect((await send(body.draft.lines, 23199)).status).toBe(201);
   });
 
-  it('rejects malformed lines', async () => {
+  it('[VI 4.2] recomputes totals when the owner edits or removes a line', async () => {
+    const speech = sampleInvoiceScripts.find((s) => s.id === 'clean')!.speech;
+    const { body } = await ctx.call<Draft>('POST', '/api/invoices/draft', { speech });
+    const quote = async (lines: InvoiceLine[]) =>
+      (await ctx.call<{ quote: { totals: { subtotalCents: number; totalCents: number } } }>('POST', '/api/invoices/quote', { lines })).body.quote.totals;
+    const start = await quote(body.draft.lines);
+    expect(start.totalCents).toBe(56292);
+
+    const [first, ...rest] = body.draft.lines;
+    const doubled = await quote([{ ...first!, quantity: first!.quantity * 2 }, ...rest]);
+    expect(doubled.subtotalCents).toBe(start.subtotalCents + lineAmountCents(first!.quantity, first!.unitPriceCents!));
+
+    const removed = await quote(rest);
+    expect(removed.subtotalCents).toBe(start.subtotalCents - lineAmountCents(first!.quantity, first!.unitPriceCents!));
+  });
+
+  it('[VI 4.4] rejects malformed lines', async () => {
     const res = await ctx.call<{ error: string }>('POST', '/api/invoices/quote', { lines: [{ id: 'x', quantity: 1.234 }] });
     expect(res).toMatchObject({ status: 400, body: { error: 'invalid-request' } });
   });
 });
 
 describe('text-back failures', () => {
-  it('files the message with a reason when the provider refuses the text, then retries it', async () => {
+  it('[MC 4.8] files the message with a reason when the provider refuses the text, then retries it', async () => {
     let n = 0;
     const newId = () => `fx${String(++n).padStart(4, '0')}`;
     const clock = () => NOW;

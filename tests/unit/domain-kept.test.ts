@@ -43,18 +43,18 @@ function line(heard: string, quantity: number, unitPriceCents: number): InvoiceL
 }
 
 describe('kept this week', () => {
-  it('uses the median past invoice before tax as the value of a booked, unbilled job', () => {
+  it('[MC 6.6] uses the median past invoice before tax as the value of a booked, unbilled job', () => {
     expect(typicalJobCents(pastInvoices)).toBe(33050);
   });
 
-  it('counts a price the owner corrected from what was first heard', () => {
+  it('[MC 6.6] counts a price the owner corrected from what was first heard', () => {
     expect(caughtOnLine(line('Dryer belt fifteen, taxed', 1, 5000))).toBe(3500);
     expect(caughtOnLine(line('forty water heater elements at eighty nine', 1, 8900))).toBe(39 * 8900);
     expect(caughtOnLine(line('One hour labor at eighty-five', 1, 8500))).toBe(0);
     expect(caughtOnLine(line('Trip charge', 1, 4500))).toBe(0);
   });
 
-  it('adds up calls, text-backs, bookings and corrections from the last seven days only', () => {
+  it('[MC 6.6] adds up calls, text-backs, bookings and corrections from the last seven days only', () => {
     const job: Job = {
       id: 'j1', messageId: 'm2', customerName: 'Ivy Sloane', phone: '(614) 555-0101', email: null, address: null,
       description: 'Leak', urgency: 'routine', start: hoursAgo(-20), end: hoursAgo(-22), status: 'scheduled', invoiceId: null,

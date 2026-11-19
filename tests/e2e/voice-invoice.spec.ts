@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('a spoken invoice is held on a wrong price and sent only at the approved total', async ({ page }) => {
+test('[VI 3.8, 4.1, 4.3, 5.2] a spoken invoice is held on a wrong price and sent only at the approved total', async ({ page }) => {
   await page.goto('/machine/invoice');
   await expect(page.getByLabel('Job')).toContainText('Wendell Ashgrove');
 
@@ -35,7 +35,7 @@ test('a spoken invoice is held on a wrong price and sent only at the approved to
   await expect(page.getByRole('row', { name: /Dryer belt/ })).toContainText('5');
 });
 
-test('two items joined by "and" become two lines, and a misheard quantity is held', async ({ page }) => {
+test('[VI 1.8, 3.10] two items joined by "and" become two lines, and a misheard quantity is held', async ({ page }) => {
   await page.goto('/machine/invoice');
   const speech = page.getByLabel('What you said');
   const draft = page.getByTestId('draft');
@@ -57,7 +57,7 @@ test('two items joined by "and" become two lines, and a misheard quantity is hel
   await expect(draft.getByTestId('line').first()).toContainText('1 ea x $89.00');
 });
 
-test('an ambiguous price with no history waits for the owner to pick a reading', async ({ page }) => {
+test('[VI 3.11] an ambiguous price with no history waits for the owner to pick a reading', async ({ page }) => {
   await page.goto('/machine/invoice');
   await page.getByLabel('What you said').fill('dryer repair, part three twenty-nine taxed, two hours labor at eighty-five');
   await page.getByRole('button', { name: 'Line it up' }).click();
@@ -69,7 +69,7 @@ test('an ambiguous price with no history waits for the owner to pick a reading',
   await expect(draft.getByTestId('line').first()).toContainText('$3.29');
 });
 
-test('a labor rate well below the usual rate is held until the owner keeps it', async ({ page }) => {
+test('[VI 3.4] a labor rate well below the usual rate is held until the owner keeps it', async ({ page }) => {
   await page.goto('/machine/invoice');
   await page.getByLabel('What you said').fill('two hours labor at sixty');
   await page.getByRole('button', { name: 'Line it up' }).click();

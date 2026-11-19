@@ -7,7 +7,7 @@ test.afterEach(async ({ request }) => {
   await request.post('/api/demo/reset');
 });
 
-test('the whole story runs from a missed call to a sent invoice', async ({ page }) => {
+test('[MC 6.6, 7.7] the whole story runs from a missed call to a sent invoice', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: /Demo the whole story/ }).click();
   await expect(page).toHaveURL(/\/machine\/call\?story=1$/);
@@ -48,7 +48,7 @@ test('the whole story runs from a missed call to a sent invoice', async ({ page 
   await expect(page.getByTestId('kept-caught')).toHaveText('$35');
 });
 
-test('the hero machine plays a missed call and shows the price check', async ({ page }) => {
+test('[MC 7.8] the hero machine plays a missed call and shows the price check', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   const device = page.getByTestId('device');

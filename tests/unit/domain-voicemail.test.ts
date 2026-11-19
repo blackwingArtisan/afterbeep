@@ -16,7 +16,7 @@ const sample = (id: string) => simulatorScripts.find((s) => s.id === id)!;
 const extract = (id: string) => extractWithRules(sample(id).transcript, { callerId: sample(id).from, defaultAreaCode: '614' });
 
 describe('rule-based voicemail extraction', () => {
-  it('reads the burst water heater emergency', () => {
+  it('[MC 3.1, 3.3] reads the burst water heater emergency', () => {
     expect(extract('burst-heater')).toMatchObject({
       callerName: 'Priya Natarajan',
       callbackNumber: '(614) 555-0134',
@@ -27,7 +27,7 @@ describe('rule-based voicemail extraction', () => {
     expect(extract('burst-heater').job).toBe('Water heater: burst, flooding');
   });
 
-  it('reads an apartment unit and a "soon" request', () => {
+  it('[MC 3.1, 3.4] reads an apartment unit and a "soon" request', () => {
     expect(extract('clogged-sink')).toMatchObject({
       callerName: 'Edith Marsh',
       callbackNumber: '(614) 555-0121',
@@ -38,7 +38,7 @@ describe('rule-based voicemail extraction', () => {
     });
   });
 
-  it('prefers the spoken callback number over caller ID and reads spoken house numbers', () => {
+  it('[MC 3.2] prefers the spoken callback number over caller ID and reads spoken house numbers', () => {
     expect(extract('slow-dryer')).toMatchObject({
       callerName: 'Gus Lindqvist',
       callbackNumber: '(614) 555-0179',
@@ -49,7 +49,7 @@ describe('rule-based voicemail extraction', () => {
     });
   });
 
-  it('falls back to caller ID and a generic job when the caller says little', () => {
+  it('[MC 3.2, 4.4] falls back to caller ID and a generic job when the caller says little', () => {
     const result = extractWithRules('Hi, um, call me back please.', { callerId: '+16145550100', defaultAreaCode: '614' });
     expect(result).toMatchObject({ callerName: null, callbackNumber: '(614) 555-0100', address: null, jobCategory: 'general' });
     expect(result.summary).toContain('Unknown caller');
@@ -63,12 +63,12 @@ describe('rule-based voicemail extraction', () => {
     expect(extractName(text)).toBe(name);
   });
 
-  it('fills in a local number with the business area code', () => {
+  it('[MC 3.2] fills in a local number with the business area code', () => {
     expect(extractCallback('reach me at 555-0150', '614')).toBe('(614) 555-0150');
     expect(toE164('(614) 555-0150')).toBe('+16145550150');
   });
 
-  it('ignores text without a street suffix', () => {
+  it('[MC 3.6] ignores text without a street suffix', () => {
     expect(extractAddress('I have 2 dogs and a cat')).toBeNull();
   });
 
@@ -83,7 +83,7 @@ describe('rule-based voicemail extraction', () => {
     expect(classifyJob(text).job).toBe(job);
   });
 
-  it('treats "no rush" as routine even with "this week"', () => {
+  it('[MC 3.4] treats "no rush" as routine even with "this week"', () => {
     expect(classifyUrgency('no rush, sometime this week')).toBe('routine');
     expect(classifyUrgency('I smell gas in the basement')).toBe('emergency');
   });
@@ -94,18 +94,18 @@ describe('slots', () => {
   // Monday 2026-11-16, 14:30 in Columbus (EST, UTC-5).
   const now = new Date('2026-11-16T19:30:00Z');
 
-  it('converts wall time in the business time zone', () => {
+  it('[MC 5.2] converts wall time in the business time zone', () => {
     expect(zonedInstant({ year: 2026, month: 11, day: 17 }, 8, 0, tz).toISOString()).toBe('2026-11-17T13:00:00.000Z');
     expect(zonedInstant({ year: 2026, month: 7, day: 1 }, 8, 0, tz).toISOString()).toBe('2026-07-01T12:00:00.000Z');
     expect(wallClock(now, tz)).toMatchObject({ hour: 14, minute: 30, weekday: 1 });
   });
 
-  it('offers tomorrow onward for routine jobs', () => {
+  it('[MC 5.3] offers tomorrow onward for routine jobs', () => {
     const slots = openSlots({ now, timeZone: tz, hours: demoBusiness.hours, slotMinutes: 120, booked: [], urgency: 'routine', limit: 3 });
     expect(slots.map((s) => s.start)).toEqual(['2026-11-17T13:00:00.000Z', '2026-11-17T15:00:00.000Z', '2026-11-17T17:00:00.000Z']);
   });
 
-  it('offers today for emergencies, after the lead time', () => {
+  it('[MC 5.3] offers today for emergencies, after the lead time', () => {
     const [first] = openSlots({ now, timeZone: tz, hours: demoBusiness.hours, slotMinutes: 120, booked: [], urgency: 'emergency' });
     // At 14:30 with an hour of notice, no two-hour slot still fits before 17:00, so the first is tomorrow 08:00.
     expect(first?.start).toBe('2026-11-17T13:00:00.000Z');
@@ -114,7 +114,7 @@ describe('slots', () => {
     expect(early?.start).toBe('2026-11-16T15:00:00.000Z'); // 10:00 local, the first slot after an hour of notice
   });
 
-  it('skips booked time, Saturdays are short and Sundays closed', () => {
+  it('[MC 5.2] skips booked time, Saturdays are short and Sundays closed', () => {
     const friday = new Date('2026-11-19T22:00:00Z'); // Thursday 17:00 local
     const booked = [{ start: '2026-11-20T13:00:00.000Z', end: '2026-11-20T15:00:00.000Z' }];
     const slots = openSlots({ now: friday, timeZone: tz, hours: demoBusiness.hours, slotMinutes: 120, booked, urgency: 'routine', limit: 7 });
@@ -136,18 +136,18 @@ describe('empty messages', () => {
     emptyMessageReason(transcript, extractWithRules(transcript, { callerId: '+16145550190', defaultAreaCode: '614' }));
 
   it.each(['uh hello? hello? nobody there', 'Hello? Is anyone there? Okay, bye.', 'um sorry wrong number'])(
-    'gets no text-back for "%s"',
+    '[MC 4.6] gets no text-back for "%s"',
     (transcript) => {
       expect(reason(transcript)).toMatch(/^No text sent/);
     },
   );
 
-  it('texts back anyone who asked for something, even with no job keyword', () => {
+  it('[MC 4.6] texts back anyone who asked for something, even with no job keyword', () => {
     expect(reason('Hi, please call me back about getting a quote for some work.')).toBeNull();
     expect(reason('This is Dana, call me back.')).toBeNull();
   });
 
-  it('texts back every sample voicemail', () => {
+  it('[MC 4.1] texts back every sample voicemail', () => {
     for (const s of simulatorScripts) expect(reason(s.transcript)).toBeNull();
   });
 });
@@ -162,21 +162,21 @@ describe('urgency for lost heat, freezing weather and vulnerable people', () => 
     "It's 15 degrees outside and the heat pump keeps blowing cold air.",
     'The heater is acting up and my elderly mother lives with us.',
     'No hot water and we have a newborn at home.',
-  ])('files "%s" as an emergency', (text) => {
+  ])('[MC 3.7, 3.8] files "%s" as an emergency', (text) => {
     expect(classifyUrgency(text)).toBe('emergency');
   });
 
-  it('files no hot water as soon, never as no rush', () => {
+  it('[MC 3.9] files no hot water as soon, never as no rush', () => {
     expect(classifyUrgency('We have no hot water since yesterday.')).toBe('soon');
     expect(classifyUrgency('The water heater is leaking a little.')).toBe('soon');
   });
 
-  it('keeps a dryer that is not heating routine', () => {
+  it('[MC 3.7] keeps a dryer that is not heating routine', () => {
     expect(classifyUrgency('My dryer is not heating, no rush.')).toBe('routine');
     expect(extract('slow-dryer').urgency).toBe('routine');
   });
 
-  it('labels a lost-heat call as heating with no heat', () => {
+  it('[MC 3.7] labels a lost-heat call as heating with no heat', () => {
     const result = extractWithRules('The heat went out at 12 Oak Street, call me at 614-555-0101.', {
       callerId: '+16145550101',
       defaultAreaCode: '614',

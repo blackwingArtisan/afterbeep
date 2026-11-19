@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readCount, readPrice, spokenDigitsToText } from '../../src/domain/spoken-numbers';
 
-describe('readPrice', () => {
+describe('[VI 1.2, 1.3] readPrice', () => {
   it.each([
     ['three twenty-nine', [32900, 329]],
     ['sixty-two fifty', [6250, 625000]],
@@ -26,7 +26,7 @@ describe('readPrice', () => {
   });
 });
 
-describe('readCount', () => {
+describe('[VI 1.2] readCount', () => {
   it.each([
     ['nineteen', 19],
     ['two', 2],
@@ -37,7 +37,7 @@ describe('readCount', () => {
   });
 });
 
-describe('spokenDigitsToText', () => {
+describe('[MC 3.2] spokenDigitsToText', () => {
   it('joins spoken phone digits', () => {
     expect(spokenDigitsToText('call six one four, five five five, oh one seven seven thanks')).toBe(
       'call 6145550177 thanks',
