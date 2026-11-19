@@ -81,7 +81,9 @@ export function keptThisWeek(
   const typical = typicalJobCents(db.pastInvoices);
   let bookedValueCents = 0;
   let booked = 0;
-  for (const m of recent) {
+  // A call raised from the graveyard this week and booked counts as a booking this week.
+  const bookable = db.messages.filter((m) => Date.parse(m.receivedAt) >= since || (m.raisedAt && Date.parse(m.raisedAt) >= since));
+  for (const m of bookable) {
     const job = m.jobId ? db.jobs.find((j) => j.id === m.jobId) : undefined;
     if (!job) continue;
     booked++;

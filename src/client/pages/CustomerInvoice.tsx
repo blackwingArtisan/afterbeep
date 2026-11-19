@@ -175,7 +175,7 @@ export default function CustomerInvoice() {
       </article>
       {story && paid && (
         <p className="row" style={{ justifyContent: 'center' }}>
-          <Link className="btn" to="/machine">
+          <Link className="btn" to="/machine?story=1">
             Back to the machine
           </Link>
         </p>

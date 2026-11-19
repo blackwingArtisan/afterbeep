@@ -27,9 +27,3 @@ export function StoryBar({ step, next }: { step: 1 | 2 | 3 | 4 | 5; next?: { to:
     </aside>
   );
 }
-
-/** A fresh caller ID in the 555-01xx range reserved for fiction, so the story can run again without the 10-minute text cooldown. */
-export function storyCallerId(): string {
-  const last = String(10 + Math.floor(Math.random() * 90));
-  return `(614) 555-01${last}`;
-}

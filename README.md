@@ -25,7 +25,8 @@ Requires Node 24 or later. No accounts or keys.
 4. **Open the text as June**, pick a time, book.
 5. **Back to Morgan: bill it by voice.** Line it up, use the usual $50.00, approve and send. The invoice is stamped SENT.
 6. The story ends on a finale (1 booked, $182.88 billed, $35.00 caught). Press **Pay as June** and PAID slams onto her invoice.
-7. Open **Messages**: "Kept this week" now reads Morgan's Tuesday: 2 booked, $557 of work, $35 caught, paid for itself 14 times.
+7. **Back to the machine: raise the dead.** Last week's five hang-ups wait in the graveyard as ghost cassettes. One press texts each a booking link, and they rise.
+8. Open **Messages**: "Kept this week" now reads Morgan's Tuesday: 2 booked, $557 of work, $35 caught, paid for itself 14 times.
 
 ## What a missed call costs
 
@@ -83,6 +84,7 @@ Everything runs on a laptop with no accounts. Each item is covered by the tests 
 - Texts every real caller a booking link at once. Emergencies are promised a call back; everyone else sees the first open slot. Hang-ups get no text, a repeat caller gets one text per 10 minutes, and a text the carrier refuses is filed with a retry button.
 - The booking page offers real open slots in the business's time zone, lets the caller correct the address, and texts a confirmation.
 - The inbox shows each message as a cassette, emergencies first under a "Call back now" strip, with a seven-segment counter and a "Kept this week" readout.
+- **Raise the dead.** Plain voicemail loses 69% of callers, and the ones who hang up without a word are the hardest to win back. Unreturned hang-ups from the last 30 days wait in a graveyard, one per number. One owner press texts each a single booking link that names the day they called; nothing goes out without the press, and a raised call is never texted twice.
 
 **The Dictaphone and the carbon copies**
 - "Dryer belt fifteen, taxed. One hour labor at eighty-five. Trip charge." becomes three lines. Code does every multiplication, the tax and the total in integer cents.
@@ -131,12 +133,12 @@ The phone wiring is in [infra/connect/README.md](infra/connect/README.md). All s
 ## Tests and spec traceability
 
 ```bash
-npm run check             # typecheck, spec coverage, 135 Vitest unit and API tests
+npm run check             # typecheck, spec coverage, 154 Vitest unit and API tests
 npx playwright install chromium
-npm run test:e2e          # 15 Playwright tests against the production build on port 3112
+npm run test:e2e          # 20 Playwright tests against the production build on port 3112
 ```
 
-Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 85 of 89 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
+Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 97 of 101 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
 
 `npm run eval` scores the rules extractor on 24 hand-labelled voicemails it had not seen: on the first run it got every phone number and address right, never invented an address, and read urgency right in 19 of 24. The two missed emergencies it found are fixed, and urgency is now 21 of 24. Details and the remaining misses: [docs/eval.md](docs/eval.md). The same script scores Bedrock side by side with `--bedrock`, and `npm run test:aws` checks the live Bedrock path; both are paid, so both stay off unless you switch them on, and neither has been run for these numbers.
 

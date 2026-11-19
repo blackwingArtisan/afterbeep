@@ -88,3 +88,14 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 7.8 THE SYSTEM SHALL let the landing page machine play a missed call, show the price check, and open a real booking page.
 7.9 WHEN the landing page first loads in a browser session THE SYSTEM SHALL play the landing machine's missed call once with the sound off, unless the visitor prefers reduced motion.
 7.10 WHEN "the whole story" sends its invoice THE SYSTEM SHALL mark every story step done and show a finale with the jobs booked, the amount billed and the amount caught, and a way to pay as the customer.
+
+## Requirement 8: Raise the dead
+**User story:** As an owner, I want one press to reach the callers who hung up without a message, so that the 69% who never leave a voicemail are not lost for good.
+
+8.1 THE SYSTEM SHALL keep a graveyard of hang-ups and empty messages between one and 30 days old that were never texted, booked, called back or raised, one per number, leaving out any number the machine has already texted or booked.
+8.2 WHEN the owner presses "Raise the dead" THE SYSTEM SHALL text each caller in the graveyard one booking link that names the business, the owner's first name and the day they called, and SHALL mark the call raised.
+8.3 THE SYSTEM SHALL raise the dead only when the owner presses the button, and SHALL never text a raised call a second time.
+8.4 IF the text provider refuses a raise text THEN THE SYSTEM SHALL keep that call in the graveyard and report the reason.
+8.5 THE SYSTEM SHALL show the graveyard with each call's number and day, and the work the calls might win back at the owner's typical job price.
+8.6 WHEN a raised caller books THE SYSTEM SHALL count the booking in "Kept this week".
+8.7 WHERE the viewer prefers reduced motion THE SYSTEM SHALL show the graveyard without the rising and fog animations.

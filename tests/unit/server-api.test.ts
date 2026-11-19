@@ -41,8 +41,9 @@ describe('seeded machine', () => {
   it('[MC 4.1, 4.5, 6.1] starts with three new messages, each already texted back', async () => {
     const { body } = await ctx.call<{ messages: Message[]; newCount: number }>('GET', '/api/messages');
     expect(body.newCount).toBe(3);
-    expect(body.messages.map((m) => m.extraction.callerName)).toEqual(['Gus Lindqvist', 'Edith Marsh', 'Priya Natarajan']);
-    expect(body.messages.every((m) => m.textedAt)).toBe(true);
+    const tapes = body.messages.filter((m) => !m.hangUp);
+    expect(tapes.map((m) => m.extraction.callerName)).toEqual(['Gus Lindqvist', 'Edith Marsh', 'Priya Natarajan']);
+    expect(tapes.every((m) => m.textedAt)).toBe(true);
     const outbox = (await ctx.call<{ outbox: OutboxItem[] }>('GET', '/api/outbox')).body.outbox;
     // Three text-backs, plus the confirmation Priya got when she booked from hers.
     expect(outbox).toHaveLength(4);

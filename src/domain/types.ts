@@ -87,6 +87,10 @@ export interface Message {
   noTextReason: string | null;
   /** True when the text provider refused the text-back; the owner can retry it. */
   textFailed?: boolean;
+  /** True for a hang-up or empty message, which is filed without a text. These can end up in the graveyard. */
+  hangUp?: boolean;
+  /** When the owner raised this call from the graveyard with one booking-link text. */
+  raisedAt?: string | null;
   jobId: string | null;
 }
 

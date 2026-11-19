@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import type { GraveyardView } from '../../domain/graveyard';
 import type { Job, Message } from '../../domain/types';
 import { api } from '../api';
 import type { KeptStats } from '../../domain/kept';
 import { Cassette } from '../components/Cassette';
+import { Graveyard } from '../components/Graveyard';
 import { KeptLcd } from '../components/KeptLcd';
 import { Reels } from '../components/Reels';
 import { PhoneIcon, PlayIcon, StopIcon } from '../components/Icons';
@@ -17,16 +19,27 @@ export default function Inbox() {
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [kept, setKept] = useState<KeptStats | null>(null);
+  const [graveyard, setGraveyard] = useState<GraveyardView | null>(null);
+  const [params] = useSearchParams();
+  const story = params.get('story') === '1';
   const [playing, setPlaying] = useState<string | null>(null);
   const playToken = useRef(0);
   const tz = business?.timezone ?? 'America/New_York';
 
   const load = useCallback(async () => {
-    const [m, j, k] = await Promise.all([api.messages(), api.jobs(), api.kept()]);
-    setMessages(m.messages);
+    const [m, j, k, g] = await Promise.all([api.messages(), api.jobs(), api.kept(), api.graveyard()]);
+    // Hang-ups older than a day leave the tape shelf; the graveyard holds the unreturned ones.
+    const dayAgo = Date.now() - 86_400_000;
+    setMessages(m.messages.filter((msg) => !msg.hangUp || Date.parse(msg.receivedAt) > dayAgo));
     setJobs(j.jobs);
     setKept(k.kept);
+    setGraveyard(g.graveyard);
   }, []);
+
+  const graveyardLoaded = graveyard !== null;
+  useEffect(() => {
+    if (story && graveyardLoaded) document.getElementById('graveyard-title')?.scrollIntoView({ block: 'center' });
+  }, [story, graveyardLoaded]);
 
   useEffect(() => {
     void load();
@@ -124,6 +137,10 @@ export default function Inbox() {
         </section>
       )}
 
+      {graveyard && story && (
+        <Graveyard view={graveyard} timeZone={tz} story raise={api.raiseTheDead} onRaise={() => void Promise.all([load(), refresh()])} />
+      )}
+
       {messages.length === 0 ? (
         <div className="empty-tape panel panel-pad" data-testid="empty-tape">
           <div className="cassette sim-cassette">
@@ -158,6 +175,10 @@ export default function Inbox() {
             />
           ))}
         </div>
+      )}
+
+      {graveyard && !story && (
+        <Graveyard view={graveyard} timeZone={tz} raise={api.raiseTheDead} onRaise={() => void Promise.all([load(), refresh()])} />
       )}
     </div>
   );

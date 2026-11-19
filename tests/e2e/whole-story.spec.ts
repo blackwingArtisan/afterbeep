@@ -7,7 +7,7 @@ test.afterEach(async ({ request }) => {
   await request.post('/api/demo/reset');
 });
 
-test('[MC 6.6, 7.7, 7.10] [VI 5.7, 5.9] the whole story runs from a missed call to a paid invoice', async ({ page }) => {
+test('[MC 6.6, 7.7, 7.10, 8.2, 8.5] [VI 5.7, 5.9] the whole story runs from a missed call to a paid invoice and raises the dead', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: /Demo the whole story/ }).click();
   await expect(page).toHaveURL(/\/machine\/call\?story=1$/);
@@ -60,6 +60,15 @@ test('[MC 6.6, 7.7, 7.10] [VI 5.7, 5.9] the whole story runs from a missed call 
   await expect(page.getByTestId('paid-stamp')).toBeVisible();
   await expect(page.getByTestId('customer-invoice')).toContainText('Paid in full');
 
+  // One more thing: last week's hang-ups wait in the graveyard, and one press raises them.
+  await page.getByRole('link', { name: 'Back to the machine' }).click();
+  const graveyard = page.getByTestId('graveyard');
+  await expect(graveyard).toContainText('One more thing');
+  await expect(graveyard.getByTestId('ghost')).toHaveCount(5);
+  await graveyard.getByTestId('raise-dead').click();
+  await expect(graveyard.getByTestId('raise-result')).toContainText('Raised 5.');
+  await expect(graveyard).toContainText('The dead have risen.');
+
   await page.goto('/machine');
   await expect(page.getByTestId('kept-booked')).toHaveText('02');
   await expect(page.getByTestId('kept-jobs')).toHaveText('$557');
@@ -82,4 +91,19 @@ test('[MC 7.8] the hero machine plays a missed call and shows the price check', 
   await device.getByRole('button', { name: 'Book' }).click();
   await expect(page).toHaveURL(/\/book\//);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(/^Hi /);
+});
+
+test('[MC 8.7] the graveyard stays still under reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/machine');
+  const graveyard = page.getByTestId('graveyard');
+  await expect(graveyard.getByTestId('ghost')).toHaveCount(5);
+  const still = async () =>
+    graveyard.evaluate((el) =>
+      [el, ...el.querySelectorAll('.ghost, .ghost-cassette')].flatMap((node) => [getComputedStyle(node).animationName, getComputedStyle(node, '::before').animationName]),
+    );
+  expect(new Set(await still())).toEqual(new Set(['none']));
+  await graveyard.getByTestId('raise-dead').click();
+  await expect(graveyard.getByTestId('ghost').first()).toHaveClass(/risen/);
+  expect(new Set(await still())).toEqual(new Set(['none']));
 });

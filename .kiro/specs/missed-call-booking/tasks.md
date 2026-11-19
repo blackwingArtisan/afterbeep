@@ -36,3 +36,5 @@
   - [x] 27.1 Playwright: the whole story end to end, and the hero machine keys (Req 6.6, 7.7, 7.8)
 - [x] 28. The landing machine plays itself once a session, muted, never under reduced motion (Req 7.9)
 - [x] 29. Story finale: every step done, a count-up of what the story kept, and "Pay as" the customer (Req 7.10)
+- [x] 30. Raise the dead: a graveyard of unreturned hang-ups, one owner press to text each a booking link, `GET /api/graveyard` and `POST /api/graveyard/raise` (Req 8.1-8.6)
+  - [x] 30.1 Unit tests for the graveyard rules, a refused text and a raised caller booking; Playwright for the strip, the press and reduced motion (Req 8.1-8.7)

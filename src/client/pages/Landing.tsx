@@ -216,6 +216,10 @@ export default function Landing() {
             Every message is read for the five things you would scribble on a napkin. Emergencies get flagged red and a promise that you
             will call back. Everyone else picks a time and lands on your schedule while you work.
           </p>
+          <p className="muted graveyard-pitch" data-testid="graveyard-pitch">
+            <strong>Your missed calls aren't gone. They're just dead. Bring them back.</strong> Callers who hang up without a word land in
+            the graveyard. One press of <em>Raise the dead</em> texts each of them a booking link, once.
+          </p>
           <Link className="btn" to="/machine/call">
             Leave it a message <ArrowIcon />
           </Link>

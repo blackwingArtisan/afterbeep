@@ -84,7 +84,10 @@ export async function receiveVoicemail(deps: Deps, call: IncomingCall): Promise<
     (m) => m.textedAt !== null && new Date(m.textedAt).getTime() >= cooldownStart && textBackNumber(m.extraction, m.from) === to,
   );
   const empty = emptyMessageReason(text, extraction);
-  if (empty) message.extraction = { ...extraction, summary: 'Hang-up or empty message. Nothing to book.' };
+  if (empty) {
+    message.extraction = { ...extraction, summary: 'Hang-up or empty message. Nothing to book.' };
+    message.hangUp = true;
+  }
   message.noTextReason =
     empty ??
     (textedRecently ? `No text sent: this number was already texted in the last ${TEXT_BACK_COOLDOWN_MINUTES} minutes.` : null);
@@ -96,7 +99,7 @@ export async function receiveVoicemail(deps: Deps, call: IncomingCall): Promise<
 }
 
 /** Why a text could not be sent, in words the owner can act on. */
-function failureReason(error: unknown): string {
+export function failureReason(error: unknown): string {
   const detail = error instanceof Error && error.message ? error.message.replace(/\.$/, '') : 'the text provider gave no reason';
   return `Text not sent: ${detail}. Call them back, or retry the text.`;
 }

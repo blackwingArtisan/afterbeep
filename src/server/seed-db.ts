@@ -23,6 +23,18 @@ export function emptyDb(): Db {
 export const PRIYA_QUOTE_CENTS = 37_700;
 
 /**
+ * Last week's hang-ups: five callers who rang, said nothing useful and never heard back. They are
+ * older than the seven-day "Kept this week" window, so they wait in the graveyard to be raised.
+ */
+export const GRAVEYARD_SEED = [
+  { from: '+16145550142', daysAgo: 8, hour: 11, transcript: 'Hello? Hello? Anyone there?' },
+  { from: '+16145550116', daysAgo: 9, hour: 15, transcript: 'Hi, is this the plumber? Okay.' },
+  { from: '+16145550193', daysAgo: 10, hour: 9, transcript: 'Yeah, hi, um. I will call back.' },
+  { from: '+16145550127', daysAgo: 11, hour: 13, transcript: 'Hello?' },
+  { from: '+16145550168', daysAgo: 12, hour: 17, transcript: 'Um, sorry, wrong button.' },
+] as const;
+
+/**
  * The demo state, the start of "Morgan's Tuesday": three voicemails that came in over the last few
  * hours (run through the real pipeline with local adapters, so their text-backs are in the outbox),
  * the emergency caller already booked from her text at a $377 quote, and one finished job ready to
@@ -30,6 +42,18 @@ export const PRIYA_QUOTE_CENTS = 37_700;
  */
 export async function seedDb(now: Date, newId: () => string, publicBaseUrl: string): Promise<Db> {
   const store = new MemoryStore(emptyDb());
+  const today = wallClock(now, demoBusiness.timezone);
+  for (const ghost of GRAVEYARD_SEED) {
+    const day = { ...today, day: today.day - ghost.daysAgo };
+    const at = zonedInstant(day, ghost.hour, 20, demoBusiness.timezone);
+    const clock = () => at;
+    const deps = { store, adapters: localAdapters({ store, clock, newId, publicBaseUrl }), clock, newId, publicBaseUrl };
+    const message = await receiveVoicemail(deps, { from: ghost.from, transcript: ghost.transcript, durationSec: 4 });
+    // The owner heard the silence at the time and moved on; nobody called back.
+    store.update((db) => {
+      db.messages.find((m) => m.id === message.id)!.status = 'heard';
+    });
+  }
   const minutesAgo = [190, 95, 25];
   for (const [i, sample] of sampleVoicemails.entries()) {
     const at = new Date(now.getTime() - minutesAgo[i]! * 60_000);
@@ -50,7 +74,6 @@ export async function seedDb(now: Date, newId: () => string, publicBaseUrl: stri
       }
     }
   }
-  const today = wallClock(now, demoBusiness.timezone);
   store.update((db) => {
     db.jobs.push({
       id: newId(),

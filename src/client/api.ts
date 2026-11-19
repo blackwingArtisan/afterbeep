@@ -1,5 +1,6 @@
 import type { InvoiceDraft, Quote } from '../domain/invoice-draft';
 import type { KeptStats } from '../domain/kept';
+import type { GraveyardView, RaiseResult } from '../domain/graveyard';
 import type { PriceBookEntry } from '../domain/price-book';
 import type { Slot } from '../domain/slots';
 import type { Business, Customer, Invoice, InvoiceLine, Job, Message, OutboxItem, Urgency } from '../domain/types';
@@ -68,6 +69,8 @@ export const api = {
   jobs: () => request<{ jobs: Job[] }>('GET', '/jobs'),
   outbox: () => request<{ outbox: OutboxItem[] }>('GET', '/outbox'),
   kept: () => request<{ kept: KeptStats }>('GET', '/kept'),
+  graveyard: () => request<{ graveyard: GraveyardView }>('GET', '/graveyard'),
+  raiseTheDead: () => request<RaiseResult>('POST', '/graveyard/raise'),
   priceBook: () => request<{ entries: PriceBookEntry[] }>('GET', '/price-book'),
   draft: (speech: string, jobId: string | null) =>
     request<{ draft: InvoiceDraft; customer: Customer | null; jobId: string | null }>('POST', '/invoices/draft', { speech, jobId }),

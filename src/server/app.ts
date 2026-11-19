@@ -7,6 +7,7 @@ import { sampleInvoiceScripts, simulatorScripts } from './seed';
 import { bookingView, bookSlot } from './services/booking';
 import { ServiceError, type Deps } from './services/deps';
 import { draftInvoice, InvoiceLineSchema, payDemoInvoice, publicInvoice, quoteInvoice, SendInvoiceSchema, sendInvoice } from './services/invoicing';
+import { graveyardView, raiseTheDead } from './services/revive';
 import { receiveVoicemail, retryTextBack, setMessageStatus } from './services/voicemail';
 
 export interface AppOptions {
@@ -127,6 +128,10 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
   });
 
   api.get('/kept', (c) => c.json({ kept: keptThisWeek(deps.store.read(), deps.clock()) }));
+
+  api.get('/graveyard', (c) => c.json({ graveyard: graveyardView(deps) }));
+  // Only ever on the owner's press: nothing calls this on a schedule.
+  api.post('/graveyard/raise', async (c) => c.json(await raiseTheDead(deps)));
 
   api.get('/price-book', (c) => c.json({ entries: buildPriceBook(deps.store.read().pastInvoices) }));
 
