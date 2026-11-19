@@ -6,7 +6,7 @@
 
 ### The machine that hears fifteen and knows you meant fifty.
 
-![One missed call, from the beep to a sent invoice, in 15 seconds](docs/demo.gif)
+![One missed call, from the full tape to a paid invoice and five raised hang-ups, in 23 seconds](docs/demo.gif)
 
 ## Why it matters
 

@@ -63,5 +63,5 @@ Where to find the proof for each submission check and each judging criterion. Ev
 | Claim | Proof |
 |---|---|
 | A one-press guided demo: "Demo the whole story" runs a missed call through booking, a spoken invoice, payment and raising the dead | Landing page and machine header |
-| A 15-second GIF of the whole flow | [docs/demo.gif](demo.gif) at the top of the README |
+| A 23-second GIF of the whole flow, with captions | [docs/demo.gif](demo.gif) at the top of the README |
 | A 60-second demo script | [.kiro/steering/demo.md](../.kiro/steering/demo.md) |
