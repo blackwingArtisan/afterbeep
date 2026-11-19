@@ -2220,9 +2220,44 @@
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-/* Raised: the cassette rises out of the fog and glows. */
+/* Raised: one by one, 150 ms apart, each cassette rises out of the fog as the blur clears, glows,
+   and takes a TEXTED stamp. */
+.ghost {
+  animation-delay: calc(var(--i, 0) * 150ms);
+}
+.ghost-cassette {
+  position: relative;
+}
 .ghost.risen {
   animation: ghost-rise 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 150ms);
+}
+.ghost-stamp {
+  position: absolute;
+  z-index: 2;
+  /* Over the reels, so the number and the day on the label stay readable. */
+  top: 76%;
+  left: 50%;
+  padding: 1px 10px;
+  border: 3px solid var(--ok);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--panel) 85%, transparent);
+  color: var(--ok);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%) rotate(-9deg);
+  pointer-events: none;
+  animation: ghost-stamp 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  animation-delay: calc(0.9s + var(--i, 0) * 150ms);
+}
+@keyframes ghost-stamp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-9deg) scale(2.4);
+  }
 }
 .ghost.risen .ghost-cassette {
   opacity: 1;
@@ -2259,11 +2294,16 @@
 }
 @keyframes ghost-rise {
   from {
-    transform: translateY(46px) scale(0.94);
+    transform: translateY(40px) scale(0.94);
+    filter: blur(8px);
     opacity: 0;
+  }
+  60% {
+    filter: blur(1px);
   }
   to {
     transform: none;
+    filter: none;
     opacity: 1;
   }
 }
@@ -2279,7 +2319,8 @@
   .graveyard::before,
   .ghost,
   .ghost.risen,
-  .ghost.risen .ghost-cassette {
+  .ghost.risen .ghost-cassette,
+  .ghost-stamp {
     animation: none;
   }
 }

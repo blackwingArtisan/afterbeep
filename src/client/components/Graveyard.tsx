@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import type { GraveyardView, RaiseResult } from '../../domain/graveyard';
 import { formatCents } from '../../domain/money';
 import { formatDay, formatPhone, formatTime } from '../lib/format';
@@ -73,8 +73,13 @@ export function Graveyard({ view, timeZone, onRaise, raise, story = false }: Pro
         {(ghosts.length > 0 ? ghosts.map((g) => ({ ...g, raised: null })) : raised.map((r) => ({ ...r, raised: r }))).map((g, i) => {
           const isRaised = g.raised !== null;
           return (
-            <li key={g.id} className={`ghost ${isRaised ? 'risen' : ''}`} style={{ animationDelay: `${i * 120}ms` }} data-testid="ghost">
+            <li key={g.id} className={`ghost ${isRaised ? 'risen' : ''}`} style={{ '--i': i } as CSSProperties} data-testid="ghost">
               <div className="cassette ghost-cassette">
+                {g.raised && (
+                  <span className={`ghost-stamp ${g.raised.booked ? 'booked' : ''}`} aria-hidden="true" data-testid="ghost-stamp">
+                    {g.raised.booked ? 'Booked' : 'Texted'}
+                  </span>
+                )}
                 <div className="cassette-label">
                   <span className="cassette-stripe unknown" />
                   <div className="cassette-name">{formatPhone(g.from)}</div>

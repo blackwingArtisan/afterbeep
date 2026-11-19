@@ -45,3 +45,4 @@
 - [x] 33. Hero cold open: TAPE FULL on the old machine, AfterBeep picks up with a VU meter, the message and text back by about three seconds, then the price-check slip; a still VU meter when idle (Req 7.9)
 - [x] 34. Texting rules: STOP, HELP and START replies on `POST /api/hooks/inbound-text`, an opt-out list checked before every text, and the opt-out line on the first text (Req 9.1-9.7)
   - [x] 34.1 Unit tests for the keywords, and API tests for opting out, help, opting back in, ordinary replies, the graveyard and the webhook secret (Req 9.1-9.7)
+- [x] 35. Raise the dead climax: the cassettes rise 150 ms apart as the fog blur clears, and each takes a TEXTED (or BOOKED) stamp over its reels; all still under reduced motion (Req 8.2, 8.7)

@@ -68,6 +68,8 @@ test('[MC 6.6, 7.7, 7.10, 8.2, 8.5] [VI 5.7, 5.9] the whole story runs from a mi
   await graveyard.getByTestId('raise-dead').click();
   await expect(graveyard.getByTestId('raise-result')).toContainText('Raised 5.');
   await expect(graveyard).toContainText('The dead have risen.');
+  // Each raised cassette takes a TEXTED stamp.
+  await expect(graveyard.getByTestId('ghost-stamp')).toHaveText(['Texted', 'Texted', 'Texted', 'Texted', 'Texted']);
 
   await page.goto('/machine');
   await expect(page.getByTestId('kept-booked')).toHaveText('02');
@@ -100,7 +102,7 @@ test('[MC 8.7] the graveyard stays still under reduced motion', async ({ page })
   await expect(graveyard.getByTestId('ghost')).toHaveCount(5);
   const still = async () =>
     graveyard.evaluate((el) =>
-      [el, ...el.querySelectorAll('.ghost, .ghost-cassette')].flatMap((node) => [getComputedStyle(node).animationName, getComputedStyle(node, '::before').animationName]),
+      [el, ...el.querySelectorAll('.ghost, .ghost-cassette, .ghost-stamp')].flatMap((node) => [getComputedStyle(node).animationName, getComputedStyle(node, '::before').animationName]),
     );
   expect(new Set(await still())).toEqual(new Set(['none']));
   await graveyard.getByTestId('raise-dead').click();
