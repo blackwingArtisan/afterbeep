@@ -8,9 +8,9 @@ Where to find the proof for each submission check and each judging criterion. Ev
 |---|---|
 | A working app | `npm ci && npm run build && npm start`, then http://localhost:3111. Runs with no accounts or keys; every external service has a free local adapter ([src/adapters/index.ts](../src/adapters/index.ts)). Steps in the [README](../README.md#try-it-in-60-seconds). |
 | Open source license | [LICENSE](../LICENSE), MIT, at the repository root. |
-| `/.kiro` at the root | [.kiro/](../.kiro): 6 steering files, 2 specs, 6 hooks, MCP settings. Not ignored by git. |
+| `/.kiro` at the root | [.kiro/](../.kiro): 6 steering files, 2 specs, 6 hooks, pinned MCP settings and a tracked custom agent, [.kiro/agents/afterbeep-builder.json](../.kiro/agents/afterbeep-builder.json). Not ignored by git. |
 | Demo video | Under 3 minutes, following the beat sheet in [.kiro/steering/demo.md](../.kiro/steering/demo.md). Linked from the README. |
-| How Kiro was used | [KIRO-LOG.md](../KIRO-LOG.md): a feature-by-feature map with a "Written by" column for every file, and a record of each Kiro session. |
+| How Kiro was used | [KIRO-LOG.md](../KIRO-LOG.md): a feature checklist with proof links, how Kiro and the coding assistant split the work (it matches `git log`), a "Caught by Kiro" table and a record of each Kiro session. |
 
 ## Judging criteria
 
