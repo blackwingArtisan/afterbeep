@@ -81,15 +81,15 @@ export default function Inbox() {
   return (
     <div className="stack" style={{ gap: 24 }}>
       <section className="inbox-head panel panel-pad">
-        <div>
+        <div className="inbox-copy">
           <p className="eyebrow">The machine</p>
           <h1 className="inbox-title" data-testid="inbox-title">
             You have <span className="lcd-word">{countWord(newOnes.length)}</span> new message{newOnes.length === 1 ? '' : 's'}
           </h1>
           <p className="muted">Every real caller already got a text with a booking link. Play them, call back the emergencies, and let the rest book themselves.</p>
         </div>
+        <KeptLcd kept={kept} />
         <div className="inbox-side">
-          <KeptLcd kept={kept} />
           <div className="row">
           {playing ? (
             <button className="btn" type="button" onClick={stop}>

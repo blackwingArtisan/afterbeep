@@ -13,13 +13,18 @@ export interface KeptStats {
   textedBack: number;
   /** Of those, callers who booked a visit from the text. */
   booked: number;
-  /** Booked jobs at their invoiced total, or at the owner's median past invoice while not yet billed. */
+  /** Booked jobs at their invoiced subtotal, else the owner's quote, else the owner's median past invoice. */
   bookedValueCents: Cents;
   /** Money the owner corrected on sent invoices before the customer saw them (misheard prices and quantities). */
   caughtCents: Cents;
 }
 
 export const KEPT_WINDOW_DAYS = 7;
+
+/** How many times over the booked work pays one month of AfterBeep, rounded down. */
+export function timesPrice(bookedValueCents: Cents, priceCents: Cents = 3_900): number {
+  return priceCents > 0 ? Math.floor(bookedValueCents / priceCents) : 0;
+}
 
 function median(values: number[]): number {
   if (values.length === 0) return 0;
@@ -81,7 +86,7 @@ export function keptThisWeek(
     if (!job) continue;
     booked++;
     const invoice = job.invoiceId ? db.invoices.find((i) => i.id === job.invoiceId) : undefined;
-    bookedValueCents += invoice ? invoice.totals.subtotalCents : typical;
+    bookedValueCents += invoice ? invoice.totals.subtotalCents : (job.quotedCents ?? typical);
   }
   const caughtCents = db.invoices
     .filter((i) => Date.parse(i.createdAt) >= since)

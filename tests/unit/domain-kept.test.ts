@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { carbonStamp, caughtOnLine, keptThisWeek, typicalJobCents } from '../../src/domain/kept';
+import { carbonStamp, caughtOnLine, keptThisWeek, timesPrice, typicalJobCents } from '../../src/domain/kept';
 import type { Invoice, InvoiceLine, Job, Message } from '../../src/domain/types';
 import { pastInvoices } from '../../src/server/seed';
 
@@ -82,5 +82,20 @@ describe('kept this week', () => {
       NOW,
     );
     expect(stats).toEqual({ calls: 3, textedBack: 2, booked: 1, bookedValueCents: 33050, caughtCents: 3500 });
+  });
+
+  it('[MC 6.6] values an unbilled booking at the owner\'s quote when there is one', () => {
+    const job: Job = {
+      id: 'j1', messageId: 'm1', customerName: 'Ivy Sloane', phone: '(614) 555-0101', email: null, address: null,
+      description: 'Burst pipe', urgency: 'emergency', start: hoursAgo(-2), end: hoursAgo(-4), status: 'scheduled', invoiceId: null, quotedCents: 37_700,
+    };
+    const stats = keptThisWeek({ messages: [message('m1', hoursAgo(1), { jobId: 'j1' })], jobs: [job], invoices: [], pastInvoices }, NOW);
+    expect(stats.bookedValueCents).toBe(37_700);
+  });
+
+  it('says how many times over the booked work pays the $39 price', () => {
+    expect(timesPrice(55_700)).toBe(14);
+    expect(timesPrice(3_899)).toBe(0);
+    expect(timesPrice(10_000, 0)).toBe(0);
   });
 });

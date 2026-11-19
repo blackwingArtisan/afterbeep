@@ -103,6 +103,8 @@ export interface Job {
   end: string;
   status: JobStatus;
   invoiceId: string | null;
+  /** What the owner quoted for the visit, if anything. "Kept this week" uses it until the job is invoiced. */
+  quotedCents?: Cents | null;
 }
 
 export type OutboxKind = 'sms' | 'invoice';

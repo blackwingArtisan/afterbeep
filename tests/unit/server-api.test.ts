@@ -44,8 +44,20 @@ describe('seeded machine', () => {
     expect(body.messages.map((m) => m.extraction.callerName)).toEqual(['Gus Lindqvist', 'Edith Marsh', 'Priya Natarajan']);
     expect(body.messages.every((m) => m.textedAt)).toBe(true);
     const outbox = (await ctx.call<{ outbox: OutboxItem[] }>('GET', '/api/outbox')).body.outbox;
-    expect(outbox).toHaveLength(3);
+    // Three text-backs, plus the confirmation Priya got when she booked from hers.
+    expect(outbox).toHaveLength(4);
+    expect(outbox.filter((o) => o.body.includes(`${BASE}/book/`))).toHaveLength(3);
     expect(outbox.find((o) => o.to === '+16145550179')?.body).toContain(`${BASE}/book/`);
+  });
+
+  it('[MC 6.6] opens on Morgan\'s Tuesday: the emergency already booked at a $377 quote', async () => {
+    const { messages } = (await ctx.call<{ messages: Message[] }>('GET', '/api/messages')).body;
+    const priya = messages.find((m) => m.extraction.callerName === 'Priya Natarajan')!;
+    expect(priya.jobId).not.toBeNull();
+    const { jobs } = (await ctx.call<{ jobs: Job[] }>('GET', '/api/jobs')).body;
+    expect(jobs.find((j) => j.id === priya.jobId)).toMatchObject({ urgency: 'emergency', quotedCents: 37_700 });
+    const { kept } = (await ctx.call<{ kept: { calls: number; textedBack: number; booked: number; bookedValueCents: number; caughtCents: number } }>('GET', '/api/kept')).body;
+    expect(kept).toEqual({ calls: 3, textedBack: 3, booked: 1, bookedValueCents: 37_700, caughtCents: 0 });
   });
 
   it('[MC 7.4] reports local adapters', async () => {

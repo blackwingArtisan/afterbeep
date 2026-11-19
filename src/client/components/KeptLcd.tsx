@@ -1,4 +1,4 @@
-import type { KeptStats } from '../../domain/kept';
+import { timesPrice, type KeptStats } from '../../domain/kept';
 import { dollars } from '../lib/format';
 
 /** The "Kept this week" readout: what the machine saved the owner over the last seven days. */
@@ -23,6 +23,11 @@ export function KeptLcd({ kept }: { kept: KeptStats | null }) {
           </div>
         ))}
       </dl>
+      {kept && kept.bookedValueCents > 0 && (
+        <p className="kept-payback" data-testid="kept-payback">
+          Paid for itself <strong>{timesPrice(kept.bookedValueCents)}&times;</strong> this week
+        </p>
+      )}
     </section>
   );
 }

@@ -36,6 +36,8 @@ Every figure below has a source. Where a number is our own assumption, it says s
 
 At the plain voicemail rate of 31% the same math gives about $460 a month, so even a greeting that keeps no extra callers pays for itself 11 times over. One booked job pays for more than five months of AfterBeep. A year of AfterBeep ($468) is 0.7% of the average solo shop's receipts. The landing page has the same model with both assumptions on sliders (`src/domain/payback.ts`, unit tested).
 
+**Morgan's Tuesday, a worked scenario.** The demo data is built so the app shows these numbers after "Demo the whole story": 4 calls answered and texted back, 2 booked (Priya's emergency at a $377 quote, which is Thumbtack's typical emergency plumbing price [3], and June's dryer repair billed at $180 before tax), and $35 caught when "dryer belt, fifteen" was held at the usual $50. That is $557 of booked work in one afternoon, 14 times the monthly price.
+
 ## Unit economics on AWS
 
 Prices are AWS list prices in US East (N. Virginia), read from the AWS Price List API and pricing pages in November 2026. One call is assumed to use one minute of line time (greeting plus message). The worst case is assumed for texts: every caller gets a two-segment text-back and books, which adds a two-segment confirmation.

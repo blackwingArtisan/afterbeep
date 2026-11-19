@@ -24,7 +24,8 @@ Requires Node 24 or later. No accounts or keys.
 3. Press **Demo the whole story**. A call places itself and ends with June's tape and the exact text she was sent.
 4. **Open the text as June**, pick a time, book.
 5. **Back to Morgan: bill it by voice.** Line it up, use the usual $50.00, approve and send. The invoice is stamped SENT.
-6. Open **Messages**: "Kept this week" now counts the booking and the $35 the price check caught.
+6. The story ends on a finale (1 booked, $182.88 billed, $35.00 caught). Press **Pay as June** and PAID slams onto her invoice.
+7. Open **Messages**: "Kept this week" now reads Morgan's Tuesday: 2 booked, $557 of work, $35 caught, paid for itself 14 times.
 
 ## What a missed call costs
 
@@ -40,6 +41,8 @@ Requires Node 24 or later. No accounts or keys.
 | US plumbing, HVAC and electrical contractors with no employees | **362,219**, up 10% since 2019 | US Census Bureau, Nonemployer Statistics 2023 |
 
 **Payback, with the assumptions labelled.** Five missed calls a week is about 22 a month. Plain voicemail keeps 31% of them as messages. *Assume* a greeting that promises a text keeps half, and *assume* one in three of those callers books at Thumbtack's typical $206: that is about **$740 a month** of booked work, or **18 times** the $39 price. One booked job pays for five months. The landing page lets you move both assumptions.
+
+**Morgan's Tuesday** (a scenario built on the demo data, so the app shows the same numbers). Morgan spends the afternoon under a water heater. Four calls roll to the machine, and every caller gets a text with open times in seconds. Priya's burst water heater books the first open slot at a $377 quote (Thumbtack's typical emergency plumbing call). June books a dryer visit, and that evening Morgan says "dryer belt, fifteen": the carbon copies hold it at the usual $50 and the bill goes out at $182.88. Kept this week: **2 jobs booked, $557 of work, $35 caught, paid for itself 14 times.** Run "Demo the whole story" and the inbox shows exactly that.
 
 **Revenue at stake.** 362,219 solo building-equipment contractors at $468 a year is about **$170M a year**, before the 158,019 solo household repair shops (about $74M more) and the 1.93 million solo specialty trade contractors in NAICS 238 (about $900M) that miss calls the same way. The near-term goal is 1% of the first group: about $1.7M a year. Sources, assumptions and the full model: [docs/business.md](docs/business.md).
 

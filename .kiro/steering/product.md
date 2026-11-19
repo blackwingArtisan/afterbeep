@@ -35,6 +35,7 @@ Solo tradespeople and two-person shops: plumbers, roofers, HVAC techs, appliance
 - Most people pay $206 for a minor appliance repair and $377 for emergency plumbing (Thumbtack cost guides, 2026).
 - 362,219 US plumbing, HVAC and electrical contractors have no employees, with average receipts of $69,368 (Census Nonemployer Statistics 2023, NAICS 2382).
 - Payback: 5 missed calls a week (22 a month); half leave a message when the greeting promises a text; 1 in 3 of those book at $206. That is about $740 a month, 18 times the price. One job pays for five months. (The 5 a week, the 50% and the 1 in 3 are assumptions; plain voicemail keeps 31%.)
+- Morgan's Tuesday (a labelled scenario that matches the demo data after "Demo the whole story"): 4 calls texted back, 2 booked (a $377 emergency quote and a $180 dryer repair), $35 caught, $557 of work, 14 times the price. Keep the seed and this scenario in step.
 - Revenue at stake: 362,219 solo building-equipment contractors × $468 a year is about $170M a year; 1% is about $1.7M.
 
 Use only these cited figures in copy. Never invent a statistic, a customer or a testimonial.

@@ -626,16 +626,35 @@
 /* ================= Inbox ================= */
 
 .inbox-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-end;
+  display: grid;
   gap: 20px;
+  align-items: center;
 }
-.inbox-head > div:first-child {
+.inbox-copy {
   display: grid;
   gap: 10px;
   max-width: 42em;
+}
+/* On desktop the Kept readout fills the right half of the hero at about twice its old size. */
+@media (min-width: 960px) {
+  .inbox-head {
+    grid-template-columns: 1fr auto;
+  }
+  .inbox-head .kept {
+    grid-row: span 2;
+    padding: 18px 24px 20px;
+    gap: 10px;
+  }
+  .inbox-head .kept-grid {
+    grid-template-columns: repeat(3, auto);
+    gap: 12px 30px;
+  }
+  .inbox-head .kept-grid dd {
+    font-size: 64px;
+  }
+  .inbox-head .kept-title {
+    font-size: 13px;
+  }
 }
 .inbox-title {
   font-size: clamp(32px, 5.4vw, 60px);
@@ -1477,6 +1496,19 @@
   gap: 14px;
   justify-items: start;
 }
+.kept-payback {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.kept-payback strong {
+  font-family: var(--font-lcd);
+  font-size: 1.6em;
+  letter-spacing: 0;
+  text-shadow: 0 0 14px var(--lcd-dim);
+}
 .kept {
   display: grid;
   gap: 6px;
@@ -1981,4 +2013,38 @@
     margin-top: 4mm;
     font-size: 9pt;
   }
+}
+
+/* ---------- Morgan's Tuesday ---------- */
+
+.tuesday {
+  display: grid;
+  gap: 14px;
+  padding-block: 8px 40px;
+}
+.tuesday-beats {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 52em;
+}
+.tuesday-beats li {
+  display: grid;
+  grid-template-columns: 5.2ch 1fr;
+  gap: 14px;
+  align-items: baseline;
+  color: var(--ink-dim);
+}
+.tuesday-beats .lcd {
+  font-size: 20px;
+  text-align: right;
+}
+.tuesday-tally {
+  max-width: 52em;
+  color: var(--ink-dim);
+}
+.tuesday-tally strong {
+  color: var(--ink);
 }

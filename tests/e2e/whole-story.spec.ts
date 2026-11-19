@@ -61,7 +61,9 @@ test('[MC 6.6, 7.7, 7.10] [VI 5.7, 5.9] the whole story runs from a missed call 
   await expect(page.getByTestId('customer-invoice')).toContainText('Paid in full');
 
   await page.goto('/machine');
-  await expect(page.getByTestId('kept-booked')).toHaveText('01');
+  await expect(page.getByTestId('kept-booked')).toHaveText('02');
+  await expect(page.getByTestId('kept-jobs')).toHaveText('$557');
+  await expect(page.getByTestId('kept-payback')).toContainText('14×');
   await expect(page.getByTestId('kept-caught')).toHaveText('$35');
 });
 

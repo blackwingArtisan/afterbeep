@@ -164,6 +164,32 @@ export default function Landing() {
         </p>
       </section>
 
+      <section className="wrap tuesday" aria-labelledby="tuesday-title" data-testid="tuesday">
+        <p className="eyebrow">A scenario, built on the demo data</p>
+        <h2 id="tuesday-title">Morgan's Tuesday</h2>
+        <ol className="tuesday-beats">
+          <li>
+            <span className="lcd">1:40</span> Morgan goes under a water heater for the afternoon. Four calls roll to the machine, and every caller gets
+            a text with open times in seconds.
+          </li>
+          <li>
+            <span className="lcd">1:44</span> Priya's burst water heater books the first open slot. Morgan quotes $377, the typical emergency
+            plumbing call.
+          </li>
+          <li>
+            <span className="lcd">4:15</span> June books a dryer visit from her text.
+          </li>
+          <li>
+            <span className="lcd">7:30</span> In the truck, Morgan says "dryer belt, fifteen." The carbon copies hold it at the usual $50, and
+            June's bill goes out at $182.88.
+          </li>
+        </ol>
+        <p className="tuesday-tally">
+          <strong>2 jobs booked, $557 of work, $35 caught.</strong> AfterBeep paid for itself 14 times over.{' '}
+          <Link to="/machine/call?story=1">Run the story yourself</Link> and the inbox ends on these exact numbers.
+        </p>
+      </section>
+
       <section id="how" className="wrap section">
         <p className="eyebrow">How it haunts your back office</p>
         <h2>Three machines you thought were dead</h2>
