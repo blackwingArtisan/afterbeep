@@ -36,3 +36,18 @@ export function ring(times = 2) {
 export function beep() {
   tone([1000], 0, 0.45, 0.07);
 }
+
+const DTMF_ROWS = [697, 770, 852, 941] as const;
+const DTMF_COLS = [1209, 1336, 1477] as const;
+const DTMF_LAYOUT = ['123', '456', '789', '*0#'] as const;
+
+/** The standard keypad tone pairs: [row Hz, column Hz] for each of the twelve keys. */
+export const DTMF_FREQUENCIES: Record<string, readonly [number, number]> = Object.fromEntries(
+  DTMF_LAYOUT.flatMap((row, r) => [...row].map((key, c) => [key, [DTMF_ROWS[r]!, DTMF_COLS[c]!] as const])),
+);
+
+/** One keypad press: its two-tone pair for 120 ms. Silent when audio is unavailable. */
+export function dtmf(key: string) {
+  const pair = DTMF_FREQUENCIES[key];
+  if (pair) tone([...pair], 0, 0.12, 0.05);
+}

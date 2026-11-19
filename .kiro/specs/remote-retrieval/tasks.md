@@ -28,12 +28,12 @@ Each task is one commit and leaves `npm run check` and `npm run test:e2e` passin
 - [x] 14. API test that the remote call needs no other new route: mark heard through the existing status route (a called-back message keeps its status in the driver's rule) and draft through the existing invoice draft route, with nothing sent (Req 4.1, 4.3, 8.2, 8.3, 11.4)
 
 ## The keypad simulation
-- [ ] 15. `dtmf(key)` in `src/client/lib/sound.ts` with an exported frequency table, and a unit test of the table for all twelve keys (Req 12.6)
-- [ ] 16. `Keypad` component: twelve keys, each at least 56 px square, physical keyboard keys `0`-`9`, `*` and `#` (Req 12.2, 12.3, 12.12)
-- [ ] 17. `Remote` page: reducer around `step`, prompt transcript, spoken prompts through `speak()` where available, silence timers of 10 and 20 seconds, effect runner for the five server effects with results fed back, and a failure prompt on error (Req 12.4, 12.5, 12.7, 12.8)
-- [ ] 18. Route `/machine/remote`, a Remote key in the machine navigation, the demo code shown in demo mode, and the header's new-message count refreshed when the call ends (Req 12.1, 12.10, 12.11)
-- [ ] 19. Invoice step: dictation or typed words, then a link to `/machine/invoice` carrying the words in router state; `VoiceInvoice` fills its text box from that state and still needs the owner's approval of the exact total (Req 8.2, 8.3, 12.9)
-- [ ] 20. Playwright `tests/e2e/remote.spec.ts`: open Remote from the navigation, key 4-2-7, hear the count, press 1, 2, `#`, erase with 9 9, reach the invoice prompt, type the slip script, open the draft and see it on hold with nothing sent; a wrong code three times ends the call (Req 1.1-1.6, 3.1, 4.1, 5.7, 6.2, 8.1, 8.3, 12.1-12.4, 12.9)
+- [x] 15. `dtmf(key)` in `src/client/lib/sound.ts` with an exported frequency table, and a unit test of the table for all twelve keys (Req 12.6)
+- [x] 16. `Keypad` component: twelve keys, each at least 56 px square, physical keyboard keys `0`-`9`, `*` and `#` (Req 12.2, 12.3, 12.12)
+- [x] 17. `Remote` page: reducer around `step`, prompt transcript, spoken prompts through `speak()` where available, silence timers of 10 and 20 seconds, effect runner for the five server effects with results fed back, and a failure prompt on error (Req 12.4, 12.5, 12.7, 12.8)
+- [x] 18. Route `/machine/remote`, a Remote key in the machine navigation, the demo code shown in demo mode, and the header's new-message count refreshed when the call ends (Req 12.1, 12.10, 12.11)
+- [x] 19. Invoice step: dictation or typed words, then a link to `/machine/invoice` carrying the words in router state; `VoiceInvoice` fills its text box from that state and still needs the owner's approval of the exact total (Req 8.2, 8.3, 12.9)
+- [x] 20. Playwright `tests/e2e/remote.spec.ts`: open Remote from the navigation, key 4-2-7, hear the count, press 1, 2, `#`, erase with 9 9, reach the invoice prompt, type the slip script, open the draft and see it on hold with nothing sent; a wrong code three times ends the call (Req 1.1-1.6, 3.1, 4.1, 5.7, 6.2, 8.1, 8.3, 12.1-12.4, 12.9)
 
 ## The Amazon Connect flow
 - [ ] 21. Read the `Compare` and `MessageParticipant` flow-language pages with the `aws-docs` server and add them to "Sources looked up" in `design.md` (Req 13.1)

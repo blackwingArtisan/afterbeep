@@ -101,3 +101,10 @@ export const GhostIcon = (p: IconProps) => (
     <circle cx="14.5" cy="10.5" r="1" fill="currentColor" />
   </svg>
 );
+
+export const KeypadIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    {[5, 12, 19].flatMap((x) => [4, 10, 16].map((y) => <circle key={`${x}-${y}`} cx={x} cy={y} r="1.6" fill="currentColor" stroke="none" />))}
+    <circle cx="12" cy="21" r="1.6" fill="currentColor" stroke="none" />
+  </svg>
+);

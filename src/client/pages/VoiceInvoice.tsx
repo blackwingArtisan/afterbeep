@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { findEntry, type CheckOption, type PriceBookEntry, type PriceCheck, type PriceCheckStatus } from '../../domain/price-book';
 import { formatCents, formatQuantity, formatRateMilli, lineAmountCents } from '../../domain/money';
 import type { Customer, Invoice, InvoiceLine, InvoiceTotals, Job, OutboxItem } from '../../domain/types';
@@ -49,6 +49,7 @@ export default function VoiceInvoice() {
   useTitle('Voice invoice');
   const { business } = useMachine();
   const [params] = useSearchParams();
+  const handoff = (useLocation().state as { speech?: string } | null)?.speech;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [jobId, setJobId] = useState<string>('');
   const [scripts, setScripts] = useState<InvoiceScript[]>([]);
@@ -64,6 +65,10 @@ export default function VoiceInvoice() {
   useEffect(() => {
     void api.priceBook().then((r) => setBook(r.entries)).catch(() => setBook([]));
   }, [sent]);
+  // A remote call hands over the words the owner said; the owner still lines them up and approves the total.
+  useEffect(() => {
+    if (handoff) setSpeech(handoff);
+  }, [handoff]);
   const story = params.get('story') === '1';
   const dictation = useDictation();
 

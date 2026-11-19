@@ -23,6 +23,7 @@ import Machine from './pages/Machine';
 import NotFound from './pages/NotFound';
 import Outbox from './pages/Outbox';
 import PriceBook from './pages/PriceBook';
+import Remote from './pages/Remote';
 import Schedule from './pages/Schedule';
 import VoiceInvoice from './pages/VoiceInvoice';
 
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
       { index: true, element: <Inbox /> },
       { path: 'call', element: <CallSimulator /> },
       { path: 'greeting', element: <Greeting /> },
+      { path: 'remote', element: <Remote /> },
       { path: 'schedule', element: <Schedule /> },
       { path: 'invoice', element: <VoiceInvoice /> },
       { path: 'outbox', element: <Outbox /> },

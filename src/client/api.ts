@@ -2,6 +2,7 @@ import type { InvoiceDraft, Quote } from '../domain/invoice-draft';
 import type { KeptStats } from '../domain/kept';
 import type { GraveyardView, RaiseResult } from '../domain/graveyard';
 import type { PriceBookEntry } from '../domain/price-book';
+import type { RemoteMessage, TextOutcome } from '../domain/remote-retrieval';
 import type { Slot } from '../domain/slots';
 import type { Business, Customer, Invoice, InvoiceLine, Job, Message, OutboxItem, Urgency } from '../domain/types';
 
@@ -82,4 +83,10 @@ export const api = {
   invoice: (id: string) => request<PublicInvoice>('GET', `/invoices/${id}`),
   demoPay: (id: string) => request<{ invoice: Invoice }>('POST', `/invoices/${id}/demo-pay`),
   reset: () => request<{ ok: true }>('POST', '/demo/reset'),
+  health: () => request<{ ok: boolean; demo: boolean }>('GET', '/health'),
+  remoteCode: (code: string) =>
+    request<{ result: 'ok'; messages: RemoteMessage[] } | { result: 'wrong' } | { result: 'locked' }>('POST', '/remote/code', { code }),
+  remoteText: (id: string) =>
+    request<{ outcome: Exclude<TextOutcome, 'failed'> }>('POST', `/remote/messages/${id}/text`),
+  remoteErase: (id: string) => request<{ erased: true }>('POST', `/remote/messages/${id}/erase`),
 };

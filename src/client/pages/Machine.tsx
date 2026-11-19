@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import type { Business } from '../../domain/types';
 import { api } from '../api';
 import { Brand } from '../components/Brand';
-import { BookIcon, CalendarIcon, OutboxIcon, PhoneIcon, ReceiptIcon, TapeIcon } from '../components/Icons';
+import { BookIcon, CalendarIcon, KeypadIcon, OutboxIcon, PhoneIcon, ReceiptIcon, TapeIcon } from '../components/Icons';
 import { MessageCounter } from '../components/Lcd';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { MachineContext } from '../lib/machine';
@@ -11,6 +11,7 @@ import { MachineContext } from '../lib/machine';
 const KEYS = [
   { to: '/machine', label: 'Messages', icon: TapeIcon, end: true },
   { to: '/machine/call', label: 'Call in', icon: PhoneIcon },
+  { to: '/machine/remote', label: 'Remote', icon: KeypadIcon },
   { to: '/machine/schedule', label: 'Schedule', icon: CalendarIcon },
   { to: '/machine/invoice', label: 'Invoice', icon: ReceiptIcon },
   { to: '/machine/outbox', label: 'Outbox', icon: OutboxIcon },
