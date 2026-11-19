@@ -1,7 +1,8 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { blockReason } from '../../scripts/kiro/guard-write.mjs';
 
 const root = process.cwd();
 const guard = join(root, 'scripts/kiro/guard-write.mjs');
@@ -13,7 +14,8 @@ function runGuard(toolName: string, toolInput: Record<string, unknown>) {
   return { status: run.status, stderr: run.stderr };
 }
 
-describe('Kiro agent guard (scripts/kiro/guard-write.mjs)', () => {
+// Each case starts a Node process, as Kiro does, so allow for a busy machine.
+describe('Kiro agent guard (scripts/kiro/guard-write.mjs)', { timeout: 20_000 }, () => {
   it('blocks a write to .env and says why', () => {
     const result = runGuard('fs_write', { command: 'create', path: '.env', file_text: 'AFTERBEEP_SMS=aws\n' });
     expect(result.status).toBe(2);
@@ -56,10 +58,10 @@ describe('Kiro agent guard (scripts/kiro/guard-write.mjs)', () => {
   });
 
   it('passes every file already in src/domain, so the guard never blocks working code', () => {
-    for (const file of ['money', 'tax', 'price-book', 'invoice-draft', 'invoice-parser', 'spoken-numbers', 'payback', 'kept']) {
-      const path = `src/domain/${file}.ts`;
-      const result = runGuard('fs_write', { command: 'create', path, file_text: readFileSync(join(root, path), 'utf8') });
-      expect(result.status, path).toBe(0);
+    for (const file of readdirSync(join(root, 'src/domain')).filter((f) => f.endsWith('.ts'))) {
+      const path = `src/domain/${file}`;
+      const event = { cwd: root, tool_name: 'fs_write', tool_input: { command: 'create', path, file_text: readFileSync(join(root, path), 'utf8') } };
+      expect(blockReason(event), path).toBeNull();
     }
   });
 
