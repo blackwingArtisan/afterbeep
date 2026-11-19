@@ -9,20 +9,45 @@ const STEPS = [
   {
     n: '001',
     icon: PhoneIcon,
-    title: 'It answers',
-    body: "You're on a ladder. The call rolls to AfterBeep, which plays your greeting, records the caller, and writes down every word.",
+    machine: 'The answering machine',
+    title: 'It answers and books',
+    body: "You're on a ladder. The call rolls to AfterBeep, which plays your greeting, records the caller, reads the name, number, address, job and urgency, and texts them real open slots in your week.",
   },
   {
     n: '002',
-    icon: CheckIcon,
-    title: 'It books',
-    body: 'Name, callback number, address, the job and how urgent it is, pulled out for you. The caller gets a text with real open slots in your week.',
+    icon: MicIcon,
+    machine: 'The Dictaphone',
+    title: 'It bills',
+    body: 'Say the invoice out loud in the truck. AfterBeep lines it up and does the math in code, to the cent. Nothing goes out until you approve the exact total.',
   },
   {
     n: '003',
     icon: ReceiptIcon,
-    title: 'It bills',
-    body: 'Say the invoice out loud in the truck. AfterBeep checks every price against your own past invoices and sends only the total you approve.',
+    machine: 'The carbon copies',
+    title: 'It remembers',
+    body: 'Your carbon copies remember what you charge. Say "fifteen" for a belt you always bill at fifty and the invoice stops and asks before the customer ever sees it.',
+  },
+];
+
+/** The stakes, each with its source. Full table and method in docs/business.md. */
+const STAKES = [
+  {
+    big: '69%',
+    line: 'of callers who reach voicemail hang up without leaving a message.',
+    source: 'Moneypenny call data, 10,000 businesses',
+    href: 'https://moneypenny.com/us/resources/news/small-business-call-report/',
+  },
+  {
+    big: '$206',
+    line: 'is what most people pay for a minor appliance repair. Emergency plumbing: $377.',
+    source: 'Thumbtack cost guides, 2026',
+    href: 'https://www.thumbtack.com/p/appliance-repair-cost',
+  },
+  {
+    big: '362,219',
+    line: 'plumbing, HVAC and electrical contractors in the US work with no employees. Nobody else picks up.',
+    source: 'US Census Nonemployer Statistics 2023',
+    href: 'https://www.census.gov/programs-surveys/nonemployer-statistics.html',
   },
 ];
 
@@ -38,6 +63,10 @@ const FAQ = [
   {
     q: 'Does the AI do my math?',
     a: 'Never. Speech is turned into line items, then plain code does every multiplication, the sales tax and the total, in whole cents.',
+  },
+  {
+    q: 'Why not iPhone Live Voicemail, Google Voice, Jobber or Smith.ai?',
+    a: 'Live Voicemail and Google Voice write the message down for free, but nobody texts the caller back, books them or bills them. Jobber does all of it as a full field-service suite ($29 to $49 a month for one user, plus $29 for its AI receptionist), so you move your whole business into it. The Smith.ai AI receptionist answers live calls, free for 25 calls and then $150 a month for 75. AfterBeep is an honest machine on your own number: it never pretends to be a person, texts every real caller your open slots, and checks every spoken price against your own past invoices. Flat $39 a month.',
   },
   {
     q: 'How do customers pay?',
@@ -70,13 +99,13 @@ export default function Landing() {
       <main id="main" tabIndex={-1}>
       <section className="hero wrap">
         <div className="hero-copy">
-          <p className="eyebrow">The answering machine, back from the dead</p>
+          <p className="eyebrow">The 1985 front office, back from the dead</p>
           <h1>
             You were under a sink. <span className="hl">AfterBeep</span> got the job.
           </h1>
           <p className="hero-lede">
-            The back office for one-person trades. AfterBeep answers the calls you miss, texts the caller a booking link, and turns
-            your spoken invoice into a checked, approved bill.
+            An answering machine, a Dictaphone and a stack of carbon copies, rebuilt for one-person trades. AfterBeep answers the calls
+            you miss, texts the caller a booking link, and turns your spoken invoice into a checked, approved bill.
           </p>
           <div className="row">
             <Link className="btn btn-primary" to="/machine">
@@ -91,24 +120,49 @@ export default function Landing() {
         <Device />
       </section>
 
+      <section className="wrap stakes" aria-labelledby="stakes-title" data-testid="stakes">
+        <p className="eyebrow" id="stakes-title">
+          What a missed call costs
+        </p>
+        <div className="stakes-grid">
+          {STAKES.map(({ big, line, source, href }) => (
+            <figure key={big} className="stake">
+              <span className="stake-big">{big}</span>
+              <figcaption>
+                {line}{' '}
+                <a className="stake-source" href={href} target="_blank" rel="noreferrer">
+                  {source}
+                </a>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+        <p className="stakes-payback">
+          Miss five calls a week and book one in three of them at $206: about <strong>$1,490 a month</strong> that would have gone to the
+          next name on the search page. One job pays for five months of AfterBeep.
+        </p>
+      </section>
+
       <section className="why wrap" aria-label="Why now">
         <p>
           <span className="eyebrow">Why now</span>
-          Speech-to-text and language models got accurate enough to understand a rushed voicemail, and cheap enough to run on
-          every call. So a one-person shop can finally have a front desk without hiring one.
+          Your phone already writes voicemail down for free, and reading a message with AWS now costs well under a cent. The transcript
+          stopped being the hard part. What a one-truck shop still lacks is what happens after the beep: the text back, the booking and
+          the bill.
         </p>
       </section>
 
       <section id="how" className="wrap section">
         <p className="eyebrow">How it haunts your back office</p>
-        <h2>Three jobs you stop doing at 9 pm</h2>
+        <h2>Three machines you thought were dead</h2>
         <div className="steps-grid">
-          {STEPS.map(({ n, icon: Icon, title, body }) => (
+          {STEPS.map(({ n, icon: Icon, machine, title, body }) => (
             <article key={n} className="panel panel-pad step-card">
               <div className="spread">
                 <span className="lcd">{n}</span>
                 <Icon width={26} height={26} />
               </div>
+              <p className="step-machine">{machine}</p>
               <h3>{title}</h3>
               <p className="muted">{body}</p>
             </article>
@@ -237,7 +291,7 @@ export default function Landing() {
 
       <footer className="site-foot wrap">
         <Brand />
-        <p className="faint">&copy; 2026 Stubborn Otter Software. Leave a message after the beep.</p>
+        <p className="faint">The answering machine never died. It learned to book jobs. &copy; 2026 Stubborn Otter Software.</p>
       </footer>
     </div>
   );

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Job, Message } from '../../domain/types';
 import { api } from '../api';
+import type { KeptStats } from '../../domain/kept';
 import { Cassette } from '../components/Cassette';
+import { KeptLcd } from '../components/KeptLcd';
 import { Reels } from '../components/Reels';
 import { PhoneIcon, PlayIcon, StopIcon } from '../components/Icons';
 import { countWord, formatPhone, formatTime, telHref } from '../lib/format';
@@ -14,14 +16,16 @@ export default function Inbox() {
   const { business, refresh } = useMachine();
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [kept, setKept] = useState<KeptStats | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
   const playToken = useRef(0);
   const tz = business?.timezone ?? 'America/New_York';
 
   const load = useCallback(async () => {
-    const [m, j] = await Promise.all([api.messages(), api.jobs()]);
+    const [m, j, k] = await Promise.all([api.messages(), api.jobs(), api.kept()]);
     setMessages(m.messages);
     setJobs(j.jobs);
+    setKept(k.kept);
   }, []);
 
   useEffect(() => {
@@ -84,7 +88,9 @@ export default function Inbox() {
           </h1>
           <p className="muted">Every real caller already got a text with a booking link. Play them, call back the emergencies, and let the rest book themselves.</p>
         </div>
-        <div className="row">
+        <div className="inbox-side">
+          <KeptLcd kept={kept} />
+          <div className="row">
           {playing ? (
             <button className="btn" type="button" onClick={stop}>
               <StopIcon /> Stop tape
@@ -97,6 +103,7 @@ export default function Inbox() {
           <Link className="btn" to="/machine/call">
             <PhoneIcon /> Call the machine
           </Link>
+          </div>
         </div>
       </section>
 

@@ -3,7 +3,9 @@ inclusion: always
 ---
 # Product: AfterBeep
 
-**One line:** The answering machine, resurrected. AfterBeep answers the calls a one-person trade business misses, books the job by text, and turns a spoken invoice into a checked, approved bill.
+**One line:** The 1985 front office, back from the dead. AfterBeep answers the calls a one-person trade business misses, books the job by text, and turns a spoken invoice into a checked, approved bill.
+
+**The thesis.** Three office machines a one-truck business used to rely on, rebuilt: the **answering machine** (missed calls become booked jobs), the **Dictaphone** (a spoken invoice becomes line items) and the **carbon copies** (the price book: "your carbon copies remember what you charge"). Copy, screen names and features should fit one of the three. Closing line: "The answering machine never died. It learned to book jobs."
 
 ## Who it is for
 Solo tradespeople and two-person shops: plumbers, roofers, HVAC techs, appliance repair. They work with their hands, often in a crawlspace or on a roof, and cannot answer the phone. Every missed call is a job that goes to the next name on the search results.
@@ -25,8 +27,22 @@ Solo tradespeople and two-person shops: plumbers, roofers, HVAC techs, appliance
 - Copy is short, plain and confident. Talk to a busy tradesperson, not a developer.
 - Every screen must work one-handed on a phone.
 
+## What a missed call costs (cited; full table and sources in docs/business.md)
+- 69% of callers who reach voicemail hang up without leaving a message (Moneypenny, call data from 10,000 businesses, 2016).
+- Most people pay $206 for a minor appliance repair and $377 for emergency plumbing (Thumbtack cost guides, 2026).
+- 362,219 US plumbing, HVAC and electrical contractors have no employees, with average receipts of $69,368 (Census Nonemployer Statistics 2023, NAICS 2382).
+- Payback: 5 missed calls a week, 1 in 3 booked at $206 is about $1,490 a month. One job pays for five months. (The 5 a week and 1 in 3 are assumptions.)
+
+Use only these cited figures in copy. Never invent a statistic, a customer or a testimonial.
+
 ## Business model
-Flat monthly price, one plan: $39/month, includes one phone number, unlimited messages and invoices, and the text-back. 14-day free trial. No per-invoice fees from AfterBeep.
+Flat monthly price, one plan: $39/month, includes one phone number, unlimited messages and invoices, and the text-back. 14-day free trial. No per-invoice fees from AfterBeep. AWS cost per customer is about $7.61 a month at 50 missed calls (80% gross margin) and $18.73 at 200 (52%), worst case on texts.
+
+## Go to market
+Conditional call forwarding on the owner's own phone (no new number), counter cards at plumbing and HVAC supply houses, trade communities, a Google Business Profile guide, and a free month per referral.
 
 ## Why now
-Speech-to-text and language models became accurate enough to understand a rushed voicemail and cheap enough to run on every call, so a one-person shop can have a front desk without hiring one.
+Phones already transcribe voicemail for free (iPhone Live Voicemail, Google Voice), and reading a voicemail on AWS now costs well under a cent (Transcribe $0.006 a minute, Nova Lite about $0.0002 a message). The transcript stopped being the hard part; what a solo tech still lacks is what happens after the beep: the text back, the booking and the bill.
+
+## Competitors, in one line each
+Live Voicemail and Google Voice transcribe but never text back, book or bill. Jobber ($29-$49 a month plus $29 for its AI receptionist) is a whole field-service suite. Podium does not publish prices. Smith.ai's AI receptionist is free for 25 calls, then $150 a month for 75, and answers as a receptionist. AfterBeep is an honest machine on your own number, flat $39, with price-book checks and the exact-total guarantee.

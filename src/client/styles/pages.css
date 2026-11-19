@@ -134,6 +134,65 @@
   }
 }
 
+/* ---------- Stakes ---------- */
+
+.stakes {
+  display: grid;
+  gap: 18px;
+  padding-block: 8px 36px;
+}
+.stakes-grid {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 860px) {
+  .stakes-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.stake {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  margin: 0;
+  padding: 18px 20px;
+  border-radius: var(--radius-m);
+  border: 1px solid var(--edge);
+  background: var(--lcd-bg);
+}
+.stake-big {
+  font-family: var(--font-lcd);
+  font-size: clamp(54px, 7vw, 72px);
+  line-height: 0.9;
+  color: var(--lcd);
+  text-shadow: 0 0 18px var(--lcd-dim);
+}
+.stake figcaption {
+  color: var(--lcd);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.stake-source {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--lcd);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  opacity: 0.85;
+}
+.stakes-payback {
+  max-width: 46em;
+  color: var(--ink-dim);
+}
+.stakes-payback strong {
+  color: var(--ink);
+}
+.step-machine {
+  font-family: var(--font-type);
+  font-size: 15px;
+  color: var(--ink-dim);
+}
+
 .why {
   padding-block: 8px 40px;
 }
@@ -1250,4 +1309,60 @@
 .call-now .btn {
   white-space: normal;
   text-align: left;
+}
+
+/* ---------- Kept this week ---------- */
+
+.inbox-side {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+.kept {
+  display: grid;
+  gap: 6px;
+  padding: 10px 14px 12px;
+  border-radius: 8px;
+  background: var(--lcd-bg);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.6),
+    0 1px 0 var(--edge-hi);
+  color: var(--lcd);
+}
+.kept-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.kept-grid {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  gap: 4px 18px;
+  margin: 0;
+}
+.kept-grid > div {
+  display: grid;
+}
+.kept-grid dt {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.kept-grid dd {
+  margin: 0;
+  font-family: var(--font-lcd);
+  font-size: 34px;
+  line-height: 1;
+  text-shadow: 0 0 14px var(--lcd-dim);
+}
+@media (max-width: 520px) {
+  .kept-grid {
+    grid-template-columns: repeat(3, auto);
+  }
 }

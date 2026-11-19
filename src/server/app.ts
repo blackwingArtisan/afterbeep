@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { z, ZodError } from 'zod';
+import { keptThisWeek } from '../domain/kept';
 import { buildPriceBook } from '../domain/price-book';
 import { businessTaxRateMilli } from '../domain/tax';
 import { sampleInvoiceScripts, simulatorScripts } from './seed';
@@ -124,6 +125,8 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
     const { outbox } = deps.store.read();
     return c.json({ outbox: [...outbox].reverse().sort((a, b) => b.createdAt.localeCompare(a.createdAt)) });
   });
+
+  api.get('/kept', (c) => c.json({ kept: keptThisWeek(deps.store.read(), deps.clock()) }));
 
   api.get('/price-book', (c) => c.json({ entries: buildPriceBook(deps.store.read().pastInvoices) }));
 
