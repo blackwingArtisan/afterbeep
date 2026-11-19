@@ -2,16 +2,44 @@
   "mcpServers": {
     "aws-docs": {
       "command": "uvx",
-      "args": ["awslabs.aws-documentation-mcp-server@1.2.4"],
-      "env": { "FASTMCP_LOG_LEVEL": "ERROR", "AWS_DOCUMENTATION_PARTITION": "aws" },
+      "args": [
+        "awslabs.aws-documentation-mcp-server@1.2.4"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "AWS_DOCUMENTATION_PARTITION": "aws"
+      },
       "disabled": false,
-      "autoApprove": ["search_documentation", "read_documentation"]
+      "autoApprove": [
+        "search_documentation",
+        "read_documentation"
+      ]
     },
     "context7": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@4.5.0"],
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@4.5.0"
+      ],
       "disabled": false,
-      "autoApprove": ["resolve-library-id", "get-library-docs"]
+      "autoApprove": [
+        "resolve-library-id",
+        "get-library-docs"
+      ]
+    },
+    "afterbeep": {
+      "command": "node",
+      "args": [
+        "--import",
+        "tsx",
+        "scripts/mcp/afterbeep-mcp.ts"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "spec_coverage",
+        "price_book_lookup",
+        "check_greeting"
+      ]
     }
   }
 }

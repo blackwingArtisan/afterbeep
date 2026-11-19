@@ -9,6 +9,7 @@ inclusion: always
 scripts/               spec-coverage.ts: every EARS criterion must be named by a test; eval-extractor.ts and
                        transcribe-sample.ts score and spot-check extraction (paid paths are switched off by default);
                        kiro/ holds the afterbeep-builder agent's hook scripts (write guard, tests after a source write)
+                       mcp/afterbeep-mcp.ts is the project's own MCP server: spec_coverage, price_book_lookup, check_greeting
 src/
   domain/              pure business logic, fully unit tested
     money.ts           cents, formatting, rounding

@@ -70,7 +70,9 @@ describe('Kiro agent guard (scripts/kiro/guard-write.mjs)', { timeout: 20_000 },
     const pre = agent.hooks.find((h: { trigger: string }) => h.trigger === 'PreToolUse');
     expect(pre.action.command).toBe('node scripts/kiro/guard-write.mjs');
     for (const tool of ['fs_write', 'str_replace', 'execute_bash']) expect(new RegExp(pre.matcher).test(tool)).toBe(true);
+    // Servers fetched from a registry are pinned to an exact version; the project's own runs from the repo.
     for (const server of Object.values(agent.mcpServers) as { args: string[] }[]) {
+      if (server.args.some((a) => a.startsWith('scripts/'))) continue;
       expect(server.args.join(' ')).toMatch(/@\d+\.\d+\.\d+/);
     }
   });

@@ -1,7 +1,7 @@
 {
   "name": "afterbeep-builder",
   "description": "Builds AfterBeep features spec-first: writes .kiro/specs/<feature>/ (requirements in EARS form, design, tasks), then implements one task per turn with tests, under the product and money rules in .kiro/steering.",
-  "prompt": "You build AfterBeep, the answering machine back office for one-person trade businesses. Follow every steering file loaded as a resource; product.md and money.md are non-negotiable. Work spec-first: requirements in EARS form, then design, then tasks, each task small enough for one commit. Every new requirement gets a test whose title names it, such as [RR 1.2], and `npm run spec:coverage` must pass. Money is integer cents and code does all arithmetic. Look up AWS behavior with the aws-docs MCP server and library APIs with Context7 before you write adapter code, and cite what you looked up in the design. Never write .env files or secrets; a guard hook blocks those writes and tells you why.",
+  "prompt": "You build AfterBeep, the answering machine back office for one-person trade businesses. Follow every steering file loaded as a resource; product.md and money.md are non-negotiable. Work spec-first: requirements in EARS form, then design, then tasks, each task small enough for one commit. Every new requirement gets a test whose title names it, such as [RR 1.2], and `npm run spec:coverage` must pass. Money is integer cents and code does all arithmetic. Look up AWS behavior with the aws-docs MCP server and library APIs with Context7 before you write adapter code, and cite what you looked up in the design. Use the afterbeep MCP server to check spec coverage, look up usual prices and check greetings. Never write .env files or secrets; a guard hook blocks those writes and tells you why.",
   "mcpServers": {
     "aws-docs": {
       "command": "uvx",
@@ -13,11 +13,16 @@
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp@4.5.0"],
       "timeout": 120000
+    },
+    "afterbeep": {
+      "command": "node",
+      "args": ["--import", "tsx", "scripts/mcp/afterbeep-mcp.ts"],
+      "timeout": 120000
     }
   },
   "includeMcpJson": false,
-  "tools": ["read", "write", "shell", "@aws-docs", "@context7"],
-  "allowedTools": ["read", "@aws-docs", "@context7"],
+  "tools": ["read", "write", "shell", "@aws-docs", "@context7", "@afterbeep"],
+  "allowedTools": ["read", "@aws-docs", "@context7", "@afterbeep"],
   "resources": [
     "file://.kiro/steering/**/*.md",
     "file://README.md",

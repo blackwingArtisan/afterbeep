@@ -13,7 +13,7 @@ How Kiro is set up in this repository, what Kiro itself did, and what the coding
 | Hooks, file save | Yes: 4 | [test-on-save](.kiro/hooks/test-on-save.json), [money-guard](.kiro/hooks/money-guard.json), [spec-sync](.kiro/hooks/spec-sync.json), [copy-tone](.kiro/hooks/copy-tone.json) |
 | Hooks, agent stop | Yes: 2 | [typecheck-on-stop](.kiro/hooks/typecheck-on-stop.json), [demo-readiness](.kiro/hooks/demo-readiness.json) |
 | Custom agent with its own hooks | Yes: 1 agent, 3 hooks | [.kiro/agents/afterbeep-builder.json](.kiro/agents/afterbeep-builder.json): steering as resources, a PreToolUse guard, tests after every source write |
-| MCP servers | Yes: 2, pinned to exact versions | [.kiro/settings/mcp.json](.kiro/settings/mcp.json): `awslabs.aws-documentation-mcp-server@1.2.4`, `@upstash/context7-mcp@4.5.0` |
+| MCP servers | Yes: 3; the two from registries pinned to exact versions, plus the project's own | [.kiro/settings/mcp.json](.kiro/settings/mcp.json): `awslabs.aws-documentation-mcp-server@1.2.4`, `@upstash/context7-mcp@4.5.0`, and [scripts/mcp/afterbeep-mcp.ts](scripts/mcp/afterbeep-mcp.ts) (`spec_coverage`, `price_book_lookup`, `check_greeting`) |
 | Spec-driven work | Yes | Both features were built task by task from their `tasks.md` (by Claude Code, see below); each task names its criteria |
 | Vibe coding in Kiro chat | Not yet | Copy and design passes were done by Claude Code against `product.md` |
 | Kiro sessions (kiro-cli) | 2 so far | [Sessions](#sessions) below; session 2 is commit `22a9c64` |
@@ -44,8 +44,8 @@ This repository was built by one developer working with two AI tools. `git log` 
 | Spec traceability | Every test title names the criteria it proves, such as `[VI 3.4]`; `npm run spec:coverage` fails when a criterion has no test | `scripts/spec-coverage.ts` | Claude Code |
 | Hooks: file save | Run the unit tests on any source save; restate the money rules and ask for a test when money code changes; keep specs in step with server code; review screen copy | `.kiro/hooks/test-on-save.json`, `money-guard.json`, `spec-sync.json`, `copy-tone.json` | `test-on-save` and `money-guard` rewritten to the canonical format by Kiro (session 2); the other two by Claude Code |
 | Hooks: agent stop | Type-check the project; check spec coverage and the production build before work is handed back | `.kiro/hooks/typecheck-on-stop.json`, `demo-readiness.json` | Claude Code |
-| Custom agent | `afterbeep-builder`: loads the steering, pins both MCP servers, blocks writes to `.env` files, live Stripe keys and float money in `src/domain`, and runs the unit tests after each source write | `.kiro/agents/afterbeep-builder.json`, `scripts/kiro/guard-write.mjs`, `scripts/kiro/test-after-write.mjs` | Claude Code |
-| MCP servers | AWS documentation for the Connect, Transcribe, Bedrock and End User Messaging adapters; Context7 for library docs | `.kiro/settings/mcp.json` | Claude Code |
+| Custom agent | `afterbeep-builder`: loads the steering and all three MCP servers, blocks writes to `.env` files, live Stripe keys and float money in `src/domain`, and runs the unit tests after each source write | `.kiro/agents/afterbeep-builder.json`, `scripts/kiro/guard-write.mjs`, `scripts/kiro/test-after-write.mjs` | Claude Code |
+| MCP servers | AWS documentation for the Connect, Transcribe, Bedrock and End User Messaging adapters; Context7 for library docs; the project's own server so an agent can check spec coverage, look up the usual price of an item and check a greeting without leaving the session | `.kiro/settings/mcp.json`, `scripts/mcp/afterbeep-mcp.ts` | Claude Code |
 
 ## Caught by Kiro
 

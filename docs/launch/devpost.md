@@ -17,7 +17,7 @@ One plan, $39 a month. In our worked scenario, one afternoon of missed calls boo
 ## How we built it
 React and Vite on the front, Hono on Node, with ports and adapters so every outside service (Amazon Connect, Amazon Transcribe, Amazon Bedrock, AWS End User Messaging, Stripe) has a free local stand-in. The whole product runs on a laptop with no accounts, and each real service is one environment variable away.
 
-Kiro shaped the build through steering (product, money and AWS rules that load with the files they govern), two EARS specs with 119 criteria, hooks (tests on every save, a money guard that restates the integer-cents rules whenever money code changes), pinned AWS documentation and Context7 MCP servers, and a custom agent whose guard blocks `.env` writes, live keys and float money. Every test title names the criteria it proves, and CI fails if any criterion has no test. KIRO-LOG.md says exactly which parts Kiro did and which the coding assistant did.
+Kiro shaped the build through steering (product, money and AWS rules that load with the files they govern), two EARS specs with 119 criteria, hooks (tests on every save, a money guard that restates the integer-cents rules whenever money code changes), pinned AWS documentation and Context7 MCP servers plus the project's own (spec coverage, price lookups, greeting checks), and a custom agent whose guard blocks `.env` writes, live keys and float money. Every test title names the criteria it proves, and CI fails if any criterion has no test. KIRO-LOG.md says exactly which parts Kiro did and which the coding assistant did.
 
 ## Code does the math
 All money is integer cents. The model, when one is used, only reads words; code does every multiplication, the tax and the total. The server recomputes the invoice and sends it only when the total equals the exact amount the owner approved.
@@ -26,7 +26,7 @@ All money is integer cents. The model, when one is used, only reads words; code 
 Speech-to-text hears "fifteen" and "fifty" the same way, and "forty gallon water heater" is a size, not a quantity. The price check, against the owner's own past invoices, is what makes spoken invoicing safe.
 
 ## Accomplishments
-- 195 unit and API tests and 23 Playwright tests, run in CI on every push.
+- 201 unit and API tests and 23 Playwright tests, run in CI on every push.
 - 115 of 119 spec criteria named by tests; the other 4 sit on the real AWS and Stripe path.
 - Every phone number and address right on a held-out set of 24 voicemails, with no invented addresses.
 - About $0.074 per call on AWS, for an 80% gross margin at 50 calls a month.

@@ -30,7 +30,7 @@ Requires Node 24 or later. No accounts or keys.
 > - **6 steering files:** 3 always included, 2 loaded by file match (money rules with `src/domain`, AWS rules with `src/adapters`), 1 manual demo script
 > - **2 specs, 119 EARS criteria:** 115 named by test titles and enforced in CI by `npm run spec:coverage`, 4 on the real AWS and Stripe path
 > - **6 IDE hooks** (4 on file save, 2 on agent stop) and **1 custom agent** with 3 hooks of its own: a guard that blocks `.env` writes, live Stripe keys and float money, and tests after every source write
-> - **2 MCP servers**, pinned: AWS documentation and Context7
+> - **3 MCP servers:** AWS documentation and Context7, pinned, plus AfterBeep's own (spec coverage, price-book lookup, greeting check)
 > - How Kiro and the coding assistant split the work, and every time Kiro caught something: [KIRO-LOG.md](KIRO-LOG.md)
 
 ## What died
@@ -175,10 +175,11 @@ Every outside service sits behind a port with a free local default, so the demo 
 | Store | `AFTERBEEP_DATA_DIR` | JSON file with atomic writes | |
 
 ```
-src/domain/     pure logic: money, spoken numbers, tax, invoice parser, price book (carbon copies), voicemail rules, Spanish glossary, slots, kept stats, graveyard, payback, story caller IDs
+src/domain/     pure logic: money, spoken numbers, tax, invoice parser, price book (carbon copies), voicemail rules, Spanish glossary, texting rules, greeting checks, slots, kept stats, graveyard, payback, story caller IDs
 src/adapters/   ports and implementations: store, transcriber, extractor, sms, invoices
-src/server/     Hono API, services (voicemail, booking, invoicing, revive), seed data
-src/client/     React app: landing, machine (inbox, call, schedule, invoice, outbox, prices), caller pages
+src/server/     Hono API, services (voicemail, texting, booking, invoicing, revive, greeting), seed data
+src/client/     React app: landing, machine (inbox, call, greeting, schedule, invoice, outbox, prices), caller pages
+scripts/        spec coverage, extractor eval, the Kiro agent's hook scripts, and the project's MCP server
 infra/          SAM template for the real phone path; connect/ holds the contact flow and Lambda
 .kiro/          steering, specs, hooks, MCP settings and the afterbeep-builder agent
 ```
@@ -188,7 +189,7 @@ The phone wiring is in [infra/connect/README.md](infra/connect/README.md), and [
 ## Tests and spec traceability
 
 ```bash
-npm run check             # typecheck, spec coverage, 195 Vitest unit and API tests
+npm run check             # typecheck, spec coverage, 201 Vitest unit and API tests
 npx playwright install chromium
 npm run test:e2e          # 23 Playwright tests (one is phone-only) against the production build on port 3112
 ```
