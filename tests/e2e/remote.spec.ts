@@ -19,10 +19,16 @@ async function quietInbox(request: APIRequestContext) {
   }
 }
 
-test('[RR 1.1, 1.3, 1.5, 1.6, 12.3, 12.4, 12.1] a wrong code three times ends the call without reading anything', async ({ page }) => {
+test('[RR 1.1, 1.3, 1.5, 1.6, 12.3, 12.4, 12.1, 12.10, 12.12] a wrong code three times ends the call without reading anything', async ({ page }) => {
   await callMachine(page);
   await expect(tape(page)).toContainText('This is the answering machine for Hollow Creek Plumbing');
   await expect(page.getByTestId('remote-demo-code')).toContainText('427');
+  // Every key is at least 56 px square, so it works one-handed (RR 12.12).
+  for (const k of ['0', '1', '5', '9', '*', '#']) {
+    const box = await key(page, k).boundingBox();
+    expect(box!.width, k).toBeGreaterThanOrEqual(56);
+    expect(box!.height, k).toBeGreaterThanOrEqual(56);
+  }
 
   // The computer keyboard presses the keys too.
   for (const k of ['1', '1', '1']) await page.keyboard.press(k);
@@ -39,7 +45,7 @@ test('[RR 1.1, 1.3, 1.5, 1.6, 12.3, 12.4, 12.1] a wrong code three times ends th
   await expect(key(page, '1')).toBeDisabled();
 });
 
-test('[RR 1.1, 1.2, 3.1, 4.1, 5.1, 5.4, 6.2, 8.1, 8.3, 12.1, 12.2, 12.4, 12.9] key the code, hear, text, erase, say the invoice, and get a held draft', async ({ page, request }) => {
+test('[RR 1.1, 1.2, 3.1, 4.1, 5.1, 5.4, 6.2, 8.1, 8.3, 12.1, 12.2, 12.4, 12.7, 12.9, 12.11] key the code, hear, text, erase, say the invoice, and get a held draft', async ({ page, request }) => {
   await quietInbox(request);
   const calls = [
     { from: '+16145550166', transcript: 'Hi, this is Dana Whitfield. My kitchen faucet drips all day. I am at 12 Maple Street. Call me back.' },
@@ -53,6 +59,7 @@ test('[RR 1.1, 1.2, 3.1, 4.1, 5.1, 5.4, 6.2, 8.1, 8.3, 12.1, 12.2, 12.4, 12.9] k
   const outboxBefore = ((await (await request.get('/api/outbox')).json()) as { outbox: { kind: string }[] }).outbox;
 
   await callMachine(page);
+  await expect(page.getByTestId('lcd-count')).toHaveText('02');
   await key(page, '4').click();
   await key(page, '2').click();
   await key(page, '7').click();
@@ -87,6 +94,8 @@ test('[RR 1.1, 1.2, 3.1, 4.1, 5.1, 5.4, 6.2, 8.1, 8.3, 12.1, 12.2, 12.4, 12.9] k
   await page.getByRole('button', { name: /Give it to the machine/ }).click();
   await expect(tape(page)).toContainText('Your invoice is a draft. Nothing goes out until you approve the total.');
   await expect(tape(page)).not.toContainText('$');
+  // Hearing one and erasing the other leaves nothing new; the header count refreshes when the call ends (RR 12.11).
+  await expect(page.getByTestId('lcd-count')).toHaveText('00');
 
   await page.getByTestId('open-draft').click();
   await expect(page).toHaveURL(/\/machine\/invoice$/);

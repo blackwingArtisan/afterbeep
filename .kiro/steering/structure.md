@@ -23,6 +23,8 @@ src/
     graveyard.ts       which unreturned hang-ups can be raised from the dead
     spanish.ts         detects Spanish voicemails and maps trade phrases to English for the rules
     payback.ts         the landing page payback estimate
+    remote-retrieval.ts  the remote call script: pure step(state, event) -> prompts and effects
+    remote-code.ts     remote code check: constant-time compare, lockout after five wrong codes
     types.ts           shared domain types
   adapters/
     transcriber/  extractor/  sms/  invoices/  store/
@@ -32,15 +34,16 @@ src/
     index.ts           selects implementations from env
   server/
     app.ts             Hono app factory (dependencies injected)
-    services/          voicemail pipeline, booking, invoicing, revive (raise the dead)
+    services/          voicemail pipeline, booking, invoicing, revive (raise the dead), remote (code check, text back, erase)
     seed.ts            the demo business, past invoices and sample voicemails
     main.ts            Node entry point
   client/
-    pages/             one file per route
+    pages/             one file per route (Remote.tsx is the keypad call at /machine/remote)
+    lib/               sound.ts (rings, beeps, dtmf keypad tones), speech.ts, remote.ts
     components/        cassette, message light, tape deck, etc.
     styles/            tokens.css and global styles
 infra/template.yaml    SAM template for the real phone path (validated in CI)
-infra/connect/         Amazon Connect contact flow, hand-off Lambda and wiring notes
+infra/connect/         Amazon Connect contact flow, remote-retrieval-flow.json (keypad flow, not deployed), hand-off Lambda and wiring notes
 tests/
   unit/                Vitest
   e2e/                 Playwright

@@ -3,14 +3,14 @@
  * or listed below with the reason it is checked another way.
  *
  * Tests name requirements in their titles, for example `it('[VI 3.4, 3.7] holds a labor rate...')`.
- * MC is the missed-call-booking spec and VI is the voice-invoicing spec.
+ * MC is the missed-call-booking spec, VI is the voice-invoicing spec and RR is the remote-retrieval spec.
  *
  * Usage: tsx scripts/spec-coverage.ts [--list]
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const SPECS = { MC: 'missed-call-booking', VI: 'voice-invoicing' } as const;
+const SPECS = { MC: 'missed-call-booking', VI: 'voice-invoicing', RR: 'remote-retrieval' } as const;
 type Prefix = keyof typeof SPECS;
 
 /** Requirements that live on the real AWS or Stripe path, which is type-checked but not called in tests. */
@@ -37,7 +37,7 @@ function testFiles(dir: string): string[] {
 const named = new Map<string, Set<string>>();
 for (const file of [...testFiles('tests/unit'), ...testFiles('tests/e2e')]) {
   const text = readFileSync(join(root, file), 'utf8');
-  for (const [, prefix, ids = ''] of text.matchAll(/\[(MC|VI) ([\d., ]+)\]/g)) {
+  for (const [, prefix, ids = ''] of text.matchAll(/\[(MC|VI|RR) ([\d., ]+)\]/g)) {
     for (const id of ids.split(',').map((s) => s.trim()).filter(Boolean)) {
       const key = `${prefix} ${id}`;
       if (!named.has(key)) named.set(key, new Set());

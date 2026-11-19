@@ -14,6 +14,15 @@ Use this when preparing or recording the demo. Include it in a chat with `#demo`
 6. **Back to the machine: raise the dead.** Last week's five hang-ups wait as ghost cassettes. One press texts each a booking link, and they rise.
 7. The inbox now reads Morgan's Tuesday: 2 booked, $557 of booked work, $35 caught, paid for itself 14 times.
 
+## The remote call (optional, about 30 seconds)
+Add this after step 7, or on its own.
+1. Open **Remote** in the machine navigation. In demo mode the screen shows the remote code, 427.
+2. Press **Call your machine**. It rings and asks for the code. Key 4, 2, 7 on the keypad or the computer keyboard.
+3. Hear "You have N new messages", most urgent first. Press **1** to play one, **2** to text the caller the booking link, **#** for the next. Press **9** twice to erase.
+4. After the last message: "After the beep, say your invoice." Say or type the slip script, then **Open the draft**. The slip is on hold and nothing is sent until the owner approves the exact total.
+5. Say plainly that the Connect keypad flow for a real phone is written and checked by a test but not deployed.
+- Reset demo first so there are new messages to hear. A wrong code three times ends the call.
+
 ## The full video
 The 2:55 video's beat sheet, voice-over, clicks and captions are in `docs/launch/video.md`. Keep this 60-second path and that file in step.
 

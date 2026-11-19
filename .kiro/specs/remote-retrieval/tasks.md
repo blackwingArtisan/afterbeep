@@ -36,12 +36,12 @@ Each task is one commit and leaves `npm run check` and `npm run test:e2e` passin
 - [x] 20. Playwright `tests/e2e/remote.spec.ts`: open Remote from the navigation, key 4-2-7, hear the count, press 1, 2, `#`, erase with 9 9, reach the invoice prompt, type the slip script, open the draft and see it on hold with nothing sent; a wrong code three times ends the call (Req 1.1-1.6, 3.1, 4.1, 5.7, 6.2, 8.1, 8.3, 12.1-12.4, 12.9)
 
 ## The Amazon Connect flow
-- [ ] 21. Read the `Compare` and `MessageParticipant` flow-language pages with the `aws-docs` server and add them to "Sources looked up" in `design.md` (Req 13.1)
-- [ ] 22. `infra/connect/remote-retrieval-flow.json` with the code input, the menu and the Lambda hand-off, and `tests/unit/connect-remote-flow.test.ts` that parses it (Req 13.1-13.5)
-  - [ ] 22.1 The test checks the version and start action, unique identifiers, no dangling transition, `StoreInput: "True"` with a maximum length of 3, one `Equals` condition each for 1, 2, 9 and `#`, the error transitions on every keypad input, and that `427` appears nowhere in the file (Req 13.1-13.5)
-- [ ] 23. `infra/connect/README.md`: describe the remote flow, the two ways in, and say it is written and checked but not deployed (Req 13.6)
-  - [ ] 23.1 A unit test that the README says the flow is not deployed (Req 13.6)
+- [x] 21. Read the `Compare` and `MessageParticipant` flow-language pages with the `aws-docs` server and add them to "Sources looked up" in `design.md` (Req 13.1)
+- [x] 22. `infra/connect/remote-retrieval-flow.json` with the code input, the menu and the Lambda hand-off, and `tests/unit/connect-remote-flow.test.ts` that parses it (Req 13.1-13.5)
+  - [x] 22.1 The test checks the version and start action, unique identifiers, no dangling transition, `StoreInput: "True"` with a maximum length of 3, one `Equals` condition each for 1, 2, 9 and `#`, the error transitions on every keypad input, and that `427` appears nowhere in the file (Req 13.1-13.5)
+- [x] 23. `infra/connect/README.md`: describe the remote flow, the two ways in, and say it is written and checked but not deployed (Req 13.6)
+  - [x] 23.1 A unit test that the README says the flow is not deployed (Req 13.6)
 
 ## Wrap-up
-- [ ] 24. Turn on the RR prefix in `scripts/spec-coverage.ts` (`RR: 'remote-retrieval'`, the test regexp and the header comment) and run `npm run spec:coverage` until every RR criterion is named by a test (Req 1-13)
-- [ ] 25. Update `structure.md` with the new files, the README counts of specs, criteria and tests, the `#demo` steering file with the remote call, and `KIRO-LOG.md` with this spec (no criteria)
+- [x] 24. Turn on the RR prefix in `scripts/spec-coverage.ts` (`RR: 'remote-retrieval'`, the test regexp and the header comment) and run `npm run spec:coverage` until every RR criterion is named by a test (Req 1-13)
+- [x] 25. Update `structure.md` with the new files, the README counts of specs, criteria and tests, the `#demo` steering file with the remote call, and `KIRO-LOG.md` with this spec (no criteria)

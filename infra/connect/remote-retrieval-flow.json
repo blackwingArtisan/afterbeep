@@ -1,0 +1,457 @@
+{
+  "Version": "2019-10-30",
+  "StartAction": "ask-code",
+  "Metadata": {
+    "name": "AfterBeep remote retrieval",
+    "description": "Owner calls in, keys the remote code, hears messages with the keypad. Each turn is handed to a Lambda that runs the call script. Not deployed."
+  },
+  "Actions": [
+    {
+      "Identifier": "ask-code",
+      "Type": "GetParticipantInput",
+      "Parameters": {
+        "Text": "This is the answering machine for Hollow Creek Plumbing and Appliance. Enter your three-digit remote code.",
+        "InputTimeLimitSeconds": "10",
+        "StoreInput": "True",
+        "InputValidation": {
+          "CustomValidation": {
+            "MaximumLength": "3"
+          }
+        },
+        "DTMFConfiguration": {
+          "InterdigitTimeLimitSeconds": "5"
+        }
+      },
+      "Transitions": {
+        "NextAction": "turn-code",
+        "Errors": [
+          {
+            "NextAction": "turn-silence",
+            "ErrorType": "InputTimeLimitExceeded"
+          },
+          {
+            "NextAction": "turn-other",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "turn-code",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN",
+        "InvocationTimeLimitSeconds": "8",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "step": "code",
+          "digits": "$.StoredCustomerInput",
+          "caller": "$.CustomerEndpoint.Address",
+          "contactId": "$.ContactId"
+        },
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
+      },
+      "Transitions": {
+        "NextAction": "route",
+        "Errors": [
+          {
+            "NextAction": "went-wrong",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "route",
+      "Type": "Compare",
+      "Parameters": {
+        "ComparisonValue": "$.External.next"
+      },
+      "Transitions": {
+        "NextAction": "goodbye",
+        "Conditions": [
+          {
+            "NextAction": "menu",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "menu"
+              ]
+            }
+          },
+          {
+            "NextAction": "say-invoice-prompt",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "invoice"
+              ]
+            }
+          },
+          {
+            "NextAction": "goodbye",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "goodbye"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "goodbye",
+            "ErrorType": "NoMatchingCondition"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "menu",
+      "Type": "GetParticipantInput",
+      "Parameters": {
+        "Text": "$.External.prompt",
+        "InputTimeLimitSeconds": "20",
+        "StoreInput": "False"
+      },
+      "Transitions": {
+        "NextAction": "turn-other",
+        "Conditions": [
+          {
+            "NextAction": "turn-1",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "1"
+              ]
+            }
+          },
+          {
+            "NextAction": "turn-2",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "2"
+              ]
+            }
+          },
+          {
+            "NextAction": "turn-9",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "9"
+              ]
+            }
+          },
+          {
+            "NextAction": "turn-pound",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "#"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "turn-silence",
+            "ErrorType": "InputTimeLimitExceeded"
+          },
+          {
+            "NextAction": "turn-other",
+            "ErrorType": "NoMatchingCondition"
+          },
+          {
+            "NextAction": "turn-other",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "turn-1",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN",
+        "InvocationTimeLimitSeconds": "8",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "step": "key",
+          "key": "1",
+          "caller": "$.CustomerEndpoint.Address",
+          "contactId": "$.ContactId"
+        },
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
+      },
+      "Transitions": {
+        "NextAction": "route",
+        "Errors": [
+          {
+            "NextAction": "went-wrong",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "turn-2",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN",
+        "InvocationTimeLimitSeconds": "8",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "step": "key",
+          "key": "2",
+          "caller": "$.CustomerEndpoint.Address",
+          "contactId": "$.ContactId"
+        },
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
+      },
+      "Transitions": {
+        "NextAction": "route",
+        "Errors": [
+          {
+            "NextAction": "went-wrong",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "turn-9",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN",
+        "InvocationTimeLimitSeconds": "8",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "step": "key",
+          "key": "9",
+          "caller": "$.CustomerEndpoint.Address",
+          "contactId": "$.ContactId"
+        },
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
+      },
+      "Transitions": {
+        "NextAction": "route",
+        "Errors": [
+          {
+            "NextAction": "went-wrong",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "turn-pound",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN",
+        "InvocationTimeLimitSeconds": "8",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "step": "key",
+          "key": "#",
+          "caller": "$.CustomerEndpoint.Address",
+          "contactId": "$.ContactId"
+        },
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
+      },
+      "Transitions": {
+        "NextAction": "route",
+        "Errors": [
+          {
+            "NextAction": "went-wrong",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "turn-silence",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN",
+        "InvocationTimeLimitSeconds": "8",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "step": "silence",
+          "caller": "$.CustomerEndpoint.Address",
+          "contactId": "$.ContactId"
+        },
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
+      },
+      "Transitions": {
+        "NextAction": "route",
+        "Errors": [
+          {
+            "NextAction": "went-wrong",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "turn-other",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN",
+        "InvocationTimeLimitSeconds": "8",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "step": "key",
+          "key": "other",
+          "caller": "$.CustomerEndpoint.Address",
+          "contactId": "$.ContactId"
+        },
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
+      },
+      "Transitions": {
+        "NextAction": "route",
+        "Errors": [
+          {
+            "NextAction": "went-wrong",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "say-invoice-prompt",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "$.External.prompt"
+      },
+      "Transitions": {
+        "NextAction": "record-invoice",
+        "Errors": [
+          {
+            "NextAction": "record-invoice",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "record-invoice",
+      "Type": "UpdateContactRecordingBehavior",
+      "Parameters": {
+        "RecordingBehavior": {
+          "RecordedParticipants": [
+            "Customer"
+          ]
+        }
+      },
+      "Transitions": {
+        "NextAction": "listen-invoice"
+      }
+    },
+    {
+      "Identifier": "listen-invoice",
+      "Type": "GetParticipantInput",
+      "Parameters": {
+        "Text": " ",
+        "InputTimeLimitSeconds": "60",
+        "StoreInput": "False"
+      },
+      "Transitions": {
+        "NextAction": "turn-invoice",
+        "Errors": [
+          {
+            "NextAction": "turn-invoice",
+            "ErrorType": "InputTimeLimitExceeded"
+          },
+          {
+            "NextAction": "turn-invoice",
+            "ErrorType": "NoMatchingCondition"
+          },
+          {
+            "NextAction": "turn-invoice",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "turn-invoice",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN",
+        "InvocationTimeLimitSeconds": "8",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "step": "invoice",
+          "caller": "$.CustomerEndpoint.Address",
+          "contactId": "$.ContactId"
+        },
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
+      },
+      "Transitions": {
+        "NextAction": "route",
+        "Errors": [
+          {
+            "NextAction": "went-wrong",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "goodbye",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "$.External.prompt"
+      },
+      "Transitions": {
+        "NextAction": "hang-up",
+        "Errors": [
+          {
+            "NextAction": "hang-up",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "went-wrong",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "Something went wrong. Goodbye."
+      },
+      "Transitions": {
+        "NextAction": "hang-up",
+        "Errors": [
+          {
+            "NextAction": "hang-up",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "hang-up",
+      "Type": "DisconnectParticipant",
+      "Parameters": {},
+      "Transitions": {}
+    }
+  ]
+}
