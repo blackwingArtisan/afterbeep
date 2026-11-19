@@ -1,0 +1,170 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AfterBeep real phone path. Amazon Connect stores each voicemail recording in S3, a Lambda hands
+  the recording to the AfterBeep webhook, and the AfterBeep server transcribes it with Amazon
+  Transcribe, reads it with Amazon Bedrock and texts the caller with AWS End User Messaging SMS.
+  The contact flow itself is imported from connect/contact-flow.json (see connect/README.md).
+
+Parameters:
+  ConnectInstanceArn:
+    Type: String
+    AllowedPattern: '^arn:aws[a-z-]*:connect:[a-z0-9-]+:\d{12}:instance/[0-9a-f-]{36}$'
+    Description: ARN of the Amazon Connect instance that answers the forwarded calls.
+  AfterBeepUrl:
+    Type: String
+    AllowedPattern: '^https://.+[^/]$'
+    Description: Public base URL of the AfterBeep server, without a trailing slash.
+  WebhookSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    Description: Shared secret for the voicemail webhook. The server reads the same value from AFTERBEEP_WEBHOOK_SECRET.
+  RecordingRetentionDays:
+    Type: Number
+    Default: 30
+    MinValue: 1
+    Description: Days to keep voicemail recordings. Transcripts live in AfterBeep; the audio is not needed after that.
+  BedrockModelId:
+    Type: String
+    Default: amazon.nova-lite-v1:0
+    Description: Bedrock model the server may invoke for extraction.
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Architectures: [arm64]
+    MemorySize: 256
+    Timeout: 30
+
+Resources:
+  RecordingsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireRecordings
+            Status: Enabled
+            ExpirationInDays: !Ref RecordingRetentionDays
+
+  RecordingsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref RecordingsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt RecordingsBucket.Arn
+              - !Sub '${RecordingsBucket.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  # Tells the Connect instance to store call recordings in the bucket above.
+  CallRecordingsStorage:
+    Type: AWS::Connect::InstanceStorageConfig
+    Properties:
+      InstanceArn: !Ref ConnectInstanceArn
+      ResourceType: CALL_RECORDINGS
+      StorageType: S3
+      S3Config:
+        BucketName: !Ref RecordingsBucket
+        BucketPrefix: connect
+
+  FailedHandoffQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      SqsManagedSseEnabled: true
+
+  RecordingToWebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Hands each new voicemail recording to the AfterBeep webhook with the caller's number.
+      CodeUri: connect/
+      Handler: recording-to-webhook.handler
+      Environment:
+        Variables:
+          CONNECT_INSTANCE_ID: !Select [1, !Split ['/', !Ref ConnectInstanceArn]]
+          AFTERBEEP_URL: !Ref AfterBeepUrl
+          AFTERBEEP_WEBHOOK_SECRET: !Ref WebhookSecret
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: connect:GetContactAttributes
+              Resource: !Sub '${ConnectInstanceArn}/contact/*'
+      Events:
+        Recording:
+          Type: S3
+          Properties:
+            Bucket: !Ref RecordingsBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: connect/
+                  - Name: suffix
+                    Value: .wav
+      # A voicemail that cannot be handed off after the retries lands here instead of disappearing.
+      EventInvokeConfig:
+        MaximumRetryAttempts: 2
+        DestinationConfig:
+          OnFailure:
+            Type: SQS
+            Destination: !GetAtt FailedHandoffQueue.Arn
+
+  # Everything the AfterBeep server needs on the real path. Attach it to the server's role.
+  AfterBeepServerPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: AfterBeep server access to Transcribe, Bedrock, End User Messaging SMS and the recordings bucket.
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ReadRecordings
+            Effect: Allow
+            Action: s3:GetObject
+            Resource: !Sub '${RecordingsBucket.Arn}/connect/*'
+          - Sid: Transcribe
+            Effect: Allow
+            Action:
+              - transcribe:StartTranscriptionJob
+              - transcribe:GetTranscriptionJob
+            Resource: '*'
+          - Sid: ReadVoicemails
+            Effect: Allow
+            Action: bedrock:InvokeModel
+            Resource: !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/${BedrockModelId}'
+          - Sid: TextCallers
+            Effect: Allow
+            Action: sms-voice:SendTextMessage
+            Resource: '*'
+
+Outputs:
+  RecordingsBucketName:
+    Description: Bucket where Amazon Connect stores the voicemail recordings.
+    Value: !Ref RecordingsBucket
+  ServerPolicyArn:
+    Description: Attach this managed policy to the AfterBeep server's IAM role.
+    Value: !Ref AfterBeepServerPolicy
+  FailedHandoffQueueUrl:
+    Description: Voicemails that could not be handed to AfterBeep after retries.
+    Value: !Ref FailedHandoffQueue

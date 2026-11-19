@@ -125,11 +125,11 @@ src/domain/     pure logic: money, spoken numbers, tax, invoice parser, price bo
 src/adapters/   ports and implementations: store, transcriber, extractor, sms, invoices
 src/server/     Hono API, services (voicemail, booking, invoicing), seed data
 src/client/     React app: landing, machine (inbox, call, schedule, invoice, outbox, prices), caller pages
-infra/connect/  Amazon Connect contact flow and Lambda for the real phone path
+infra/          SAM template for the real phone path; connect/ holds the contact flow and Lambda
 .kiro/          steering, specs, hooks, MCP settings
 ```
 
-The phone wiring is in [infra/connect/README.md](infra/connect/README.md). All settings are listed in `.env.example`.
+The phone wiring is in [infra/connect/README.md](infra/connect/README.md), and [infra/template.yaml](infra/template.yaml) deploys it with SAM; CI validates the template on every push. All settings are listed in `.env.example`.
 
 ## Tests and spec traceability
 

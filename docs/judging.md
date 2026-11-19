@@ -30,6 +30,7 @@ Where to find the proof for each submission check and each judging criterion. Ev
 
 | Claim | Proof |
 |---|---|
+| The real phone path as infrastructure as code: an S3 recordings bucket, the hand-off Lambda with a dead-letter queue, and a least-privilege server policy, validated in CI | [infra/template.yaml](../infra/template.yaml), [infra/connect/README.md](../infra/connect/README.md) |
 | Ports and adapters with free local defaults; AWS (Connect, Transcribe, Bedrock, End User Messaging) and Stripe behind environment variables | [src/adapters/](../src/adapters), [.kiro/steering/aws-adapters.md](../.kiro/steering/aws-adapters.md) |
 | All money in integer cents; the server sends an invoice only when its recomputed total equals the exact total the owner approved | [src/domain/money.ts](../src/domain/money.ts), [src/server/services/invoicing.ts](../src/server/services/invoicing.ts), [.kiro/steering/money.md](../.kiro/steering/money.md) |
 | The price check: "dryer belt, fifteen" is held when the usual price is $50 (more than 15% under or 25% over) | [src/domain/price-book.ts](../src/domain/price-book.ts) |
