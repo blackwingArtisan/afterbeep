@@ -109,6 +109,7 @@ Every input below is an assumption until there are paying customers, and it is l
 - **Reading a voicemail now costs well under a cent.** Amazon Transcribe batch is $0.006 a minute and Nova Lite reads a message for about $0.0002 [5], so understanding every call is no longer the expensive part.
 - **Transcripts became free, so the value moved.** iPhone Live Voicemail shows the message as it is left [10] and Google Voice transcribes voicemail [11]. A transcript alone is no longer worth paying for. What a solo tech still lacks is what happens after the beep: the text back, the booking and the bill.
 - **The customer base is growing.** Solo building-equipment contractors grew 10% from 2019 to 2023 [4].
+- **Many callers, and many techs, speak Spanish.** About 1 in 8 US residents age 5 and older speak Spanish at home: 21.7% speak a language other than English and 61.1% of them speak Spanish (our multiplication of the Census figures) [20]. In 2025, 30.3% of plumbers, pipefitters and steamfitters and 26.7% of HVAC mechanics and installers were Hispanic or Latino [21]. A machine that reads a Spanish voicemail and texts back in Spanish serves both sides of the call.
 
 ## Why not Live Voicemail, Google Voice, Jobber, Housecall Pro, GoHighLevel, Podium, ServiceTitan or an AI receptionist?
 
@@ -128,6 +129,15 @@ Every input below is an assumption until there are paying customers, and it is l
 | **AfterBeep** | **$39 a month, flat** | **Your own greeting, and it says it is a machine** | Text back, booking, spoken invoices checked against your history | |
 
 **AfterBeep's answer: an honest machine on your own number.** No robot pretending to be your receptionist. It says it is a machine, takes the message and texts every real caller your real open slots, then turns your spoken invoice into a bill that is held when a price or quantity looks wrong, and sent only at the exact total you approved. Flat $39 a month, no per-call or per-invoice fees.
+
+## Texting rules
+
+- **Opt-out on every number.** Every first text names the business and ends "Reply STOP to opt out." in the caller's language. STOP, UNSUBSCRIBE, CANCEL, PARAR and the rest of the common set put the number on an opt-out list that every send checks first; HELP gets the business name and phone; START opts back in. AWS End User Messaging keeps its own opt-out list per number too.
+- **Registered sending.** US business texts from a local number need A2P 10DLC registration: a registered brand and a campaign. AfterBeep's campaign is customer care, replies to people who called the business first, with no marketing content. The $1 number lease and $2 campaign fee are in the unit economics above [8].
+- **Raise the dead is a one-time reply to a call the person made.** Only numbers that called in the last 30 days and never heard back, only when the owner presses it, one text each that names the day they called, never a second, and never to a number that opted out.
+
+
+Prices were checked on November 18 2026 and change over time.
 
 ## Sources
 
@@ -151,5 +161,5 @@ Every input below is an assumption until there are paying customers, and it is l
 17. HighLevel help center, "Where and How to Configure the Missed Call Text Back Feature". https://help.gohighlevel.com/support/solutions/articles/48001239140
 18. ServiceTitan pricing ("Request pricing"). https://www.servicetitan.com/pricing
 19. Rosie pricing. https://heyrosie.com/pricing
-
-Prices were checked on November 18 2026 and change over time.
+20. U.S. Census Bureau, "Language Spoken at Home" (American Community Survey 5-year estimates, 2018-2022), December 7, 2023: 78.3% of people age 5 and older spoke only English at home; Spanish was 61.1% of those who spoke another language. https://www.census.gov/newsroom/press-releases/2023/language-at-home-acs-5-year.html
+21. U.S. Bureau of Labor Statistics, Current Population Survey, Table 11, "Employed persons by detailed occupation, sex, race, and Hispanic or Latino ethnicity", 2025 annual averages (11 months; October 2025 was not collected). https://www.bls.gov/cps/cpsaat11.htm

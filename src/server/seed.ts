@@ -27,7 +27,7 @@ export const demoBusiness: Business = {
   taxRateOverrideMilli: null,
   laborTaxable: false,
   greeting:
-    "You've reached Hollow Creek Plumbing and Appliance. Morgan is elbow-deep in a job right now. " +
+    "You've reached Hollow Creek Plumbing and Appliance's answering machine. Morgan is elbow-deep in a job right now. " +
     "Leave your name, address and what's going on after the beep, and you'll get a text with times we can come out.",
 };
 

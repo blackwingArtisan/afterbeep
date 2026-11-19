@@ -14,6 +14,9 @@ Use this when preparing or recording the demo. Include it in a chat with `#demo`
 6. **Back to the machine: raise the dead.** Last week's five hang-ups wait as ghost cassettes. One press texts each a booking link, and they rise.
 7. The inbox now reads Morgan's Tuesday: 2 booked, $557 of booked work, $35 caught, paid for itself 14 times.
 
+## The full video
+The 2:55 video's beat sheet, voice-over, clicks and captions are in `docs/launch/video.md`. Keep this 60-second path and that file in step.
+
 ## Before recording
 - Press **Reset demo** first; the story uses a fresh 555-01xx caller ID each run.
 - Run `npm run check` and `npm run test:e2e`; the whole story is covered by `tests/e2e/whole-story.spec.ts`.
