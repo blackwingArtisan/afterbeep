@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import type { CheckOption, PriceCheck, PriceCheckStatus } from '../../domain/price-book';
+import { findEntry, type CheckOption, type PriceBookEntry, type PriceCheck, type PriceCheckStatus } from '../../domain/price-book';
 import { formatCents, formatQuantity, formatRateMilli, lineAmountCents } from '../../domain/money';
 import type { Customer, Invoice, InvoiceLine, InvoiceTotals, Job, OutboxItem } from '../../domain/types';
 import { api, ApiError, type InvoiceScript } from '../api';
 import { AlertIcon, ArrowIcon, CheckIcon, MicIcon, StopIcon } from '../components/Icons';
 import { caughtOnLine } from '../../domain/kept';
 import { CarbonCopies } from '../components/CarbonCopies';
+import { CarbonFan } from '../components/CarbonFan';
 import { StoryBar } from '../components/StoryBar';
 import { StoryFinale } from '../components/StoryFinale';
 import { useMachine, useTitle } from '../lib/machine';
@@ -58,6 +59,11 @@ export default function VoiceInvoice() {
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState<Invoice | null>(null);
   const [sentText, setSentText] = useState<OutboxItem | null>(null);
+  // The owner's own past invoices, fanned out under a held price as carbon slips.
+  const [book, setBook] = useState<PriceBookEntry[]>([]);
+  useEffect(() => {
+    void api.priceBook().then((r) => setBook(r.entries)).catch(() => setBook([]));
+  }, [sent]);
   const story = params.get('story') === '1';
   const dictation = useDictation();
 
@@ -334,6 +340,10 @@ export default function VoiceInvoice() {
                         <CheckBadge check={check} />
                         <span>{check?.message}</span>
                       </div>
+                      {check?.status === 'outlier' && check.blocking && (() => {
+                        const entry = findEntry(book, line.description, line.kind);
+                        return entry ? <CarbonFan entry={entry} heardCents={line.unitPriceCents} /> : null;
+                      })()}
                       {line.note && <div className="line-note">{line.note}</div>}
                       {check && check.options.length > 0 && (
                         <div className="row line-options">

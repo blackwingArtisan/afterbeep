@@ -28,7 +28,7 @@ Requires Node 24 or later. No accounts or keys.
 
 > **Built with Kiro**
 > - **6 steering files:** 3 always included, 2 loaded by file match (money rules with `src/domain`, AWS rules with `src/adapters`), 1 manual demo script
-> - **2 specs, 113 EARS criteria:** 109 named by test titles and enforced in CI by `npm run spec:coverage`, 4 on the real AWS and Stripe path
+> - **2 specs, 114 EARS criteria:** 110 named by test titles and enforced in CI by `npm run spec:coverage`, 4 on the real AWS and Stripe path
 > - **6 IDE hooks** (4 on file save, 2 on agent stop) and **1 custom agent** with 3 hooks of its own: a guard that blocks `.env` writes, live Stripe keys and float money, and tests after every source write
 > - **2 MCP servers**, pinned: AWS documentation and Context7
 > - How Kiro and the coding assistant split the work, and every time Kiro caught something: [KIRO-LOG.md](KIRO-LOG.md)
@@ -130,7 +130,7 @@ Everything runs on a laptop with no accounts. Each item is covered by the tests 
 
 **The Dictaphone and the carbon copies**
 - "Dryer belt fifteen, taxed. One hour labor at eighty-five. Trip charge." becomes three lines. Code does every multiplication, the tax and the total in integer cents.
-- The carbon copies, a price book built from past invoices, hold a price more than 15% below or 25% above the usual one, fill a missing price from history, read "twelve fifty" as $1,250 for a water heater, and keep "forty gallon" as a size, not a quantity.
+- The carbon copies, a price book built from past invoices, hold a price more than 15% below or 25% above the usual one (the owner's last four slips for the item fan out under the line, with the heard "$15?" scrawled in red), fill a missing price from history, read "twelve fifty" as $1,250 for a water heater, and keep "forty gallon" as a size, not a quantity.
 - Quantities are checked too, and a price with two readings and no history waits for the owner to pick one.
 - The server recomputes the total and sends only when it equals the exact total the owner approved. The invoice number and the job are reserved before the send, so two sends at once cannot share a number, and invoices are dated in the business's own time zone.
 
@@ -192,7 +192,7 @@ npx playwright install chromium
 npm run test:e2e          # 22 Playwright tests (one is phone-only) against the production build on port 3112
 ```
 
-Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 109 of 113 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
+Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 110 of 114 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
 
 `npm run eval` scores the rules extractor on 24 hand-labelled voicemails it had not seen: on the first run it got every phone number and address right, never invented an address, and read urgency right in 19 of 24. The two missed emergencies it found are fixed, and urgency is now 21 of 24. Details and the remaining misses: [docs/eval.md](docs/eval.md). The same script scores Bedrock side by side with `--bedrock`, and `npm run test:aws` checks the live Bedrock path; both are paid, so both stay off unless you switch them on, and neither has been run for these numbers.
 

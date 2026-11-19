@@ -10,4 +10,4 @@
 
 5/ Callers who hang up without a word go to the graveyard. One press raises the dead: each gets one text with a booking link.
 
-6/ Built with @kirodotdev: steering that loads money rules with money code, 113 EARS criteria that fail CI without a test, and a hook that restates the money rules on every money change. $39 a month, about 7 cents a call on AWS. [link]
+6/ Built with @kirodotdev: steering that loads money rules with money code, 114 EARS criteria that fail CI without a test, and a hook that restates the money rules on every money change. $39 a month, about 7 cents a call on AWS. [link]

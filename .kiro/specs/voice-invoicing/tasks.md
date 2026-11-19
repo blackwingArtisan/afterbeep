@@ -27,3 +27,4 @@
 - [x] 23. Printable carbon-copy set with price-check stamps (Req 5.9)
 - [x] 24. Reserve the invoice number and the job before the provider call, release them if the provider fails, and date invoices in the business's time zone (Req 4.10, 5.6)
   - [x] 24.1 API tests: two sends for one job at once, a provider failure and retry, and an invoice sent at 8:30 PM local time (Req 4.10, 5.6)
+- [x] 25. Carbon fan: a held outlier shows up to four past carbon slips with the usual price lined up and the heard price scrawled in red (Req 3.12)

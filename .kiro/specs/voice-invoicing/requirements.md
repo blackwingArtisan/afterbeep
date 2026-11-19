@@ -47,6 +47,7 @@ After a job, the owner says the invoice out loud. AfterBeep turns the words into
 3.9 IF a line has an unplaced number THEN THE SYSTEM SHALL hold the line until the owner fixes it or chooses to ignore the number.
 3.10 IF a quantity is above the item's limit (labor: 12 hours or twice the most ever billed; items with history: 3 or twice the most ever billed; new items: 10) THEN THE SYSTEM SHALL hold the line and offer "keep" and "make it 1".
 3.11 IF a spoken price has more than one reading and the item has no history THEN THE SYSTEM SHALL hold the line and offer each reading.
+3.12 WHEN a line is held as an outlier THE SYSTEM SHALL show the owner's past invoices for the item, up to four, as carbon slips with each past price lined up, and mark the heard price beside them.
 
 ## Requirement 4: Confirm and send
 **User story:** As an owner, I want to see and approve the exact total, so that nothing goes out that I did not agree to.

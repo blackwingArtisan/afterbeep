@@ -6,7 +6,7 @@ How Kiro is set up in this repository, what Kiro itself did, and what the coding
 
 | Kiro feature | Used here | Proof |
 |---|---|---|
-| Specs (requirements, design, tasks) | Yes: 2 specs, 113 EARS criteria, every task checked off | [.kiro/specs/](.kiro/specs); `npm run spec:coverage` fails CI if a criterion has no test (109 of 113 traced, 4 on the real-service path) |
+| Specs (requirements, design, tasks) | Yes: 2 specs, 114 EARS criteria, every task checked off | [.kiro/specs/](.kiro/specs); `npm run spec:coverage` fails CI if a criterion has no test (110 of 114 traced, 4 on the real-service path) |
 | Steering, always included | Yes: 3 files | [product.md](.kiro/steering/product.md), [tech.md](.kiro/steering/tech.md), [structure.md](.kiro/steering/structure.md) |
 | Steering, file match | Yes: 2 files | [money.md](.kiro/steering/money.md) loads with `src/domain/**`, [aws-adapters.md](.kiro/steering/aws-adapters.md) with `src/adapters/**` |
 | Steering, manual | Yes: 1 file | [demo.md](.kiro/steering/demo.md), included with `#demo` |
@@ -40,7 +40,7 @@ This repository was built by one developer working with two AI tools. `git log` 
 | Steering, always included | Product rules (nothing is sent without the owner's approval, cited figures only), stack and engineering rules, file layout | `.kiro/steering/product.md`, `tech.md`, `structure.md` | Claude Code, before the first feature, so every later task was planned against them |
 | Steering, file match | Money rules load when a domain file is open; adapter and AWS rules load when an adapter is open | `.kiro/steering/money.md`, `aws-adapters.md` | Claude Code |
 | Steering, manual | The 60-second demo script, included with `#demo` | `.kiro/steering/demo.md` | Claude Code |
-| Specs | Two features as EARS requirements, design and task lists: 68 criteria for missed-call booking and 45 for voice invoicing | `.kiro/specs/missed-call-booking/`, `.kiro/specs/voice-invoicing/` | Claude Code in Kiro's spec format; Kiro (session 2) added four criteria and their tasks |
+| Specs | Two features as EARS requirements, design and task lists: 68 criteria for missed-call booking and 46 for voice invoicing | `.kiro/specs/missed-call-booking/`, `.kiro/specs/voice-invoicing/` | Claude Code in Kiro's spec format; Kiro (session 2) added four criteria and their tasks |
 | Spec traceability | Every test title names the criteria it proves, such as `[VI 3.4]`; `npm run spec:coverage` fails when a criterion has no test | `scripts/spec-coverage.ts` | Claude Code |
 | Hooks: file save | Run the unit tests on any source save; restate the money rules and ask for a test when money code changes; keep specs in step with server code; review screen copy | `.kiro/hooks/test-on-save.json`, `money-guard.json`, `spec-sync.json`, `copy-tone.json` | `test-on-save` and `money-guard` rewritten to the canonical format by Kiro (session 2); the other two by Claude Code |
 | Hooks: agent stop | Type-check the project; check spec coverage and the production build before work is handed back | `.kiro/hooks/typecheck-on-stop.json`, `demo-readiness.json` | Claude Code |

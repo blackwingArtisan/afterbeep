@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('[VI 3.8, 4.1, 4.3, 5.2] a spoken invoice is held on a wrong price and sent only at the approved total', async ({ page }) => {
+test('[VI 3.4, 3.8, 3.12, 4.1, 4.3, 5.2] a spoken invoice is held on a wrong price and sent only at the approved total', async ({ page }) => {
   await page.goto('/machine/invoice');
   await expect(page.getByLabel('Job')).toContainText('Wendell Ashgrove');
 
@@ -11,10 +11,16 @@ test('[VI 3.8, 4.1, 4.3, 5.2] a spoken invoice is held on a wrong price and sent
   const draft = page.getByTestId('draft');
   await expect(draft.getByTestId('draft-state')).toHaveText('On hold');
   await expect(draft).toContainText('You said $15.00, but you usually charge $50.00 (4 past invoices).');
+  // The owner's own four carbon copies fan out under the held line, with the heard price scrawled on top.
+  const fan = draft.getByTestId('carbon-fan');
+  await expect(fan.locator('.carbon-fan-slip')).toHaveCount(4);
+  await expect(fan.locator('.carbon-fan-amt')).toHaveText(['$50.00', '$52.00', '$50.00', '$49.50']);
+  await expect(fan.locator('.carbon-fan-scrawl')).toHaveText('$15?');
   await expect(page.getByRole('button', { name: /Settle the held lines/ })).toBeDisabled();
 
   await draft.getByRole('button', { name: 'Use usual $50.00' }).click();
   await expect(draft.getByTestId('draft-state')).toHaveText('Ready');
+  await expect(draft.getByTestId('carbon-fan')).toHaveCount(0);
   await expect(draft.getByTestId('total')).toHaveText('$182.88');
   await expect(page.getByLabel('Customer name')).toHaveValue('Wendell Ashgrove');
 

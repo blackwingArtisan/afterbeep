@@ -2380,3 +2380,87 @@
   border-color: var(--label-ink);
   background: transparent;
 }
+
+/* ---------- Carbon fan: past invoices under a held price ---------- */
+
+.carbon-fan {
+  position: relative;
+  margin: 4px 0 0;
+  padding-right: 78px;
+}
+.carbon-fan-slips {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.carbon-fan-slip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  margin-top: -2px;
+  padding: 5px 10px;
+  background: #f7e7a1;
+  color: #3b3320;
+  border: 1px solid #d8c26b;
+  border-radius: 2px;
+  font-family: var(--font-type);
+  font-size: 12.5px;
+  box-shadow: 0 1px 2px rgba(40, 30, 0, 0.18);
+  transform: rotate(calc((var(--i) - 1.5) * 0.7deg));
+  animation: carbon-fan-out 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  animation-delay: calc(var(--i) * 90ms);
+}
+.carbon-fan-no {
+  color: #6d5f36;
+}
+.carbon-fan-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carbon-fan-amt {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.carbon-fan-scrawl {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  font-family: var(--font-hand);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--hold);
+  transform: translateY(-50%) rotate(-12deg);
+  animation: carbon-scrawl 0.35s ease-out 0.45s both;
+}
+@keyframes carbon-fan-out {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--i) * -100%)) rotate(0deg);
+  }
+}
+@keyframes carbon-scrawl {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) rotate(-12deg) scale(1.6);
+  }
+}
+@media (max-width: 480px) {
+  .carbon-fan-no {
+    display: none;
+  }
+  .carbon-fan-slip {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .carbon-fan {
+    padding-right: 64px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .carbon-fan-slip,
+  .carbon-fan-scrawl {
+    animation: none;
+  }
+}

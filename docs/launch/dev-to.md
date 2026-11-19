@@ -27,7 +27,7 @@ When Amazon Bedrock reads a voicemail, it must answer through one forced tool wi
 
 ## 5. Specs that fail the build
 
-Two EARS specs hold 113 criteria. Every test title names the criteria it proves, like `[VI 3.4]`, and a script fails CI when a criterion has no test. Kiro's spec review found four behaviors the code had that the specs did not describe.
+Two EARS specs hold 114 criteria. Every test title names the criteria it proves, like `[VI 3.4]`, and a script fails CI when a criterion has no test. Kiro's spec review found four behaviors the code had that the specs did not describe.
 
 ## Try it
 
