@@ -5,24 +5,48 @@
   "mcpServers": {
     "aws-docs": {
       "command": "uvx",
-      "args": ["awslabs.aws-documentation-mcp-server@1.2.4"],
-      "env": { "FASTMCP_LOG_LEVEL": "ERROR", "AWS_DOCUMENTATION_PARTITION": "aws" },
+      "args": [
+        "awslabs.aws-documentation-mcp-server@1.2.4"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "AWS_DOCUMENTATION_PARTITION": "aws"
+      },
       "timeout": 120000
     },
     "context7": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@4.5.0"],
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@4.5.0"
+      ],
       "timeout": 120000
     },
     "afterbeep": {
       "command": "node",
-      "args": ["--import", "tsx", "scripts/mcp/afterbeep-mcp.ts"],
+      "args": [
+        "--import",
+        "tsx",
+        "scripts/mcp/afterbeep-mcp.ts"
+      ],
       "timeout": 120000
     }
   },
   "includeMcpJson": false,
-  "tools": ["read", "write", "shell", "@aws-docs", "@context7", "@afterbeep"],
-  "allowedTools": ["read", "@aws-docs", "@context7", "@afterbeep"],
+  "tools": [
+    "@afterbeep",
+    "@aws-docs",
+    "@context7",
+    "read",
+    "shell",
+    "write"
+  ],
+  "allowedTools": [
+    "read",
+    "@aws-docs",
+    "@context7",
+    "@afterbeep"
+  ],
   "resources": [
     "file://.kiro/steering/**/*.md",
     "file://README.md",
@@ -32,20 +56,55 @@
     {
       "name": "show-working-tree",
       "trigger": "SessionStart",
-      "action": { "type": "command", "command": "git status --short && git log --oneline -5" }
+      "action": {
+        "type": "command",
+        "command": "git status --short && git log --oneline -5"
+      }
     },
     {
       "name": "guard-secrets-and-float-money",
       "trigger": "PreToolUse",
       "matcher": "^(fs_write|fs_append|str_replace|delete_file|execute_bash)$",
-      "action": { "type": "command", "command": "node scripts/kiro/guard-write.mjs" }
+      "action": {
+        "type": "command",
+        "command": "node scripts/kiro/guard-write.mjs"
+      }
     },
     {
       "name": "unit-tests-after-source-write",
       "trigger": "PostToolUse",
       "matcher": "^(fs_write|fs_append|str_replace)$",
-      "action": { "type": "command", "command": "node scripts/kiro/test-after-write.mjs" }
+      "action": {
+        "type": "command",
+        "command": "node scripts/kiro/test-after-write.mjs"
+      }
     }
   ],
-  "welcomeMessage": "afterbeep-builder: spec-first, integer cents, tests after every source write."
+  "welcomeMessage": "afterbeep-builder: spec-first, integer cents, tests after every source write.",
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_read",
+        "effect": "allow"
+      },
+      {
+        "capability": "mcp",
+        "match": [
+          "afterbeep/*",
+          "aws-docs/*",
+          "context7/*"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "skill",
+        "effect": "allow"
+      }
+    ]
+  },
+  "kiroUpgrade": {
+    "revision": 3,
+    "fingerprint": "sha256:d1a6382ea14f93dad542e83d8b77a599205f433ee2300d50aba664bf54864b37",
+    "source": "sha256:4a9686b0cfa3aa37b1a76ac884abddefee53fefcefe4663d69a718855350f633"
+  }
 }
