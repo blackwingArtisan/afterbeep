@@ -14,6 +14,18 @@ type Mode = 'idle' | 'ringing' | 'playing' | 'texted' | 'bill';
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const AUTOPLAY_KEY = 'afterbeep.hero-autoplayed';
+
+/** True the first time it is asked in a browser session; storage errors (private mode) mean no autoplay. */
+function firstVisitThisSession(): boolean {
+  try {
+    if (window.sessionStorage.getItem(AUTOPLAY_KEY)) return false;
+    window.sessionStorage.setItem(AUTOPLAY_KEY, '1');
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * The hero: a 1980s answering machine, back from the dead. Play runs a real-looking missed
@@ -28,14 +40,24 @@ export function Device({ count = 3 }: { count?: number }) {
 
   useEffect(() => () => void run.current++, []);
 
-  async function play() {
+  // The first five seconds should move: play the missed call once per session, silently, unless
+  // the visitor asked for less motion or has already pressed a key.
+  useEffect(() => {
+    if (reducedMotion()) return;
+    const timer = setTimeout(() => {
+      if (run.current === 0 && firstVisitThisSession()) void play({ muted: true });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  async function play({ muted = false }: { muted?: boolean } = {}) {
     const token = ++run.current;
     setTyped('');
     setMode('ringing');
-    ring(1);
+    if (!muted) ring(1);
     await wait(reducedMotion() ? 0 : 1400);
     if (run.current !== token) return;
-    beep();
+    if (!muted) beep();
     setMode('playing');
     const words = VOICEMAIL.split(' ');
     if (reducedMotion()) {
@@ -89,7 +111,13 @@ export function Device({ count = 3 }: { count?: number }) {
         </div>
       </div>
       <div className="device-keys">
-        <button type="button" className="key" onClick={() => void play()} aria-pressed={mode === 'playing' || mode === 'texted'}>
+        <button
+          type="button"
+          className={`key key-play ${mode === 'idle' ? 'idle' : ''}`}
+          onClick={() => void play()}
+          aria-pressed={mode === 'playing' || mode === 'texted'}
+        >
+          <span className={`led led-small ${mode === 'idle' || mode === 'ringing' ? 'blink' : mode === 'bill' ? 'off' : ''}`} aria-hidden="true" />
           Play
         </button>
         <button type="button" className="key" onClick={() => void book()}>

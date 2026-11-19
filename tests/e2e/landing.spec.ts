@@ -31,3 +31,18 @@ test('theme toggle switches between graveyard shift and daylight', async ({ page
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 });
+
+test('the hero machine plays itself once a session, and never under reduced motion', async ({ page, browser }) => {
+  await page.goto('/');
+  const readout = page.getByTestId('device-readout');
+  await expect(readout).toContainText('Texted back to (614) 555-0134', { timeout: 15_000 });
+  await page.reload();
+  await page.waitForTimeout(1_500);
+  await expect(readout).toContainText('Press Play');
+
+  const still = await browser.newPage({ reducedMotion: 'reduce' });
+  await still.goto('/');
+  await still.waitForTimeout(1_500);
+  await expect(still.getByTestId('device-readout')).toContainText('Press Play');
+  await still.close();
+});

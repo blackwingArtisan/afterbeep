@@ -36,13 +36,32 @@
 
 .hero {
   display: grid;
-  gap: 40px;
-  align-items: center;
-  padding-block: 28px 56px;
+  gap: 18px;
+  align-items: start;
+  padding-block: 20px 56px;
+}
+/* On phones the copy's parts join the hero grid so the machine (cassette and Play) sits above the fold. */
+@media (max-width: 959px) {
+  .hero > .hero-copy {
+    display: contents;
+  }
+  .hero .device {
+    order: 0;
+    margin-block: 18px 8px;
+  }
+  .hero-copy > .eyebrow,
+  .hero-copy > h1,
+  .hero-copy > .hero-sub {
+    order: -1;
+  }
+  .hero-copy > * {
+    order: 1;
+  }
 }
 @media (min-width: 960px) {
   .hero {
     grid-template-columns: 1.1fr 0.9fr;
+    gap: 40px;
     padding-block: 56px 80px;
   }
 }
@@ -122,6 +141,35 @@
   min-width: 0;
   min-height: 44px;
 }
+/* Play is the primary key: pumpkin label, a red LED, and a slow pulse while the machine waits. */
+.device-keys .key-play {
+  flex-direction: row;
+  gap: 8px;
+  color: var(--pumpkin-text);
+  border-color: rgba(255, 122, 26, 0.55);
+}
+.key-play.idle {
+  animation: play-pulse 2.2s ease-out infinite;
+}
+.led.led-small {
+  width: 9px;
+  height: 9px;
+}
+@keyframes play-pulse {
+  0% {
+    box-shadow:
+      0 1px 0 var(--edge-hi) inset,
+      0 4px 0 var(--shadow),
+      0 0 0 0 rgba(255, 122, 26, 0.55);
+  }
+  70%,
+  100% {
+    box-shadow:
+      0 1px 0 var(--edge-hi) inset,
+      0 4px 0 var(--shadow),
+      0 0 0 12px rgba(255, 122, 26, 0);
+  }
+}
 .key[aria-pressed='true'] {
   transform: translateY(3px);
   color: var(--pumpkin-text);
@@ -131,7 +179,7 @@
 }
 /* The readout sits on the machine's dark plastic in both themes, so it uses fixed inks. */
 .device-readout {
-  min-height: 92px;
+  min-height: 176px;
   padding: 12px 14px;
   border-radius: 12px;
   background: #0b0a0e;
