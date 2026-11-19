@@ -25,12 +25,12 @@ Requires Node 24 or later. No accounts or keys.
 6. The story ends on a finale (1 booked, $182.88 billed, $35.00 caught). Press **Pay as June** and PAID slams onto her invoice.
 7. **Back to the machine: raise the dead.** Last week's five hang-ups wait in the graveyard as ghost cassettes. One press texts each a booking link, and they rise.
 8. Open **Messages**: "Kept this week" now reads Morgan's Tuesday: 2 booked, $557 of booked work, $35 caught, paid for itself 14 times.
-9. **Call in from the truck.** Open **Remote**, press **Call your machine** and key 4-2-7: "You have N new messages." Press 1 to play, 2 to text the caller the booking link, # for the next, 9 twice to erase. Then "After the beep, say your invoice" opens a held draft. (Built by Kiro; the Connect keypad flow for a real phone is written but not deployed.)
+9. **Call in from the truck.** Open **Remote**, press **Call your machine** and key 4-2-7: "You have N new messages." Press 1 to play, 2 to text the caller the booking link, # for the next, 9 twice to erase. Then "After the beep, say your invoice" opens a held draft. (Built by Kiro. On a real phone the owner calls the business number from their own phone and keys the same code; the Connect flows and the turn Lambda are written and tested, not deployed.)
 
 > **Built with Kiro**
-> - **Remote retrieval was built by Kiro:** kiro-cli wrote the spec (83 EARS criteria, design, 25 tasks) and then the code, tests and Amazon Connect keypad flow, task by task, in five sessions. Claude Code ran the shell and fixed one 15-line layout bug. Prompts, output and credits: [docs/kiro-sessions/](docs/kiro-sessions)
+> - **Remote retrieval was built by Kiro:** kiro-cli wrote the spec (124 EARS criteria, design, 41 tasks) and then the code, tests, Amazon Connect flows and the turn Lambda for a real phone, task by task, in eight sessions and about 5,500 lines. Claude Code ran the shell, fixed one 15-line layout bug and two single lines. Prompts, output and credits: [docs/kiro-sessions/](docs/kiro-sessions)
 > - **6 steering files:** 3 always included, 2 loaded by file match (money rules with `src/domain`, AWS rules with `src/adapters`), 1 manual demo script
-> - **3 specs, 202 EARS criteria:** 198 named by test titles and enforced in CI by `npm run spec:coverage`, 4 on the real AWS and Stripe path
+> - **3 specs, 243 EARS criteria:** 239 named by test titles and enforced in CI by `npm run spec:coverage`, 4 on the real AWS and Stripe path
 > - **6 IDE hooks** (4 on file save, 2 on agent stop) and **1 custom agent** with 3 hooks of its own: a guard that blocks `.env` writes, live Stripe keys and float money, and tests after every source write
 > - **3 MCP servers:** AWS documentation and Context7, pinned, plus AfterBeep's own (spec coverage, price-book lookup, greeting check)
 > - How Kiro and the coding assistant split the work, and every time Kiro caught something: [KIRO-LOG.md](KIRO-LOG.md)
@@ -182,7 +182,7 @@ src/adapters/   ports and implementations: store, transcriber, extractor, sms, i
 src/server/     Hono API, services (voicemail, texting, booking, invoicing, revive, greeting), seed data
 src/client/     React app: landing, machine (inbox, call, greeting, schedule, invoice, outbox, prices), caller pages
 scripts/        spec coverage, extractor eval, the Kiro agent's hook scripts, and the project's MCP server
-infra/          SAM template for the real phone path; connect/ holds the contact flow and Lambda
+infra/          SAM template for the real phone path; connect/ holds the contact flows and Lambdas
 .kiro/          steering, specs, hooks, MCP settings and the afterbeep-builder agent
 ```
 
@@ -191,12 +191,12 @@ The phone wiring is in [infra/connect/README.md](infra/connect/README.md), and [
 ## Tests and spec traceability
 
 ```bash
-npm run check             # typecheck, spec coverage, 305 Vitest unit and API tests
+npm run check             # typecheck, spec coverage, 378 Vitest unit and API tests
 npx playwright install chromium
 npm run test:e2e          # 25 Playwright tests (one is phone-only) against the production build on port 3112 (AFTERBEEP_E2E_PORT changes it)
 ```
 
-Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 198 of 202 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
+Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 239 of 243 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
 
 `npm run eval` scores the rules extractor on 24 hand-labelled voicemails it had not seen: on the first run it got every phone number and address right, never invented an address, and read urgency right in 19 of 24. The two missed emergencies it found are fixed, and urgency is now 21 of 24. Details and the remaining misses: [docs/eval.md](docs/eval.md). The same script scores Bedrock side by side with `--bedrock`, and `npm run test:aws` checks the live Bedrock path; both are paid, so both stay off unless you switch them on, and neither has been run for these numbers.
 
