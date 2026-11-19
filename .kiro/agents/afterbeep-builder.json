@@ -1,0 +1,46 @@
+{
+  "name": "afterbeep-builder",
+  "description": "Builds AfterBeep features spec-first: writes .kiro/specs/<feature>/ (requirements in EARS form, design, tasks), then implements one task per turn with tests, under the product and money rules in .kiro/steering.",
+  "prompt": "You build AfterBeep, the answering machine back office for one-person trade businesses. Follow every steering file loaded as a resource; product.md and money.md are non-negotiable. Work spec-first: requirements in EARS form, then design, then tasks, each task small enough for one commit. Every new requirement gets a test whose title names it, such as [RR 1.2], and `npm run spec:coverage` must pass. Money is integer cents and code does all arithmetic. Look up AWS behavior with the aws-docs MCP server and library APIs with Context7 before you write adapter code, and cite what you looked up in the design. Never write .env files or secrets; a guard hook blocks those writes and tells you why.",
+  "mcpServers": {
+    "aws-docs": {
+      "command": "uvx",
+      "args": ["awslabs.aws-documentation-mcp-server@1.2.4"],
+      "env": { "FASTMCP_LOG_LEVEL": "ERROR", "AWS_DOCUMENTATION_PARTITION": "aws" },
+      "timeout": 120000
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@4.5.0"],
+      "timeout": 120000
+    }
+  },
+  "includeMcpJson": false,
+  "tools": ["read", "write", "shell", "@aws-docs", "@context7"],
+  "allowedTools": ["read", "@aws-docs", "@context7"],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "file://README.md",
+    "file://KIRO-LOG.md"
+  ],
+  "hooks": [
+    {
+      "name": "show-working-tree",
+      "trigger": "SessionStart",
+      "action": { "type": "command", "command": "git status --short && git log --oneline -5" }
+    },
+    {
+      "name": "guard-secrets-and-float-money",
+      "trigger": "PreToolUse",
+      "matcher": "^(fs_write|fs_append|str_replace|delete_file|execute_bash)$",
+      "action": { "type": "command", "command": "node scripts/kiro/guard-write.mjs" }
+    },
+    {
+      "name": "unit-tests-after-source-write",
+      "trigger": "PostToolUse",
+      "matcher": "^(fs_write|fs_append|str_replace)$",
+      "action": { "type": "command", "command": "node scripts/kiro/test-after-write.mjs" }
+    }
+  ],
+  "welcomeMessage": "afterbeep-builder: spec-first, integer cents, tests after every source write."
+}

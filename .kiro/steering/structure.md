@@ -4,10 +4,11 @@ inclusion: always
 # Project structure
 
 ```
-.kiro/                 steering, specs, hooks and MCP settings (this folder)
+.kiro/                 steering, specs, hooks, MCP settings and agents/afterbeep-builder.json (this folder)
 .github/workflows/      CI: typecheck, spec coverage, unit and end-to-end tests
 scripts/               spec-coverage.ts: every EARS criterion must be named by a test; eval-extractor.ts and
-                       transcribe-sample.ts score and spot-check extraction (paid paths are switched off by default)
+                       transcribe-sample.ts score and spot-check extraction (paid paths are switched off by default);
+                       kiro/ holds the afterbeep-builder agent's hook scripts (write guard, tests after a source write)
 src/
   domain/              pure business logic, fully unit tested
     money.ts           cents, formatting, rounding
