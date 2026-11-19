@@ -22,21 +22,26 @@ Requires Node 24 or later. No accounts or keys.
 
 ## What a missed call costs
 
+**Plain voicemail loses 69% of callers. AfterBeep's greeting promises a text with open times in seconds, so callers have a reason to stay**, and every one who leaves a message gets a booking link before they dial the next name on the list.
+
 | | | Source |
 |---|---|---|
-| Callers who reach voicemail and hang up | **69%** | Moneypenny call report, 2016 |
-| Micro businesses that fail to answer their calls | **1 in 3** | Moneypenny call report, 2016 |
+| Callers who reach voicemail and hang up without a message | **69%** | Moneypenny call report, 2016 |
+| Customers whose calls go unanswered who will not call back | **up to 85%** | CallRail small business benchmark, 1.1 million leads, 2025 |
+| Home services calls that go unanswered | **14%** | CallRail, same benchmark |
 | Typical minor appliance repair | **$206** | Thumbtack, 2026 |
 | Typical emergency plumbing call | **$377** | Thumbtack, 2026 |
 | US plumbing, HVAC and electrical contractors with no employees | **362,219**, up 10% since 2019 | US Census Bureau, Nonemployer Statistics 2023 |
 
-Five missed calls a week, one in three booked at $206, is about **$1,490 a month** of work that would have gone to the next name on the search page. One booked job pays for five months of AfterBeep. Sources, assumptions and the full model: [docs/business.md](docs/business.md).
+**Payback, with the assumptions labelled.** Five missed calls a week is about 22 a month. Plain voicemail keeps 31% of them as messages. *Assume* a greeting that promises a text keeps half, and *assume* one in three of those callers books at Thumbtack's typical $206: that is about **$740 a month** of booked work, or **18 times** the $39 price. One booked job pays for five months. The landing page lets you move both assumptions.
+
+**Revenue at stake.** 362,219 solo building-equipment contractors at $468 a year is about **$170M a year**, before the 158,019 solo household repair shops (about $74M more) and the 1.93 million solo specialty trade contractors in NAICS 238 (about $900M) that miss calls the same way. The near-term goal is 1% of the first group: about $1.7M a year. Sources, assumptions and the full model: [docs/business.md](docs/business.md).
 
 ## Business
 
 - **Price:** $39 a month, flat, 14-day free trial, no per-call or per-invoice fees.
 - **Cost to serve on AWS:** about **$0.074 per call** (Connect, Transcribe, Bedrock Nova Lite, a two-segment text back and a confirmation) plus $3.90 a month for the number and 10DLC registration. Gross margin is **80% at 50 calls a month** and **52% at 200**. Texts are two-thirds of the cost, so shorter texts are the main lever.
-- **Market:** 1% of the solo building-equipment contractors alone is about $1.7 million a year.
+- **Market:** about $170M a year across solo plumbing, HVAC and electrical contractors at $39 a month; 1% of them is about $1.7M a year.
 - **Go to market:** no new number (conditional call forwarding on the phone they already carry), supply-house counter cards with a "call this and leave a message" QR code, trade forums, and a free month per referral.
 
 ## Why not iPhone Live Voicemail, Google Voice, Jobber, Podium or Smith.ai?

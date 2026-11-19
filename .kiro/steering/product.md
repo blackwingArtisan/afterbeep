@@ -28,10 +28,12 @@ Solo tradespeople and two-person shops: plumbers, roofers, HVAC techs, appliance
 - Every screen must work one-handed on a phone.
 
 ## What a missed call costs (cited; full table and sources in docs/business.md)
-- 69% of callers who reach voicemail hang up without leaving a message (Moneypenny, call data from 10,000 businesses, 2016).
+- 69% of callers who reach voicemail hang up without leaving a message (Moneypenny, call data from 10,000 businesses, 2016). This is the pitch: plain voicemail loses 69% of callers; AfterBeep's greeting promises a text with open times in seconds, so callers have a reason to stay.
+- Up to 85% of customers whose calls go unanswered will not call back; home services businesses miss 14% of calls (CallRail small business benchmark, 1.1 million leads, Jan 2025).
 - Most people pay $206 for a minor appliance repair and $377 for emergency plumbing (Thumbtack cost guides, 2026).
 - 362,219 US plumbing, HVAC and electrical contractors have no employees, with average receipts of $69,368 (Census Nonemployer Statistics 2023, NAICS 2382).
-- Payback: 5 missed calls a week, 1 in 3 booked at $206 is about $1,490 a month. One job pays for five months. (The 5 a week and 1 in 3 are assumptions.)
+- Payback: 5 missed calls a week (22 a month); half leave a message when the greeting promises a text; 1 in 3 of those book at $206. That is about $740 a month, 18 times the price. One job pays for five months. (The 5 a week, the 50% and the 1 in 3 are assumptions; plain voicemail keeps 31%.)
+- Revenue at stake: 362,219 solo building-equipment contractors × $468 a year is about $170M a year; 1% is about $1.7M.
 
 Use only these cited figures in copy. Never invent a statistic, a customer or a testimonial.
 

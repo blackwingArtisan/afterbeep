@@ -13,6 +13,16 @@ test('[MC 6.2] landing page sells the product and opens the machine', async ({ p
   await expect(page.getByTestId('cassette').filter({ hasText: 'Priya Natarajan' })).toContainText('88 Hollow Pine Road');
 });
 
+test('the payback estimate shows its assumptions and moves with them', async ({ page }) => {
+  await page.goto('/');
+  const payback = page.getByTestId('payback');
+  await expect(payback).toContainText('assumption');
+  await expect(payback.getByTestId('payback-month')).toContainText('$740');
+  await expect(payback.getByTestId('payback-times')).toContainText('18×');
+  await payback.getByLabel(/Calls you miss a week/).fill('10');
+  await expect(payback.getByTestId('payback-month')).toContainText('$1,490');
+});
+
 test('theme toggle switches between graveyard shift and daylight', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');

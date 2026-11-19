@@ -58,3 +58,8 @@ export function formatPhone(phone: string): string {
   const d = phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
   return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : phone;
 }
+
+/** Whole dollars with thousands separators: 74000 cents is "$740". */
+export function dollars(cents: number): string {
+  return `$${Math.round(cents / 100).toLocaleString('en-US')}`;
+}

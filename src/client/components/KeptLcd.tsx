@@ -1,8 +1,5 @@
 import type { KeptStats } from '../../domain/kept';
-
-function dollars(cents: number): string {
-  return `$${Math.round(cents / 100).toLocaleString('en-US')}`;
-}
+import { dollars } from '../lib/format';
 
 /** The "Kept this week" readout: what the machine saved the owner over the last seven days. */
 export function KeptLcd({ kept }: { kept: KeptStats | null }) {

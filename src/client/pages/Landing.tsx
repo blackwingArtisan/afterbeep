@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Brand } from '../components/Brand';
 import { Device } from '../components/Device';
+import { Payback } from '../components/Payback';
 import { AlertIcon, ArrowIcon, CheckIcon, MicIcon, PhoneIcon, ReceiptIcon } from '../components/Icons';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useTitle } from '../lib/machine';
@@ -33,9 +34,15 @@ const STEPS = [
 const STAKES = [
   {
     big: '69%',
-    line: 'of callers who reach voicemail hang up without leaving a message.',
-    source: 'Moneypenny call data, 10,000 businesses',
+    line: 'of callers hang up on plain voicemail without leaving a word. AfterBeep\'s greeting promises a text with open times in seconds, so callers have a reason to stay.',
+    source: 'Moneypenny call data, 10,000 businesses, 2016',
     href: 'https://moneypenny.com/us/resources/news/small-business-call-report/',
+  },
+  {
+    big: '85%',
+    line: 'Up to this share of customers whose calls go unanswered will not call back, in a US benchmark of 1.1 million leads. A text back is the second chance.',
+    source: 'CallRail small business benchmark, 2025',
+    href: 'https://www.plumbermag.com/online_exclusives/2025/01/callrail-releases-report-analyzing-which-marketing-efforts-best-convert-leads-into-business',
   },
   {
     big: '$206',
@@ -45,7 +52,7 @@ const STAKES = [
   },
   {
     big: '362,219',
-    line: 'plumbing, HVAC and electrical contractors in the US work with no employees. Nobody else picks up.',
+    line: 'plumbing, HVAC and electrical contractors in the US work with no employees. Nobody else picks up. At $39 a month that is about $170M a year in front-office work.',
     source: 'US Census Nonemployer Statistics 2023',
     href: 'https://www.census.gov/programs-surveys/nonemployer-statistics.html',
   },
@@ -141,9 +148,10 @@ export default function Landing() {
           ))}
         </div>
         <p className="stakes-payback">
-          Miss five calls a week and book one in three of them at $206: about <strong>$1,490 a month</strong> that would have gone to the
-          next name on the search page. One job pays for five months of AfterBeep.
+          Up to 85% of the callers you miss never try again, so the minutes after the beep decide the job. Move the two numbers we cannot
+          cite and see what a text back is worth to you.
         </p>
+        <Payback />
       </section>
 
       <section className="why wrap" aria-label="Why now">
