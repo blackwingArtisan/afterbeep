@@ -43,7 +43,9 @@ src/
     components/        cassette, message light, tape deck, etc.
     styles/            tokens.css and global styles
 infra/template.yaml    SAM template for the real phone path (validated in CI)
-infra/connect/         Amazon Connect contact flow, remote-retrieval-flow.json (keypad flow, not deployed), hand-off Lambda and wiring notes
+infra/connect/         Amazon Connect contact flow (checks the owner's caller ID first, then voicemail), remote-retrieval-flow.json (keypad flow),
+                       remote-turn.ts (the turn Lambda that runs one turn of the call script; written and tested with mocks, not deployed),
+                       hand-off Lambdas and wiring notes. The owner calls the business number and keys the 3-digit code; no second number
 tests/
   unit/                Vitest
   e2e/                 Playwright

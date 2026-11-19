@@ -3,7 +3,7 @@
 ## Introduction
 Old answering machines let the owner call in from anywhere, key in a remote code and hear the messages. AfterBeep brings that back. The owner calls their own AfterBeep number from the truck, enters a 3-digit remote code, hears each new message, texts a caller the booking link, erases a message or skips to the next one with the keypad, and then says an invoice out loud. The spoken invoice becomes a draft in the existing voice-invoicing flow. Nothing is sent without the owner's approval of the exact total. This spec covers the call script (a pure state machine), the remote code and its lockout, the keypad simulation at `/machine/remote`, and the Amazon Connect keypad flow. It reuses texting and message status from the missed-call-booking spec (MC) and the draft and send gate from the voice-invoicing spec (VI).
 
-Out of scope: deploying the Connect flow, the Lambda that drives the state machine from the phone, and saving drafts on the server so a phone call can leave one behind. The Connect flow is written and checked by a test, not deployed.
+Out of scope: deploying the Connect flows and the Lambda, and saving drafts on the server so a phone call can leave one behind. The Connect flow is written and checked by a test, not deployed. Requirements 14 to 16 extend this spec with the turn Lambda that drives the state machine from the phone and the way a real call reaches the remote flow; the Lambda is written and tested with mocks, not deployed.
 
 ## Glossary
 - **Remote code**: the 3-digit code the owner keys in to reach their messages. It is 427 in the demo business.
@@ -149,3 +149,66 @@ Out of scope: deploying the Connect flow, the Lambda that drives the state machi
 13.4 THE SYSTEM SHALL give every keypad input in that flow a no-matching-error transition, a timeout transition and a no-matching-condition transition where conditions are used.
 13.5 THE SYSTEM SHALL keep the remote code out of that flow; the flow passes the keyed digits to a Lambda function that answers with the next prompt.
 13.6 THE SYSTEM SHALL state in `infra/connect/README.md` that the flow is written and checked but not deployed.
+
+## Extension: the phone path
+Requirements 14 to 16 were added after requirements 1 to 13. They cover the Lambda function that the remote retrieval flow calls on every turn, and how a real call reaches that flow. Two decisions by the owner apply to all three:
+- The owner reaches the remote menu by calling the business's own AfterBeep number from the owner's own phone. When the caller ID matches the owner's number, the voicemail flow hands the call to the remote retrieval flow, which asks for the 3-digit code. Every other caller gets the voicemail flow as before. There is no second number.
+- Caller ID only routes the call. It can be faked, so the 3-digit code stays the only gate, with the lockout from requirement 2.
+
+Extra glossary:
+- **Turn**: one call from the Connect flow to the Lambda, caused by one key press, one silence or one keyed code.
+- **Turn Lambda**: `infra/connect/remote-turn.ts`, the function that runs one turn of the call script.
+- **Saved state**: the call state the Lambda hands back and the flow stores as the contact attribute `remoteState`, so the next turn can pass it back.
+
+## Requirement 14: The turn Lambda
+**User story:** As a maintainer, I want one small function that runs the shared call script for each phone turn, so that the phone and the browser keypad behave the same.
+
+14.1 THE SYSTEM SHALL provide the turn Lambda as `infra/connect/remote-turn.ts`, export `handler` from it, and compute every turn with `step` and `startState` from `src/domain/remote-retrieval.ts`, with no second copy of the call script.
+14.2 WHEN Amazon Connect invokes the Lambda THE SYSTEM SHALL read the turn name (`code`, `key`, `silence` or `invoice`), the key and the keyed digits from `Details.Parameters`, and the saved state from `Details.ContactData.Attributes.remoteState`, and SHALL validate all of them with a schema.
+14.3 WHEN the turn is `code` and no state is saved THE SYSTEM SHALL start a call from `startState`, answer it, drop the opening prompt because the flow already spoke it, and then feed the keyed digits.
+14.4 WHEN the keyed digits are not exactly three digits `0`-`9`, including the value `Timeout` that Store customer input leaves after no input, THE SYSTEM SHALL feed a silence event instead of key events.
+14.5 WHEN the turn is `key` THE SYSTEM SHALL feed that key, and SHALL feed the key `other` as `0` once the code is accepted and as `#` while the code is asked, so that `other` never adds a code digit and never skips a message.
+14.6 WHEN the turn is `silence` THE SYSTEM SHALL feed a silence event to the saved state.
+14.7 THE SYSTEM SHALL answer every turn with the new state as `state`, encoded as base64url JSON that uses only letters, digits, `-` and `_`, for the flow to store as the contact attribute `remoteState`.
+14.8 THE SYSTEM SHALL put in `state` only the phase, the counters, the index, the pending flag and, for each queued message, its id, urgency and whether it can be texted; it SHALL NOT put in it a transcript, caller name, job, keyed digit, the remote code or the webhook secret.
+14.9 IF the encoded state is longer than 16,000 characters THEN THE SYSTEM SHALL treat the turn as a failure (14.22), so the contact's attributes stay well under the 32 KB limit.
+14.10 WHEN the saved state is in the message, confirm-erase or ask-invoice phase THE SYSTEM SHALL read `GET /api/messages` and rebuild each queued message with the same mapping that `remoteQueue` uses, drop ids that were erased since the code was accepted, and keep the index on the same message.
+14.11 IF the current message is no longer on the server THEN THE SYSTEM SHALL treat the turn as a failure (14.22).
+14.12 THE SYSTEM SHALL send every server request to the address in `AFTERBEEP_URL` with `Authorization: Bearer` and the value of `AFTERBEEP_WEBHOOK_SECRET`, and SHALL validate every server response with a schema.
+14.13 WHEN the script emits `verify-code` THE SYSTEM SHALL post the code to `/api/remote/code`, feed the answer back as `code-checked`, and keep the code out of the saved state and out of every log.
+14.14 WHEN the script emits `play-message` THE SYSTEM SHALL speak that message's transcript first and then the step's prompts, so that "play" on a phone means the caller's words read aloud by the machine.
+14.15 WHEN the script emits `mark-heard` THE SYSTEM SHALL post `heard` to the existing `/api/messages/:id/status` route only if the message is still `new` in the list it just read, and a failure of that post SHALL NOT end the call.
+14.16 WHEN the script emits `text-booking-link` THE SYSTEM SHALL post to `/api/remote/messages/:id/text` and feed the outcome back as `text-result`, and IF the request fails THEN THE SYSTEM SHALL feed `effect-failed`.
+14.17 WHEN the script emits `erase-message` THE SYSTEM SHALL post to `/api/remote/messages/:id/erase`, SHALL count a not-found answer as already erased, and IF any other failure happens THEN THE SYSTEM SHALL feed `effect-failed`.
+14.18 THE SYSTEM SHALL answer with flat strings `prompt`, `next` and `state`, and `next` SHALL be `code` while the code is asked, `menu` on a message or an erase question, and `goodbye` once the call has ended or must end.
+14.19 THE SYSTEM SHALL join the spoken text of a turn into `prompt`, keep only letters, digits, spaces and the marks `. , ? ! ' -` in it, and cut it at a word boundary at 2,500 characters, below the 3,000 billed characters that one text-to-speech prompt allows.
+14.20 WHEN the call reaches the invoice step on a phone THE SYSTEM SHALL say that invoices by phone are not ready and to use the app, feed `invoice-heard` with no words so that no draft is made, answer `next` as `goodbye`, and SHALL NOT say the prompt that asks for an invoice.
+14.21 THE SYSTEM SHALL finish a turn within a budget of 5 seconds, abort any server request still running at that point, and so answer inside the 8 seconds that a synchronous Lambda call from a flow allows.
+14.22 IF anything fails in a turn, including a bad event, bad saved state, an oversize state, a server that is down, a timeout or a bad server answer, THEN THE SYSTEM SHALL answer "Something went wrong. Goodbye." with `next` `goodbye` and an ended state, and SHALL NOT throw.
+14.23 THE SYSTEM SHALL write no keyed digit, transcript, caller name, job, secret or encoded state to any log; a log line SHALL name only the turn, the phase and the kind of failure.
+14.24 THE SYSTEM SHALL carry out each effect once per turn and run at most six script steps in a turn.
+14.25 THE SYSTEM SHALL keep every prompt that the Lambda adds itself under 30 words, with no human name and no claim to be a person.
+14.26 THE SYSTEM SHALL be safe to run twice for one key press, because Connect retries a failed synchronous call up to three times: a repeated text is stopped by the 10-minute rule (5.4) and a repeated erase counts as done (14.17).
+
+## Requirement 15: The way in
+**User story:** As an owner, I want to call my own number and reach my messages, so that I do not need a second phone number.
+
+15.1 THE SYSTEM SHALL let the owner reach the remote menu by calling the business's own AfterBeep number from the owner's own phone, and SHALL NOT need a second number.
+15.2 WHEN a call starts in the voicemail flow THE SYSTEM SHALL compare the caller's number with the owner's number before it saves the caller or starts recording, and WHEN they are equal THE SYSTEM SHALL transfer the call to the remote retrieval flow.
+15.3 IF the caller's number is different, withheld, or the comparison or the transfer fails THEN THE SYSTEM SHALL carry on in the voicemail flow with every existing action unchanged.
+15.4 THE SYSTEM SHALL keep the owner's number and the remote flow's identifier out of every tracked file, using the placeholders `REPLACE_WITH_OWNER_NUMBER` and `REPLACE_WITH_REMOTE_FLOW_ID`.
+15.5 THE SYSTEM SHALL use caller ID only to route the call, and neither the Lambda nor the server SHALL use it to accept, skip or relax the code check or the lockout (2.4).
+15.6 WHEN a call is transferred to the remote flow THE SYSTEM SHALL NOT record it and SHALL NOT post it to the voicemail webhook.
+15.7 THE SYSTEM SHALL state in `infra/connect/README.md` that the remote flow must be an inbound flow, because the Transfer to flow action is available only in inbound and transfer flows.
+
+## Requirement 16: Flow changes and the record of the decision
+**User story:** As a maintainer, I want the flow changes and the decision written down and checked, so that wiring a real number is a matter of filling in placeholders.
+
+16.1 THE SYSTEM SHALL send every turn action in the remote flow to a `save-state` action that stores `$.External.state` as the contact attribute `remoteState`, and then to the `route` action.
+16.2 IF `save-state` fails THEN THE SYSTEM SHALL go to the `went-wrong` message and hang up.
+16.3 WHEN the Lambda answers `next` as `code` THE SYSTEM SHALL ask for the code again with `$.External.prompt` as the text, using stored input of at most three digits, the time limits of 13.2 and the error transitions of 13.4, and SHALL send the digits to the code turn.
+16.4 THE SYSTEM SHALL read `*` on the menu with its own Equals condition and send the key `*` in its own turn, so that `*` repeats the announcement (3.7) on a phone.
+16.5 THE SYSTEM SHALL keep requirements 13.1 to 13.5 true for the changed flow, and the remote code SHALL appear in neither flow file.
+16.6 THE SYSTEM SHALL record in `infra/connect/README.md` the decision that the owner is recognised by caller ID plus the 3-digit code, with no second number, and that caller ID only routes the call.
+16.7 THE SYSTEM SHALL say in `infra/connect/README.md` that the turn Lambda is written and tested with mocks but not deployed, that neither flow has been imported into a Connect instance, and which placeholders to fill in.
+16.8 THE SYSTEM SHALL keep every new file in `infra/connect/` free of secrets and phone numbers; the Lambda reads its settings from the environment.

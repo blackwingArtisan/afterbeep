@@ -3,6 +3,7 @@ import {
   remoteQueue,
   startState,
   step,
+  toRemoteMessage,
   type Key,
   type RemoteEffect,
   type RemoteEvent,
@@ -111,6 +112,21 @@ describe('queue and prompts', () => {
     noNumber.extraction.callbackNumber = null;
     expect(remoteQueue([noNumber])[0]?.canText).toBe(false);
     expect(remoteQueue([source('y', 'routine', '2026-11-10T08:00:00Z')])[0]?.canText).toBe(true);
+  });
+
+  it('[RR 14.10] toRemoteMessage returns what remoteQueue returned for the same message', () => {
+    const m = source('t', 'soon', '2026-11-10T08:00:00Z', {}, '  Priya Shah ');
+    expect(remoteQueue([m])).toEqual([toRemoteMessage(m)]);
+    expect(toRemoteMessage(m)).toEqual({
+      id: 't',
+      urgency: 'soon',
+      callerName: 'Priya Shah',
+      job: 'job t',
+      transcript: 'transcript of t',
+      canText: true,
+    });
+    const anon = source('u', 'routine', '2026-11-10T08:00:00Z', {}, null);
+    expect(toRemoteMessage(anon).callerName).toBeNull();
   });
 
   it('[RR 9.2] every prompt is under 30 words', () => {

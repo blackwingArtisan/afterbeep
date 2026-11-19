@@ -54,6 +54,25 @@
         }
       },
       "Transitions": {
+        "NextAction": "save-state",
+        "Errors": [
+          {
+            "NextAction": "went-wrong",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "save-state",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "Attributes": {
+          "remoteState": "$.External.state"
+        },
+        "TargetContact": "Current"
+      },
+      "Transitions": {
         "NextAction": "route",
         "Errors": [
           {
@@ -72,6 +91,15 @@
       "Transitions": {
         "NextAction": "goodbye",
         "Conditions": [
+          {
+            "NextAction": "ask-code-again",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "code"
+              ]
+            }
+          },
           {
             "NextAction": "menu",
             "Condition": {
@@ -104,6 +132,36 @@
           {
             "NextAction": "goodbye",
             "ErrorType": "NoMatchingCondition"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "ask-code-again",
+      "Type": "GetParticipantInput",
+      "Parameters": {
+        "Text": "$.External.prompt",
+        "InputTimeLimitSeconds": "10",
+        "StoreInput": "True",
+        "InputValidation": {
+          "CustomValidation": {
+            "MaximumLength": "3"
+          }
+        },
+        "DTMFConfiguration": {
+          "InterdigitTimeLimitSeconds": "5"
+        }
+      },
+      "Transitions": {
+        "NextAction": "turn-code",
+        "Errors": [
+          {
+            "NextAction": "turn-silence",
+            "ErrorType": "InputTimeLimitExceeded"
+          },
+          {
+            "NextAction": "turn-other",
+            "ErrorType": "NoMatchingError"
           }
         ]
       }
@@ -154,6 +212,15 @@
                 "#"
               ]
             }
+          },
+          {
+            "NextAction": "turn-star",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "*"
+              ]
+            }
           }
         ],
         "Errors": [
@@ -190,7 +257,7 @@
         }
       },
       "Transitions": {
-        "NextAction": "route",
+        "NextAction": "save-state",
         "Errors": [
           {
             "NextAction": "went-wrong",
@@ -217,7 +284,7 @@
         }
       },
       "Transitions": {
-        "NextAction": "route",
+        "NextAction": "save-state",
         "Errors": [
           {
             "NextAction": "went-wrong",
@@ -244,7 +311,7 @@
         }
       },
       "Transitions": {
-        "NextAction": "route",
+        "NextAction": "save-state",
         "Errors": [
           {
             "NextAction": "went-wrong",
@@ -271,7 +338,7 @@
         }
       },
       "Transitions": {
-        "NextAction": "route",
+        "NextAction": "save-state",
         "Errors": [
           {
             "NextAction": "went-wrong",
@@ -297,7 +364,7 @@
         }
       },
       "Transitions": {
-        "NextAction": "route",
+        "NextAction": "save-state",
         "Errors": [
           {
             "NextAction": "went-wrong",
@@ -324,7 +391,34 @@
         }
       },
       "Transitions": {
-        "NextAction": "route",
+        "NextAction": "save-state",
+        "Errors": [
+          {
+            "NextAction": "went-wrong",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "turn-star",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN",
+        "InvocationTimeLimitSeconds": "8",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "step": "key",
+          "key": "*",
+          "caller": "$.CustomerEndpoint.Address",
+          "contactId": "$.ContactId"
+        },
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
+      },
+      "Transitions": {
+        "NextAction": "save-state",
         "Errors": [
           {
             "NextAction": "went-wrong",
@@ -406,7 +500,7 @@
         }
       },
       "Transitions": {
-        "NextAction": "route",
+        "NextAction": "save-state",
         "Errors": [
           {
             "NextAction": "went-wrong",

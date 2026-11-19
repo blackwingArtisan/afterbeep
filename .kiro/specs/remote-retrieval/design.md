@@ -29,6 +29,21 @@ Looked up with the `aws-docs` MCP server before writing this design. Only what t
 
 The `aws-docs` server was not reachable in the session that wrote the flow (task 21), so the Compare and MessageParticipant pages were read from their Markdown versions on docs.aws.amazon.com. The same pages are what the server serves. The `$.StoredCustomerInput` path for stored digits comes from the Store customer input page above and is the one point the parse test cannot check.
 
+### Added for the turn Lambda and the way in (requirements 14 to 16)
+Looked up with the `aws-docs` MCP server (`read_documentation` and `search_documentation`) before writing the sections below.
+
+| Page | What it gave this design |
+|---|---|
+| [Grant Connect access to your Lambda functions](https://docs.aws.amazon.com/connect/latest/adminguide/connect-lambda-functions.html) | The event a flow sends: `Details.ContactData` (with `Attributes`, `ContactId`, `CustomerEndpoint.Address`, `InitiationMethod` and more) and `Details.Parameters` (the invocation attributes the flow set), plus `Name`. The answer is a STRING_MAP (a flat object of string pairs) or JSON, chosen in the flow; it must be under 64 KB of UTF-8, and the page says values may include "only alphanumeric, dash, and underscore characters", although its own example returns `"$1000"` (see Open questions). A flow that cannot reach Lambda, gets an exception, an answer it does not understand or a timeout takes the Error branch. A failed synchronous call is retried up to three times within 8 seconds. A sequence of Lambda calls with no prompt between them is limited to 20 seconds. `$.External.<key>` always holds the answer of the latest call, so a value needed later must be stored as an attribute or passed as a parameter. Used in 14.2, 14.7, 14.18, 14.21 and 14.26. |
+| [Flow block: AWS Lambda function](https://docs.aws.amazon.com/connect/latest/adminguide/invoke-lambda-function-block.html) | Synchronous timeout up to 8 seconds, asynchronous up to 60; STRING_MAP is a flat object of string pairs. Used in 14.21. |
+| [InvokeLambdaFunction (flow language)](https://docs.aws.amazon.com/connect/latest/devguide/interactions-invokelambdafunction.html) | Re-read for this extension: `InvocationTimeLimitSeconds` is an integer from 1 to 8, `LambdaInvocationAttributes` may be static or dynamic, the answer lands under `$.External`, and `NoMatchingError` is the only error. Used in 14.2 and 16.1. |
+| [Flow block: Set contact attributes](https://docs.aws.amazon.com/connect/latest/adminguide/set-contact-attributes.html) | Contact attributes may total 32 KB, and above that the contact takes the Error branch. Attributes set on the current contact reach later Lambdas, other flows and the contact record. Flow attributes (64 KB) and persisted flow attributes (128 KB, Amazon Connect Customer instances only) are kept out of the contact record but reach a Lambda only if passed as a parameter. Attribute keys must not contain `$` or `.`. Used in 14.8, 14.9 and 16.1. |
+| [UpdateContactAttributes (flow language)](https://docs.aws.amazon.com/connect/latest/devguide/contact-actions-updatecontactattributes.html) | `Attributes` keys and values may be static or dynamic, `TargetContact` is `Current` or `Related`, all attributes are set or none, no conditions, `NoMatchingError` is the only error. The existing voicemail flow already uses it. Used in 16.1 and 16.2. |
+| [TransferToFlow (flow language)](https://docs.aws.amazon.com/connect/latest/devguide/flow-control-actions-transfertoflow.html) | `ContactFlowId` must be fully static or a single JSONPath; execution jumps to the start of the other flow; no conditions; `NoMatchingError` is the only error; available in inbound and transfer flows only. Used in 15.2, 15.3 and 15.7. |
+| [Flow block: Check contact attributes](https://docs.aws.amazon.com/connect/latest/adminguide/check-contact-attributes.html), with [Compare (flow language)](https://docs.aws.amazon.com/connect/latest/devguide/flow-control-actions-compare.html) | A flow compares a value with an Equals condition (also Starts With, Contains and others); matching is case-sensitive; `NoMatchingCondition` is the only error. Used in 15.2 and 15.3. |
+| [List of contact attributes](https://docs.aws.amazon.com/connect/latest/adminguide/connect-attrib-list.html) | The caller's number is the system attribute "Customer address or number", `$.CustomerEndpoint.Address`, and in a Lambda it arrives as `CustomerEndpoint`. The table gives no number format. The Lambda page's sample event shows `"+1234567890"`, and the search result for E.164 relates to dialing; neither says an inbound Address is always E.164 (see Open questions). Used in 15.2. |
+| Search result for [Play prompt](https://docs.aws.amazon.com/connect/latest/adminguide/play.html) | The summary says text-to-speech takes 3,000 billed characters (6,000 total). Only the search summary was read, not the page. Used in 14.19. |
+
 ## Components
 | Component | File | Responsibility |
 |---|---|---|
@@ -200,7 +215,7 @@ goodbye              MessageParticipant { Text: $.External.prompt } ─► Disco
 - The flow contains no code and no list of messages. The Lambda keeps the `RemoteState` between turns and calls the three routes; it is not written here (13.5).
 - Each `InvokeLambdaFunction` sets `InvocationTimeLimitSeconds` to 8 or less and `ResponseValidation.ResponseType` to `STRING_MAP`, so the Lambda answers with flat `prompt` and `next` strings.
 - Keys other than 1, 2, 9 and `#` land in the `NoMatchingCondition` error, which sends the key `other` to the script.
-- Entry point: how the owner reaches this flow instead of the voicemail flow (a second number, or a key pressed during the greeting) is not decided here; `infra/connect/README.md` lists both options and says nothing is deployed (13.6).
+- Entry point: how the owner reaches this flow is decided in "The phone path" below (caller ID routes, the code gates, no second number; requirements 15 and 16). `infra/connect/README.md` says nothing is deployed (13.6, 16.7).
 - The test `tests/unit/connect-remote-flow.test.ts` parses the file and checks: `Version`, `StartAction`, unique `Identifier`s, every `NextAction` target exists, the code input has `StoreInput: "True"` and `MaximumLength: "3"`, the menu has one `Equals` condition each for 1, 2, 9 and `#`, every `GetParticipantInput` has a `NoMatchingError` transition, and the text `427` appears nowhere in the file (13.1 to 13.5).
 
 ## Security and honesty
@@ -218,7 +233,163 @@ goodbye              MessageParticipant { Text: $.External.prompt } ─► Disco
 - **End to end, `tests/e2e/remote.spec.ts`:** open `/machine/remote` from the navigation, key 4-2-7 on the keypad, read "You have N new messages", press 1, 2 and `#`, check the outbox for the booking text and the message status, erase one with 9 9, reach the invoice prompt, type the slip script, open the draft and see it on hold with nothing sent.
 - **Coverage:** `scripts/spec-coverage.ts` adds the prefix `RR` for the `remote-retrieval` spec. No RR criterion is listed as checked elsewhere; the Connect flow is checked by its parse test.
 
+## The phone path
+This section covers requirements 14 to 16. The pure `step` stays the only call script; the phone adds a driver (the turn Lambda) and two flow changes.
+
+```
+owner's phone ─► AfterBeep number ─► voicemail flow
+  check-owner  Compare $.CustomerEndpoint.Address  Equals REPLACE_WITH_OWNER_NUMBER
+    ├─ equal ─► to-remote  TransferToFlow REPLACE_WITH_REMOTE_FLOW_ID ─► remote retrieval flow
+    └─ anything else, or an error ─► save-caller ─► record ─► greeting ─► ... (unchanged)
+
+remote retrieval flow, one turn:
+  ask-code / menu / ask-code-again ─► turn-* (InvokeLambdaFunction, STRING_MAP, 8 s)
+     ─► save-state (UpdateContactAttributes: remoteState = $.External.state)
+     ─► route (Compare $.External.next): code | menu | invoice | goodbye
+```
+
+### Components added
+| Component | File | Responsibility |
+|---|---|---|
+| Message mapping | `src/domain/remote-retrieval.ts` | `toRemoteMessage(message)`, pulled out of `remoteQueue` so the Lambda and the queue use one mapping (14.10) |
+| Turn Lambda | `infra/connect/remote-turn.ts` | `handler`, built by `createHandler({ fetch, env, now })` so tests can inject a fake `fetch` |
+| Voicemail flow | `infra/connect/contact-flow.json` | New first action `check-owner`, then `to-remote` |
+| Remote flow | `infra/connect/remote-retrieval-flow.json` | `save-state`, the `code` branch, the `*` key |
+| Tests | `tests/unit/connect-remote-turn.test.ts`, `tests/unit/connect-voicemail-flow.test.ts`, additions to `tests/unit/connect-remote-flow.test.ts` | Mocked `fetch` and sample Connect events; flow parse tests |
+
+### The event and the answer
+The Lambda reads this from the event, validated with zod (14.2):
+```ts
+{ Details: {
+    ContactData: { ContactId: string; Attributes?: Record<string, string> },   // Attributes.remoteState
+    Parameters: { step: 'code' | 'key' | 'silence' | 'invoice'; key?: string; digits?: string; caller?: string; contactId?: string }
+  } }
+```
+It answers a flat string map (14.18):
+```ts
+{ prompt: string; next: 'code' | 'menu' | 'invoice' | 'goodbye'; state: string }
+```
+`next` is `invoice` only for a future driver that can take a recorded invoice; the Lambda does not answer it today (14.20). The flow already routes on it, so no flow change is needed later for that branch.
+
+### Carrying the state between turns
+Lambda is stateless and Connect gives a flow no per-call memory of its own, so the state travels in the contact:
+1. The Lambda answers `state`.
+2. The flow's `save-state` action copies `$.External.state` into the user-defined contact attribute `remoteState` (16.1). It must run before the next Lambda call, because `$.External` is overwritten by each call.
+3. On the next turn Connect sends every user-defined attribute in `Details.ContactData.Attributes`, so the Lambda reads `remoteState` back with no extra parameter and no AWS SDK call (14.2).
+
+Why this and not the alternatives:
+- **Lambda calls `UpdateContactAttributes` through the Connect API.** Needs the AWS SDK, IAM permission and one more network call inside the 8 seconds. The flow action does the same job for free.
+- **Persisted flow attributes.** They keep data out of the contact record, which is attractive, but the page says they exist only in Amazon Connect Customer instances and reach a Lambda only if passed as a parameter, and the flow-language action that sets them was not looked up. Attributes are documented for every instance. Revisit if the contact record turns out to matter (see Open questions).
+- **A session store (DynamoDB or the AfterBeep server).** Works, but adds a store and cleanup rules for a call that lasts a few minutes. Not needed while the state is small.
+
+Limits and what they mean here:
+| Limit | Source | What the design does |
+|---|---|---|
+| Lambda answer under 64 KB | Lambda guide | The answer is a few thousand characters at most (14.9, 14.19) |
+| All attributes of a contact total 32 KB, else the Error branch | Set contact attributes page | The Lambda refuses a state over 16,000 characters, half of that, to leave room for `afterbeepCaller` and the rest (14.9). My estimate: about 60 characters per queued message, so 100 messages is about 6,000 characters. The id format was not checked |
+| Synchronous call at most 8 seconds, retried up to 3 times within that | Lambda guide, flow language | A 5-second budget per turn (14.21); effects safe to repeat (14.26) |
+| Text-to-speech 3,000 billed characters | Play prompt search summary | Spoken text cut at 2,500 characters (14.19) |
+| STRING_MAP values: letters, digits, `-`, `_` | Lambda guide | `state` uses exactly that alphabet (base64url, no padding); `prompt` is limited to a small set of plain marks (14.19). Whether `prompt` is accepted with spaces is an open question |
+
+Message data that must not leave the server stays out of the attribute (14.8). The attribute is a contact attribute, so it is part of the contact record. It holds only ids, urgency, a can-text flag, the phase and counters. Caller names, jobs and transcripts are fetched from the server on each turn (14.10) and spoken, never stored in Connect. The remote code is never stored at all: the digits arrive as a Lambda parameter, go to the server and are dropped. One thing outside this design's control: if flow logging is on for the remote flow, Connect writes attribute and parameter values to CloudWatch. The README says to leave flow logging off for that flow (16.7).
+
+An encoded state looks like `eyJwIjoibWVzc2FnZSIs...`: `{"v":1,"p":"message","w":0,"s":0,"i":1,"k":null,"q":[["id1","e",1],["id2","s",0]]}` in base64url. `businessName` is not stored; the opening prompt is the only prompt that uses it and the flow speaks that one (14.3).
+
+### One turn
+```
+turn(event)
+  1  read step, key, digits, saved state; validate (14.2)
+  2  state := saved state, or for step=code with none: startState('') then call-answered, prompts dropped (14.3)
+  3  if phase in message | confirm-erase | ask-invoice: GET /api/messages, rebuild queue, drop erased ids (14.10, 14.11)
+  4  events := digits -> keys (or silence) | key | silence | invoice-heard with no words (14.4 to 14.6, 14.20)
+  5  for each event, at most 6 steps (14.24):
+        r := step(state, event); collect r.prompts; state := r.state
+        for each effect in r.effects, once:  run it (table below); a result becomes the next event
+  6  answer { prompt: speakable(texts), next: nextFor(state), state: encode(state) }
+  any throw, timeout or bad answer anywhere above -> the failure answer (14.22)
+```
+`step` is called with the same state and event types as the browser, so a key sequence gives the same prompts on both drivers. A test runs one scripted call through `handler` and through `step` directly and compares the prompts (14.1).
+
+### Effects on a phone
+| Effect | What the Lambda does | Result fed back |
+|---|---|---|
+| `verify-code` | `POST /api/remote/code { code }` (14.13) | `code-checked` ok with messages, wrong, or locked; a failed request gives `effect-failed` |
+| `play-message` | Put the transcript at the front of the turn's spoken text (14.14) | none |
+| `mark-heard` | If the message is `new` in the list read in step 3, `POST /api/messages/:id/status { status: 'heard' }` (14.15) | none; a failure is ignored. This differs from the browser, which shows "something went wrong", because the transcript was already spoken and the message simply stays new |
+| `text-booking-link` | `POST /api/remote/messages/:id/text` (14.16) | `text-result` with the outcome, or `effect-failed` |
+| `erase-message` | `POST /api/remote/messages/:id/erase`; a 404 counts as done (14.17) | none, or `effect-failed` on any other failure |
+| `start-invoice` | Not carried out; see below | none |
+| `draft-invoice` | Never emitted on a phone today, because no words arrive | none |
+| `hang-up` | Nothing; the answer's `next` is `goodbye`, and the flow disconnects | none |
+
+Right after `verify-code` succeeds, the code is a local variable and nothing else (14.13). The lockout is the server's (2.4), so a Lambda that is called again by a retry or by a second call cannot get around it.
+
+Step 3 needs the list of messages in the turn's own memory, not in the state. `GET /api/messages` is the route the browser's mark-heard rule already uses, and the status route is the existing one (11.4), so the phone adds no new server route. The route sits outside `/api/remote/*`, so the bearer secret is sent but not required by it today.
+
+When a message was erased earlier in this same call, its id is no longer in the list. The Lambda drops it from the queue and moves the index so that it still points at the same message (14.10). If the message the index points at is gone, for example erased in the app during the call, the turn fails and the call ends politely (14.11). That is rare enough not to need a smarter recovery.
+
+### The prompt and the next branch
+The spoken text of a turn is the transcript (if `play-message` ran) followed by the step's prompts, joined with a space. Characters outside letters, digits, spaces and `. , ? ! ' -` are removed, because caller transcripts are untrusted text and the Lambda guide limits what a STRING_MAP value may hold (14.19).
+
+| Phase after the turn | `next` | Why |
+|---|---|---|
+| `ask-code` | `code` | Wrong code, silence or a failed check: ask again with the Lambda's prompt (16.3) |
+| `message`, `confirm-erase` | `menu` | The menu speaks `$.External.prompt` and reads one key |
+| `ended` | `goodbye` | The goodbye block speaks `$.External.prompt` and disconnects |
+| `ask-invoice` | `goodbye` after the phone rule below | Never leaves a call waiting for an invoice that cannot be taken |
+| `checking-code` | not reachable | `verify-code` is resolved inside the same turn |
+
+### The invoice step on a phone today
+Nothing on the phone side can turn the owner's speech into words yet: the flow has no transcription of what the owner says after the beep, and the existing draft route (`POST /api/invoices/draft`) returns a draft without saving it, so there is nowhere for a draft to wait for the app. So when the script reaches `ask-invoice` (after the last message, or at once when there are none), the Lambda does not say "After the beep, say your invoice." and does not start a recording. It feeds `invoice-heard` with no words and says "Invoices by phone are not ready. Use the app." The script's own `no-invoice` prompt ("No invoice heard.") is dropped for the phone, because it would mislead. The call ends with `next` `goodbye`, no draft is made and nothing is sent (14.20, 8.3). The invoice branch and the recording actions stay in the flow for the day a later spec adds transcription and stored drafts; they are unreachable until the Lambda answers `invoice`.
+
+### Failure
+Every turn runs inside one catch that returns the failure answer: "Something went wrong. Goodbye.", `next` `goodbye`, and an ended state (14.22). That covers a bad event, bad state, an oversize state, a server that is down, a timeout (each request is aborted when the 5-second budget runs out, 14.21), a response that fails its schema, and a bug. The flow has its own `went-wrong` message for the case where Connect itself cannot get an answer (the Error branch), so a Lambda that crashes outright still ends in a spoken apology. One distinction: a failed effect inside a working call (a text that did not go out, an erase that failed) is not a turn failure. The script handles it with `effect-failed` and says so, as in the browser (12.8, 14.16, 14.17).
+
+### Caller ID and security
+- The caller's number routes the call and nothing else (15.5). The Lambda ignores the `caller` parameter, and the server never sees it. A faked caller ID gets an attacker only to the code prompt, where the 5-wrong-codes lockout and the 3-tries-per-call limit apply as before (1.5, 1.6, 2.4). The lockout is per business, not per caller, so a faked ID does not reset it.
+- An owner whose number is withheld, or who calls from a different phone, gets the voicemail greeting. That is the safe failure: nothing about messages is revealed (1.8).
+- The transfer happens before `save-caller` and `record`, so a remote call is never recorded, never gets `afterbeepCaller`, and never reaches `recording-to-webhook.mjs` as a voicemail (15.6).
+- The webhook secret is read from `AFTERBEEP_WEBHOOK_SECRET`, sent as a bearer token, and logged nowhere (14.12, 14.23, 16.8). The Lambda writes no digit, transcript, name or job to a log (14.23).
+- The two placeholders keep the owner's number and the flow id out of git (15.4).
+- Nobody can reach the Lambda except Connect: the Connect console adds a resource permission for `connect.amazonaws.com` when the function is added to the instance (Lambda guide). Even so the Lambda trusts nothing in the event beyond its schema.
+
+### The voicemail flow change
+`contact-flow.json` gets a new `StartAction` `check-owner` (a `Compare` on `$.CustomerEndpoint.Address` with one `Equals` condition whose operand is `REPLACE_WITH_OWNER_NUMBER`) and a `to-remote` action (`TransferToFlow`, `ContactFlowId` `REPLACE_WITH_REMOTE_FLOW_ID`). The `Compare` default and its `NoMatchingCondition` error and the `to-remote` error all go to `save-caller`, so every path other than a match is today's flow (15.3). The existing actions are not edited. The comparison is exact and case-sensitive, so the owner's number is written the way Connect reports it, probably E.164 such as `+15555550100` (see Open questions). Sample numbers in any test use the 555-01xx range, and the tracked files never hold a real one (15.4, 16.8).
+
+### The remote flow change
+- Each of the nine turn actions (`turn-code`, `turn-1`, `turn-2`, `turn-9`, `turn-pound`, `turn-star`, `turn-silence`, `turn-other`, `turn-invoice`) goes to `save-state`, then `route` (16.1). `save-state` has an error transition to `went-wrong` (16.2).
+- `route` gets a fourth condition, `code`, that leads to `ask-code-again`: a `GetParticipantInput` with `Text` `$.External.prompt`, `StoreInput` `True`, a maximum of 3 digits, the 10-second limit, the 5-second inter-digit limit and the error transitions of 13.4, which then goes to `turn-code` (16.3). The original `ask-code` keeps its static opening prompt.
+- `menu` gets an `Equals` condition for `*` that goes to the new `turn-star` with the key `*` (16.4). Without it, `*` would fall into `NoMatchingCondition` and be sent as `other`, so the repeat key (3.7) would answer "That key does nothing here." on a phone.
+- The `invoice` branch, `say-invoice-prompt`, `record-invoice`, `listen-invoice` and `turn-invoice` stay as they are.
+- `tests/unit/connect-remote-flow.test.ts` keeps its checks (13.1 to 13.5, 16.5) and adds checks for 16.1 to 16.4.
+
+### Documentation
+`infra/connect/README.md` replaces "Two ways to reach it, not decided yet" with the decision: the owner calls the business's own number, the voicemail flow recognises the owner's number and transfers, the 3-digit code is the gate, no second number, caller ID only routes (16.6). It says the Lambda is written and tested with mocks but not deployed, and that neither flow has been imported (16.7). It lists the placeholders (`REPLACE_WITH_OWNER_NUMBER`, `REPLACE_WITH_REMOTE_FLOW_ID`, `REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN`), the Lambda's environment (`AFTERBEEP_URL`, `AFTERBEEP_WEBHOOK_SECRET`), that the remote flow must be an inbound flow (15.7), that the function must be added to the Connect instance, and that the Lambda is bundled with its import of `src/domain/remote-retrieval.ts` (the existing Lambdas are plain `.mjs` files and import nothing from `src`; a bundling step is needed, and `template.yaml` is not changed in this extension).
+
+### Testing strategy for the phone path
+- **Unit, `tests/unit/connect-remote-turn.test.ts`**, with a fake `fetch` that records requests and answers from a table, and sample Connect events built by a helper:
+  - 14.1: a scripted call through `handler` matches the prompts of `step` driven directly; the file imports from `src/domain/remote-retrieval` and defines no `phase` switch.
+  - 14.2 to 14.6: event parsing, the first code turn, `Timeout` and short digits, key `other` in both phases, silence.
+  - 14.7 to 14.9: the state alphabet, the content (a test that serializes the state and searches it for the transcript, caller name, job, code and secret), and the oversize failure.
+  - 14.10, 14.11: queue rebuild, an id erased earlier, the current id missing.
+  - 14.12 to 14.17: each effect's request (method, path, bearer header), a schema failure, mark-heard only for `new`, a not-found erase.
+  - 14.18, 14.19: answer shape, `next` for each phase, character filtering of a transcript with markup in it, the 2,500-character cut.
+  - 14.20: the invoice step says the phone rule, makes no request to the draft route and ends the call.
+  - 14.21, 14.22: a fetch that never answers is aborted and the failure answer comes back inside the budget (fake timers); a throwing fetch, a garbage state and a bad event each give the failure answer and nothing throws.
+  - 14.23: a spy on `console` sees no digit, transcript, secret or state.
+  - 14.24, 14.26: one request per effect; the same turn run twice gives a refused second text and a counted erase.
+  - 14.25: every prompt the Lambda adds is under 30 words and free of a name or a claim to be a person.
+- **Unit, `tests/unit/connect-voicemail-flow.test.ts`:** the voicemail flow parses, starts at `check-owner`, has one `Equals` condition with the placeholder, transfers with the second placeholder, sends every other path to `save-caller`, leaves the old actions as they were, and holds no phone number or flow id (15.2 to 15.4, 15.6, 16.8).
+- **Unit, additions to `tests/unit/connect-remote-flow.test.ts`:** 16.1 to 16.5.
+- **Unit, README test:** the README states the decision and the not-deployed status (15.5, 15.7, 16.6, 16.7).
+- **Server side of 15.5:** the Lambda test passes a `caller` that matches nothing and one that matches the owner and checks that the requests are identical; the existing lockout tests (2.4) cover the server.
+- **Not tested:** a real Connect instance, a real phone, flow logging and real caller-ID formats. The README says so.
+
 ## Open questions
-- How the owner reaches the remote flow on a real number (second number or a key during the greeting).
-- The phone path has no place to keep a draft invoice, because the existing draft route returns a draft without saving it. Making a phone call leave a draft behind needs a stored draft, which belongs in a later spec.
-- A 3-digit code is what the brief asks for. The lockout makes guessing slow but not impossible; the owner's choice of a longer code is a later setting.
+- **Which characters Connect accepts in a STRING_MAP value.** The Lambda guide says only alphanumeric, dash and underscore, but its example answer contains `$`, and `prompt` needs spaces and marks to be spoken. The design keeps `state` strictly inside that alphabet and `prompt` to plain marks. If Connect rejects `prompt` on a first real test, the fallback is `ResponseType` `JSON` with the same flat keys; the flow would change in one field per turn action.
+- **The caller number's format.** The docs show `+1234567890` in a sample event but do not say an inbound `CustomerEndpoint.Address` is always E.164. The owner's number in the placeholder must be written the way Connect reports it, which only a real call shows. Also unchecked: what number a carrier shows when a call has been forwarded; the design assumes the owner dials the number directly, not through their own forwarding.
+- **Where the state should live.** The attribute puts ids and counters in the contact record. If that is a concern, persisted flow attributes (not in the record, 128 KB, Amazon Connect Customer instances only) are the alternative once the flow-language action for them has been looked up.
+- **Flow logging.** With logging on, Connect writes attribute and parameter values, including the keyed digits, to CloudWatch. The README asks for it off on the remote flow; nothing enforces that.
+- **Taking a spoken invoice by phone.** It needs a transcript of what the owner says after the beep and a stored draft, because the existing draft route returns a draft without saving it. Neither exists, so the phone ends at "Invoices by phone are not ready" (14.20). Both belong in a later spec; this one does not try to answer them.
+- **A 3-digit code.** A 3-digit code is what the brief asks for. The lockout makes guessing slow but not impossible; the owner's choice of a longer code is a later setting.
+- **A phone call's invoice recording.** The remote flow still has recording actions on the invoice branch that nothing reaches today. If that branch is wired later, the recording needs a storage and retention decision.

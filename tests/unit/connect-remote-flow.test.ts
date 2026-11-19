@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { demoBusiness } from '../../src/server/seed';
 
@@ -52,8 +52,9 @@ describe('remote retrieval Connect flow', () => {
     const menu = flow.Actions.find((a) => a.Identifier === 'menu')!;
     expect(menu.Parameters.StoreInput).toBe('False');
     const conditions = menu.Transitions.Conditions ?? [];
-    expect(conditions.map((c) => c.Condition.Operator)).toEqual(['Equals', 'Equals', 'Equals', 'Equals']);
-    expect(conditions.map((c) => c.Condition.Operands)).toEqual([['1'], ['2'], ['9'], ['#']]);
+    expect(conditions.every((c) => c.Condition.Operator === 'Equals')).toBe(true);
+    // `*` was added for the phone path (16.4); 1, 2, 9 and # keep one condition each.
+    expect(conditions.map((c) => c.Condition.Operands)).toEqual([['1'], ['2'], ['9'], ['#'], ['*']]);
   });
 
   it('[RR 13.4] gives every keypad input a no-matching-error and a timeout transition', () => {
@@ -90,5 +91,99 @@ describe('remote retrieval Connect flow', () => {
     const readme = readFileSync('infra/connect/README.md', 'utf8');
     expect(readme).toContain('remote-retrieval-flow.json');
     expect(readme).toMatch(/written and checked but not deployed/i);
+  });
+});
+
+describe('remote retrieval Connect flow, phone path', () => {
+  const get = (id: string): Action => flow.Actions.find((a) => a.Identifier === id)!;
+  const turns = flow.Actions.filter((a) => a.Identifier.startsWith('turn-'));
+
+  it('[RR 16.1] sends all nine turn actions to save-state and save-state to route', () => {
+    expect(turns.map((a) => a.Identifier).sort()).toEqual(
+      ['turn-1', 'turn-2', 'turn-9', 'turn-code', 'turn-invoice', 'turn-other', 'turn-pound', 'turn-silence', 'turn-star'].sort(),
+    );
+    for (const a of turns) expect(a.Transitions.NextAction, a.Identifier).toBe('save-state');
+    const save = get('save-state');
+    expect(save.Type).toBe('UpdateContactAttributes');
+    expect(save.Parameters.Attributes).toEqual({ remoteState: '$.External.state' });
+    expect(save.Parameters.TargetContact).toBe('Current');
+    expect(save.Transitions.NextAction).toBe('route');
+  });
+
+  it('[RR 16.2] sends a save-state failure to went-wrong', () => {
+    expect(get('save-state').Transitions.Errors).toEqual([{ NextAction: 'went-wrong', ErrorType: 'NoMatchingError' }]);
+    expect(get('went-wrong').Transitions.NextAction).toBe('hang-up');
+  });
+
+  it('[RR 16.4] reads 1, 2, 9, # and * on the menu and sends * in its own turn', () => {
+    const conditions = get('menu').Transitions.Conditions ?? [];
+    expect(conditions.map((c) => c.Condition.Operator)).toEqual(Array(5).fill('Equals'));
+    expect(conditions.map((c) => c.Condition.Operands[0]).sort()).toEqual(['#', '*', '1', '2', '9']);
+    const star = conditions.find((c) => c.Condition.Operands[0] === '*')!;
+    expect(star.NextAction).toBe('turn-star');
+    expect(get('turn-star').Parameters.LambdaInvocationAttributes.key).toBe('*');
+  });
+
+  it('[RR 16.5] keeps every turn at the 8-second limit and the flow free of the code', () => {
+    for (const a of turns) expect(Number(a.Parameters.InvocationTimeLimitSeconds)).toBeLessThanOrEqual(8);
+    expect(raw).not.toContain('427');
+  });
+
+  it('[RR 16.3] asks for the code again when the answer is code', () => {
+    const cond = (get('route').Transitions.Conditions ?? []).find((c) => c.Condition.Operands[0] === 'code')!;
+    expect(cond.Condition.Operator).toBe('Equals');
+    expect(cond.NextAction).toBe('ask-code-again');
+    const ask = get('ask-code-again');
+    expect(ask.Type).toBe('GetParticipantInput');
+    expect(ask.Parameters.Text).toBe('$.External.prompt');
+    expect(ask.Parameters.StoreInput).toBe('True');
+    expect(ask.Parameters.InputValidation.CustomValidation.MaximumLength).toBe('3');
+    expect(Number(ask.Parameters.DTMFConfiguration.InterdigitTimeLimitSeconds)).toBeGreaterThanOrEqual(1);
+    expect(Number(ask.Parameters.InputTimeLimitSeconds)).toBe(10);
+    const errors = ask.Transitions.Errors ?? [];
+    expect(errors.map((e) => e.ErrorType)).toEqual(expect.arrayContaining(['InputTimeLimitExceeded', 'NoMatchingError']));
+    expect(ask.Transitions.NextAction).toBe('turn-code');
+  });
+
+  it('[RR 16.5] holds the remote code in neither flow file', () => {
+    expect(readFileSync('infra/connect/contact-flow.json', 'utf8')).not.toContain('427');
+    expect(raw).not.toContain('427');
+  });
+});
+
+describe('Connect README', () => {
+  const readme = readFileSync('infra/connect/README.md', 'utf8');
+
+  it('[RR 16.6] records the caller-ID-plus-code decision with no second number', () => {
+    expect(readme).toMatch(/caller ID/i);
+    expect(readme).toMatch(/3-digit code/);
+    expect(readme).toMatch(/no second number/i);
+    expect(readme).toMatch(/caller ID only routes the call/i);
+    expect(readme).not.toContain('not decided yet');
+  });
+
+  it('[RR 16.7, 13.6] says the Lambda is not deployed, neither flow is imported and names the placeholders', () => {
+    expect(readme).toMatch(/written and tested with mocks but not deployed/i);
+    expect(readme).toMatch(/Neither flow has been imported/i);
+    for (const p of ['REPLACE_WITH_OWNER_NUMBER', 'REPLACE_WITH_REMOTE_FLOW_ID', 'REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN']) {
+      expect(readme).toContain(p);
+    }
+    expect(readme).toMatch(/written and checked but not deployed/i);
+  });
+
+  it('[RR 15.7] says the remote flow must be an inbound flow', () => {
+    expect(readme).toMatch(/remote flow must be an inbound flow/i);
+  });
+});
+
+describe('Connect folder hygiene', () => {
+  it('[RR 16.8, 15.4] holds no phone number, webhook secret or real ARN', () => {
+    for (const f of readdirSync('infra/connect')) {
+      const text = readFileSync(`infra/connect/${f}`, 'utf8');
+      expect(text, f).not.toMatch(/\+\d{7,}/);
+      expect(text, f).not.toMatch(/\b\d{3}[-. ]\d{3}[-. ]\d{4}\b/);
+      expect(text, f).not.toMatch(/arn:aws[a-z-]*:[a-z0-9-]*:[a-z0-9-]*:\d{12}:/);
+      expect(text, f).not.toMatch(/(secret|token)\s*[:=]\s*['"][A-Za-z0-9]{16,}['"]/i);
+    }
   });
 });

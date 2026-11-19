@@ -125,14 +125,32 @@ export function remoteQueue(messages: readonly RemoteSource[]): RemoteMessage[] 
         (a.receivedAt < b.receivedAt ? -1 : a.receivedAt > b.receivedAt ? 1 : 0) ||
         (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
     )
-    .map((m) => ({
-      id: m.id,
-      urgency: m.extraction.urgency,
-      callerName: m.extraction.callerName?.trim() || null,
-      job: m.extraction.job,
-      transcript: m.transcript,
-      canText: Boolean((m.extraction.callbackNumber ?? m.from)?.trim()),
-    }));
+    .map(toRemoteMessage);
+}
+
+/** The fields of a stored message that the script needs. The phone Lambda builds these from the API. */
+export interface RemoteMessageInput {
+  id: string;
+  from: string;
+  transcript: string;
+  extraction: {
+    urgency: Urgency;
+    callerName: string | null;
+    callbackNumber: string | null;
+    job: string;
+  };
+}
+
+/** The one mapping from a stored message to what the script sees (RR 14.10). */
+export function toRemoteMessage(m: RemoteMessageInput): RemoteMessage {
+  return {
+    id: m.id,
+    urgency: m.extraction.urgency,
+    callerName: m.extraction.callerName?.trim() || null,
+    job: m.extraction.job,
+    transcript: m.transcript,
+    canText: Boolean((m.extraction.callbackNumber ?? m.from)?.trim()),
+  };
 }
 
 export function startState(businessName: string): RemoteState {
