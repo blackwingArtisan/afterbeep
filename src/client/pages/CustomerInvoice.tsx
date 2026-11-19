@@ -3,23 +3,65 @@ import { useParams } from 'react-router-dom';
 import { formatCents, formatQuantity, formatRateMilli, lineAmountCents } from '../../domain/money';
 import { api, ApiError, type PublicInvoice } from '../api';
 import { BrandMark } from '../components/Brand';
+import { GhostIcon, PhoneIcon } from '../components/Icons';
+import { Reels } from '../components/Reels';
+import { telHref } from '../lib/format';
 import { useTitle } from '../lib/machine';
 
 export default function CustomerInvoice() {
   const { id = '' } = useParams();
   const [data, setData] = useState<PublicInvoice | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ business: { name: string; phone: string } | null } | null>(null);
   useTitle(data ? `Invoice ${data.invoice.number}` : 'Invoice');
 
   useEffect(() => {
     api
       .invoice(id)
       .then(setData)
-      .catch((e) => setError(e instanceof ApiError ? e.message : 'Invoice not found'));
+      .catch((e) => {
+        const details = e instanceof ApiError ? (e.details as { business?: { name: string; phone: string } } | null) : null;
+        setError({ business: details?.business ?? null });
+      });
   }, [id]);
 
-  if (error) return <div className="caller-page empty">{error}</div>;
-  if (!data) return <div className="caller-page empty">Loading...</div>;
+  if (error) {
+    const biz = error.business;
+    return (
+      <div className="caller-page">
+        <div className="caller-card panel" data-testid="bad-invoice">
+          {biz && (
+            <header className="caller-head">
+              <BrandMark />
+              <div>
+                <div className="caller-biz">{biz.name}</div>
+                <div className="faint" style={{ fontSize: 13 }}>
+                  {biz.phone}
+                </div>
+              </div>
+            </header>
+          )}
+          <section className="ghost-card">
+            <GhostIcon width={56} height={56} />
+            <h1 className="caller-title">This invoice has given up the ghost.</h1>
+            <p className="muted">The link may be mistyped or out of date. A quick call sorts it out.</p>
+            {biz && (
+              <a className="btn btn-primary caller-confirm" href={telHref(biz.phone)}>
+                <PhoneIcon /> Call {biz.phone}
+              </a>
+            )}
+          </section>
+        </div>
+      </div>
+    );
+  }
+  if (!data) {
+    return (
+      <div className="caller-page reel-loading" role="status">
+        <Reels spinning />
+        <span>Finding your invoice...</span>
+      </div>
+    );
+  }
   const { invoice, business } = data;
   const created = new Date(invoice.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const due = new Date(`${invoice.dueDate}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });

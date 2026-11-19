@@ -174,7 +174,8 @@ export interface PublicInvoice {
 export function publicInvoice(deps: Deps, id: string): PublicInvoice {
   const db = deps.store.read();
   const invoice = db.invoices.find((i) => i.id === id);
-  if (!invoice) throw new ServiceError(404, 'not-found', 'Invoice not found');
   const { name, phone, email, address } = db.business;
+  // Like a dead booking link, a dead invoice link still tells the customer who to call.
+  if (!invoice) throw new ServiceError(404, 'not-found', 'Invoice not found', { business: { name, phone } });
   return { invoice, business: { name, phone, email, address } };
 }

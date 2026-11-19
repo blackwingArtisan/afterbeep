@@ -683,6 +683,13 @@
   transform: rotate(0.7deg);
 }
 .new-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.new-chip .led {
+  width: 7px;
+  height: 7px;
   animation: blink 1.4s steps(2, jump-none) infinite;
 }
 .tape-body {
@@ -976,7 +983,7 @@
   position: relative;
   display: grid;
   gap: 18px;
-  padding: 26px 22px;
+  padding: 26px 22px 26px 48px;
   border-radius: 6px;
   background:
     linear-gradient(to right, transparent 34px, rgba(200, 40, 30, 0.25) 34px 35px, transparent 35px),
@@ -1640,7 +1647,7 @@
 .sent-paper {
   position: relative;
   width: min(100%, 340px);
-  padding: 18px 20px 18px 46px;
+  padding: 18px 20px 78px 46px;
   font-family: var(--font-type);
   font-size: 14px;
   animation: slide-in 0.5s ease-out both;
@@ -1669,10 +1676,10 @@
   font-weight: 700;
 }
 .sent-stamp {
-  right: 18px;
-  top: 52px;
+  left: 44px;
+  bottom: 12px;
   color: #1f6e42;
-  transform: rotate(-12deg);
+  transform: rotate(-8deg);
   font-size: 30px;
   animation-delay: 0.6s;
 }
@@ -1762,4 +1769,27 @@
 }
 .payback-times strong {
   color: var(--pumpkin-text);
+}
+
+/* ---------- Dead invoice link and loading ---------- */
+
+.ghost-card {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  text-align: center;
+}
+.ghost-card svg {
+  color: var(--ghost, #cfc6ff);
+  filter: drop-shadow(0 0 14px rgba(160, 140, 255, 0.45));
+}
+.reel-loading {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 60px 20px;
+  color: var(--ink-faint);
+}
+.reel-loading .cassette-window {
+  width: 160px;
 }

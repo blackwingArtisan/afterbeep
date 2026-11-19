@@ -11,6 +11,15 @@ function Spark({ entry }: { entry: PriceBookEntry }) {
   const w = 120;
   const h = 28;
   const span = max - min || 1;
+  // The same price every time is one fact, so it is drawn as one centered dot.
+  if (min === max) {
+    return (
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} role="img" aria-label={`${prices.length} past prices, all the same`}>
+        <line x1="0" x2={w} y1={h / 2} y2={h / 2} stroke="var(--edge)" strokeDasharray="2 4" />
+        <circle cx={w / 2} cy={h / 2} r="3.5" fill="var(--lcd)" />
+      </svg>
+    );
+  }
   const points = prices
     .map((p, i) => `${prices.length === 1 ? w / 2 : (i / (prices.length - 1)) * (w - 8) + 4},${h - 4 - ((p - min) / span) * (h - 8)}`)
     .join(' ');
@@ -66,7 +75,7 @@ export default function PriceBook() {
                   {e.unit === 'hour' ? '/hr' : ''}
                 </td>
                 <td className="mono muted">
-                  {e.minCents === e.maxCents ? 'always' : `${formatCents(e.minCents)} - ${formatCents(e.maxCents)}`}
+                  {e.count === 1 ? 'billed once' : e.minCents === e.maxCents ? 'same every time' : `${formatCents(e.minCents)} - ${formatCents(e.maxCents)}`}
                 </td>
                 <td className="mono">{e.count}</td>
                 <td>

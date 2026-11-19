@@ -31,7 +31,12 @@ export function Cassette({ message, side, timeZone, job, playing, onPlay, onStop
           <div className="spread" style={{ marginTop: 6 }}>
             <span className="cassette-side">{side}</span>
             <span className="row" style={{ gap: 8 }}>
-              {isNew && <span className="chip chip-hold new-chip">New</span>}
+              {isNew && (
+                <span className="chip chip-hold new-chip">
+                  <span className="led" aria-hidden="true" />
+                  New
+                </span>
+              )}
               <UrgencyChip urgency={x.urgency} />
             </span>
           </div>

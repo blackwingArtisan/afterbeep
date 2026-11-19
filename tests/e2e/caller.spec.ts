@@ -22,3 +22,10 @@ test('[MC 5.8] a bad booking link still shows the business and a call button', a
   await expect(card).toContainText('Hollow Creek Plumbing & Appliance');
   await expect(card.getByRole('link', { name: /Call \(614\) 555-0142/ })).toHaveAttribute('href', 'tel:+16145550142');
 });
+
+test('a bad invoice link gives up the ghost but still offers a call', async ({ page }) => {
+  await page.goto('/i/not-a-real-invoice');
+  const card = page.getByTestId('bad-invoice');
+  await expect(card).toContainText('This invoice has given up the ghost');
+  await expect(card.getByRole('link', { name: /Call \(614\) 555-0142/ })).toHaveAttribute('href', 'tel:+16145550142');
+});

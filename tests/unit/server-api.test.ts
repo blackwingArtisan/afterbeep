@@ -114,6 +114,13 @@ describe('missed call to booked job', () => {
     expect((await ctx.call('POST', '/api/calls', { from: 'not a phone', transcript: 'hi there' })).status).toBe(400);
   });
 
+  it('answers an unknown invoice link with the business card, not a blank page', async () => {
+    const bad = await ctx.call<{ error: string; details: { business: { name: string; phone: string } } }>('GET', '/api/invoices/nope');
+    expect(bad.status).toBe(404);
+    expect(bad.body.error).toBe('not-found');
+    expect(bad.body.details.business).toEqual({ name: 'Hollow Creek Plumbing & Appliance', phone: '(614) 555-0142' });
+  });
+
   it('[MC 6.3] marks a message heard', async () => {
     const [m] = (await ctx.call<{ messages: Message[] }>('GET', '/api/messages')).body.messages;
     const res = await ctx.call<{ message: Message }>('POST', `/api/messages/${m!.id}/status`, { status: 'heard' });
