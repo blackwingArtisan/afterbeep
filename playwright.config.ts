@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 3112;
+const PORT = Number(process.env.AFTERBEEP_E2E_PORT ?? 3112);
 
 export default defineConfig({
   testDir: 'tests/e2e',
