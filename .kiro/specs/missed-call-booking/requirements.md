@@ -38,6 +38,7 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 3.7 WHEN the caller says the furnace, boiler or heat pump has quit, stopped or gone out, or that the heat went out THE SYSTEM SHALL mark the message as an emergency.
 3.8 WHEN a heating, cooling, hot-water or pipe problem comes with freezing weather, or with a baby, an elderly person or someone medically fragile in the house THE SYSTEM SHALL mark the message as an emergency.
 3.9 WHEN the caller has no hot water or a leaking water heater and nothing more serious THE SYSTEM SHALL mark the message as soon.
+3.10 WHEN the caller leaves the message in Spanish THE SYSTEM SHALL extract the same details, write the job and summary in English for the owner, and mark the message as Spanish.
 
 ## Requirement 4: Text the caller back
 **User story:** As a caller, I want a quick text back with a way to book, so that I do not call the next plumber.
@@ -50,6 +51,7 @@ When a one-person trade business cannot answer the phone, AfterBeep answers, rec
 4.6 IF a message has no caller name, no address, no recognised job and fewer than four meaningful words THEN THE SYSTEM SHALL file it without a text and record why.
 4.7 IF the callback number was texted in the last 10 minutes THEN THE SYSTEM SHALL file the new message without another text and record why.
 4.8 IF the text provider refuses the text-back THEN THE SYSTEM SHALL keep the message, record the reason, mark it retryable and let the owner retry the text.
+4.9 WHEN the message was left in Spanish THE SYSTEM SHALL send the text-back and the booking confirmation in Spanish.
 
 ## Requirement 5: Book a slot
 **User story:** As a caller, I want to pick a time from my phone, so that the visit is booked without phone tag.

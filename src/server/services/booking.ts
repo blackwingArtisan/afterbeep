@@ -83,13 +83,18 @@ export async function bookSlot(deps: Deps, token: string, slot: Slot, address: s
     return created;
   });
 
-  const { business } = deps.store.read();
+  const db = deps.store.read();
+  const { business } = db;
+  const owner = business.ownerName.split(' ')[0];
+  const spanish = db.messages.find((m) => m.id === job.messageId)?.extraction.language === 'es';
   await deps.adapters.sms.send({
     to: toE164(job.phone) ?? job.phone,
     linkPath: null,
-    body:
-      `You're booked, ${firstName(job.customerName)}: ${formatSlot(job.start, job.end, business.timezone)} with ` +
-      `${business.name}. ${business.ownerName.split(' ')[0]} will text when on the way. Questions: ${business.phone}.`,
+    body: spanish
+      ? `Listo${job.customerName === 'Caller' ? '' : `, ${firstName(job.customerName)}`}: el ${formatSlot(job.start, job.end, business.timezone, 'es')}, con ` +
+        `${business.name}. ${owner} le avisará cuando vaya en camino. Preguntas: ${business.phone}.`
+      : `You're booked, ${firstName(job.customerName)}: ${formatSlot(job.start, job.end, business.timezone)} with ` +
+        `${business.name}. ${owner} will text when on the way. Questions: ${business.phone}.`,
   });
   return job;
 }

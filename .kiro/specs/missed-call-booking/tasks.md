@@ -38,3 +38,5 @@
 - [x] 29. Story finale: every step done, a count-up of what the story kept, and "Pay as" the customer (Req 7.10)
 - [x] 30. Raise the dead: a graveyard of unreturned hang-ups, one owner press to text each a booking link, `GET /api/graveyard` and `POST /api/graveyard/raise` (Req 8.1-8.6)
   - [x] 30.1 Unit tests for the graveyard rules, a refused text and a raised caller booking; Playwright for the strip, the press and reduced motion (Req 8.1-8.7)
+- [x] 31. Spanish callers: detect Spanish, read it through a trade glossary, keep the job and summary in English, and text back and confirm in Spanish; the Bedrock tool reports the language too (Req 3.10, 4.9)
+  - [x] 31.1 Unit tests for detection, extraction and the Bedrock field; an API test for the Spanish text-back and confirmation (Req 3.10, 4.9)

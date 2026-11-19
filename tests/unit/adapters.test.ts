@@ -138,6 +138,20 @@ describe('Bedrock extractor (stubbed client)', () => {
     expect(fallbackReason('odd')).toBe('UnknownError');
   });
 
+  it('[MC 3.10] keeps the language the model reports, and checks it when the model leaves it out', async () => {
+    const said = stubClient({ ...modelAnswer, language: 'es' });
+    const es = await new BedrockExtractor({ region: 'us-east-1', modelId: 'm', client: said.client }).extract(transcript, { callerId, business: demoBusiness });
+    expect(es.language).toBe('es');
+    expect(es).not.toHaveProperty('language', 'en');
+
+    const english = await new BedrockExtractor({ region: 'us-east-1', modelId: 'm', client: stubClient({ ...modelAnswer, language: 'en' }).client }).extract(transcript, { callerId, business: demoBusiness });
+    expect(english.language).toBeUndefined();
+
+    const spanishTranscript = 'Hola, me llamo Priya. Se rompió el calentador de agua, hay agua por todas partes. 88 Hollow Pine Road. Llámeme al 614-555-0134, por favor.';
+    const silent = await new BedrockExtractor({ region: 'us-east-1', modelId: 'm', client: stubClient(modelAnswer).client }).extract(spanishTranscript, { callerId, business: demoBusiness });
+    expect(silent.language).toBe('es');
+  });
+
   it('[MC 3.6] grounds numbers and addresses against the transcript', () => {
     expect(numberIsGrounded('614-555-0134', transcript, callerId)).toBe(true);
     expect(numberIsGrounded('614-555-0199', 'no number said', callerId)).toBe(true);

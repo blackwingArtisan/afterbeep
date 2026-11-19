@@ -173,6 +173,35 @@ describe('text-back guards', () => {
   });
 });
 
+describe('Spanish callers', () => {
+  it('[MC 4.9] texts back and confirms the booking in Spanish', async () => {
+    const rosa = simulatorScripts.find((s) => s.id === 'spanish-heater')!;
+    const { body } = await ctx.call<{ message: Message }>('POST', '/api/calls', { from: rosa.from, transcript: rosa.transcript });
+    expect(body.message.extraction).toMatchObject({ language: 'es', job: 'Water heater: burst, flooding' });
+    const outbox = () => ctx.call<{ outbox: OutboxItem[] }>('GET', '/api/outbox').then((r) => r.body.outbox);
+    const text = (await outbox()).find((o) => o.to === '+16145550185')!;
+    expect(text.body).toBe(
+      `Hola Rosa, soy Morgan de Hollow Creek Plumbing & Appliance. Recibí su mensaje. Le llamo en cuanto termine este trabajo. Reserve la primera visita aquí: ${BASE}/book/${body.message.bookingToken}`,
+    );
+
+    const view = await ctx.call<{ slots: Array<{ start: string; end: string }> }>('GET', `/api/book/${body.message.bookingToken}`);
+    expect((await ctx.call('POST', `/api/book/${body.message.bookingToken}`, view.body.slots[0])).status).toBe(201);
+    const confirmation = (await outbox()).find((o) => o.body.startsWith('Listo'))!;
+    expect(confirmation.to).toBe('+16145550185');
+    expect(confirmation.body).toMatch(/^Listo, Rosa: el [a-zé]+, \d+ de [a-z]+, de .+, con Hollow Creek Plumbing & Appliance\. Morgan le avisará cuando vaya en camino\. Preguntas: \(614\) 555-0142\.$/);
+  });
+
+  it('[MC 4.9] offers a Spanish caller the first opening in Spanish', async () => {
+    const { body } = await ctx.call<{ message: Message }>('POST', '/api/calls', {
+      from: '+16145550187',
+      transcript: 'Buenas tardes, habla Marisol Ortega. Mi secadora no calienta, no hay prisa. Vivo en 66 Orchard Lane.',
+    });
+    const text = (await ctx.call<{ outbox: OutboxItem[] }>('GET', '/api/outbox')).body.outbox.find((o) => o.to === '+16145550187')!;
+    expect(text.body).toMatch(/^Hola Marisol, soy Morgan de Hollow Creek Plumbing & Appliance\. Disculpe que no contesté su llamada\. La primera cita libre es el [a-zé]+, \d+ de [a-z]+, de \d+:\d\d [ap]\.\s?m\. a \d+:\d\d [ap]\.\s?m\. Elija la hora que le convenga: /);
+    expect(body.message.extraction.language).toBe('es');
+  });
+});
+
 describe('phone webhook (real path entry point)', () => {
   const hook = { contactId: 'c-1', callerNumber: '+16145550150', recordingUri: 's3://bucket/recording.wav' };
   it('[MC 1.2] requires the shared secret', async () => {

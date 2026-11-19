@@ -11,6 +11,7 @@ export const ModelExtractionSchema = z.object({
   ]),
   urgency: z.enum(['emergency', 'soon', 'routine']),
   summary: z.string().trim().min(1).max(300),
+  language: z.enum(['en', 'es']).nullish(),
 });
 
 export type ModelExtraction = z.infer<typeof ModelExtractionSchema>;
@@ -33,6 +34,7 @@ export const extractionToolJsonSchema = {
       enum: ['emergency', 'soon', 'routine'],
       description: 'emergency = active water, gas, sparks, no heat; soon = wants today or tomorrow; routine otherwise',
     },
-    summary: { type: 'string', description: 'One or two sentences the tradesperson reads before calling back' },
+    summary: { type: 'string', description: 'One or two sentences the tradesperson reads before calling back, always in English' },
+    language: { type: 'string', enum: ['en', 'es'], description: 'The language the caller spoke' },
   },
 } as const;

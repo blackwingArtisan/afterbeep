@@ -34,8 +34,8 @@ Where to find the proof for each submission check and each judging criterion. Ev
 | All money in integer cents; the server sends an invoice only when its recomputed total equals the exact total the owner approved | [src/domain/money.ts](../src/domain/money.ts), [src/server/services/invoicing.ts](../src/server/services/invoicing.ts), [.kiro/steering/money.md](../.kiro/steering/money.md) |
 | The price check: "dryer belt, fifteen" is held when the usual price is $50 (more than 15% under or 25% over) | [src/domain/price-book.ts](../src/domain/price-book.ts) |
 | Bedrock is forced to answer through one tool, and any number or address the caller never said is dropped; a failure falls back to the rules and records why | [src/adapters/extractor/bedrock.ts](../src/adapters/extractor/bedrock.ts) |
-| 154 Vitest unit and API tests, 22 Playwright tests against the production build (desktop and Pixel 7) | `npm run check`, `npm run test:e2e`, CI in [.github/workflows/check.yml](../.github/workflows/check.yml) |
-| 101 EARS criteria; 97 are named by test titles and the build fails if one is not, the other 4 are on the real AWS and Stripe path | `npm run spec:coverage`, [scripts/spec-coverage.ts](../scripts/spec-coverage.ts) |
+| 160 Vitest unit and API tests, 22 Playwright tests against the production build (desktop and Pixel 7) | `npm run check`, `npm run test:e2e`, CI in [.github/workflows/check.yml](../.github/workflows/check.yml) |
+| 103 EARS criteria; 99 are named by test titles and the build fails if one is not, the other 4 are on the real AWS and Stripe path | `npm run spec:coverage`, [scripts/spec-coverage.ts](../scripts/spec-coverage.ts) |
 | The extractor is measured, not assumed: on its first, held-out run over 24 labelled voicemails it got every phone number and address right and invented no address | [docs/eval.md](eval.md), `npm run eval` |
 
 ### Quality of the idea
@@ -44,6 +44,7 @@ Where to find the proof for each submission check and each judging criterion. Ev
 |---|---|
 | A resurrection of three dead machines: the answering machine, the Dictaphone and the carbon-copy invoice book | README "What died", the landing page and the three machine keys in the app |
 | The machine that hears fifteen and knows you meant fifty | The carbon copies hold a misheard price against the owner's own past invoices: landing page **Bill** key, and step 5 of the whole story |
+| Spanish callers get a Spanish text back, while the owner reads English | [src/domain/spanish.ts](../src/domain/spanish.ts), spec MC 3.10 and 4.9 |
 | Raise the dead: callers who hang up without a word are not lost | The graveyard in the inbox; one owner press texts each a single booking link ([src/domain/graveyard.ts](../src/domain/graveyard.ts), spec MC 8) |
 
 ### Design

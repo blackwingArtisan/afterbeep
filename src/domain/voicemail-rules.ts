@@ -1,3 +1,4 @@
+import { isSpanish, spanishForRules } from './spanish';
 import { lexNumbers, spokenDigitsToText, tokenize } from './spoken-numbers';
 import type { JobCategory, Urgency, VoicemailExtraction } from './types';
 
@@ -68,12 +69,13 @@ function cap(word: string): string {
   return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 }
 
-const NAME = "[A-Z][a-z'\u2019-]+";
+// Names may carry accents (Tomás, Núñez); the rest of the extractor is ASCII.
+const NAME = "[A-ZÁÉÍÓÚÑ][a-záéíóúñü'\u2019-]+";
 const CAPITALISED_PATTERNS = [
   new RegExp(`\\b(?:[Mm]y name(?:'s| is)|[Tt]his is|[Ii]t's|[Ii]t is|I'm|I am|[Nn]ame's)\\s+(${NAME})(?:\\s+(${NAME}))?`, 'g'),
   new RegExp(`\\b(${NAME})(?:\\s+(${NAME}))?\\s+here\\b`, 'g'),
 ];
-const LOWERCASE_PATTERN = /\b(?:my name is|this is)\s+([a-z'\u2019-]+)(?:\s+([a-z'\u2019-]+))?/gi;
+const LOWERCASE_PATTERN = /\b(?:my name is|this is)\s+([a-záéíóúñü'\u2019-]+)(?:\s+([a-záéíóúñü'\u2019-]+))?/gi;
 
 function nameFrom(first: string, second: string | undefined): string | null {
   if (NOT_NAMES.has(first.toLowerCase())) return null;
@@ -181,11 +183,14 @@ export interface RuleContext {
 }
 
 export function extractWithRules(transcript: string, ctx: RuleContext): VoicemailExtraction {
-  const callerName = extractName(transcript);
-  const callbackNumber = extractCallback(transcript, ctx.defaultAreaCode) ?? formatPhone(ctx.callerId);
-  const address = extractAddress(transcript);
-  const { category, job } = classifyJob(transcript);
-  const urgency = classifyUrgency(transcript);
+  // A Spanish message is read through a small trade glossary, so the same English rules apply.
+  const spanish = isSpanish(transcript);
+  const text = spanish ? spanishForRules(transcript) : transcript;
+  const callerName = extractName(text);
+  const callbackNumber = extractCallback(text, ctx.defaultAreaCode) ?? formatPhone(ctx.callerId);
+  const address = extractAddress(text);
+  const { category, job } = classifyJob(text);
+  const urgency = classifyUrgency(text);
   const who = callerName ?? 'Unknown caller';
   const where = address ? ` at ${address}` : '';
   return {
@@ -195,8 +200,9 @@ export function extractWithRules(transcript: string, ctx: RuleContext): Voicemai
     job,
     jobCategory: category,
     urgency,
-    summary: `${who}${where}. ${job}. ${URGENCY_PHRASE[urgency]}`,
+    summary: `${who}${where}. ${job}. ${URGENCY_PHRASE[urgency]}${spanish ? ' Left the message in Spanish.' : ''}`,
     source: 'rules',
+    ...(spanish ? { language: 'es' as const } : {}),
   };
 }
 

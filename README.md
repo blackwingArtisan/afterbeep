@@ -82,6 +82,7 @@ Everything runs on a laptop with no accounts. Each item is covered by the tests 
 **The answering machine**
 - Reads each voicemail for the caller's name, callback number (a spoken number beats caller ID), address, job and urgency. A furnace that quit at twenty degrees with a baby at home is an emergency; no hot water is "soon".
 - Texts every real caller a booking link at once. Emergencies are promised a call back; everyone else sees the first open slot. Hang-ups get no text, a repeat caller gets one text per 10 minutes, and a text the carrier refuses is filed with a retry button.
+- **Spanish callers.** A message left in Spanish is read for the same details, filed with an English job and summary and an ES chip, and the caller's text back and booking confirmation go out in Spanish. Try the "Burst water heater, in Spanish" sample in the call simulator.
 - The booking page offers real open slots in the business's time zone, lets the caller correct the address, and texts a confirmation.
 - The inbox shows each message as a cassette, emergencies first under a "Call back now" strip, with a seven-segment counter and a "Kept this week" readout.
 - **Raise the dead.** Plain voicemail loses 69% of callers, and the ones who hang up without a word are the hardest to win back. Unreturned hang-ups from the last 30 days wait in a graveyard, one per number. One owner press texts each a single booking link that names the day they called; nothing goes out without the press, and a raised call is never texted twice.
@@ -133,12 +134,12 @@ The phone wiring is in [infra/connect/README.md](infra/connect/README.md). All s
 ## Tests and spec traceability
 
 ```bash
-npm run check             # typecheck, spec coverage, 154 Vitest unit and API tests
+npm run check             # typecheck, spec coverage, 160 Vitest unit and API tests
 npx playwright install chromium
 npm run test:e2e          # 22 Playwright tests (one is phone-only) against the production build on port 3112
 ```
 
-Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 97 of 101 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
+Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 99 of 103 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
 
 `npm run eval` scores the rules extractor on 24 hand-labelled voicemails it had not seen: on the first run it got every phone number and address right, never invented an address, and read urgency right in 19 of 24. The two missed emergencies it found are fixed, and urgency is now 21 of 24. Details and the remaining misses: [docs/eval.md](docs/eval.md). The same script scores Bedrock side by side with `--bedrock`, and `npm run test:aws` checks the live Bedrock path; both are paid, so both stay off unless you switch them on, and neither has been run for these numbers.
 
@@ -151,7 +152,7 @@ For development with hot reload: `npm run dev` (client on 3110, API on 3111).
 Kiro steering, specs, hooks and MCP settings live in [`.kiro/`](.kiro). [KIRO-LOG.md](KIRO-LOG.md) maps each Kiro feature to the files that use it and says which were written by Kiro and which by hand.
 
 - **Steering:** product, tech and structure rules always included; money rules load with domain files and AWS rules with adapters; a manual demo script.
-- **Specs:** two features in EARS form, 101 criteria, every task checked off and traced to tests. A Kiro review against the code added four criteria the code already met.
+- **Specs:** two features in EARS form, 103 criteria, every task checked off and traced to tests. A Kiro review against the code added four criteria the code already met.
 - **Hooks:** unit tests on save, a money-rules guard, spec sync, a copy review, and typecheck plus build checks when the agent stops.
 - **MCP:** AWS documentation and Context7.
 

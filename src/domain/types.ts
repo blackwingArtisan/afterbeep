@@ -54,6 +54,8 @@ export interface VoicemailExtraction {
   summary: string;
   /** Which extractor produced this result. */
   source: 'rules' | 'bedrock';
+  /** The language the caller spoke, when it is not English. The job and summary are always in English. */
+  language?: 'es';
   /** Why a model extractor's answer was not used and the rules answered instead (for logs and the eval). */
   fallbackReason?: string;
 }

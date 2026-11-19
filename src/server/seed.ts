@@ -134,6 +134,15 @@ export const simulatorScripts: SampleVoicemail[] = [
       'Today or tomorrow would be great. Thanks.',
   },
   {
+    id: 'spanish-heater',
+    label: 'Burst water heater, in Spanish (emergency)',
+    from: '+16145550185',
+    durationSec: 19,
+    transcript:
+      'Hola, me llamo Rosa Delgado. Se rompió el calentador de agua y hay agua por todas partes en el sótano. ' +
+      'Estoy en 1420 Juniper Street. Por favor llámeme al 614-555-0185. Gracias.',
+  },
+  {
     id: 'washer-noise',
     label: 'Noisy washer (routine)',
     from: '+16145550188',

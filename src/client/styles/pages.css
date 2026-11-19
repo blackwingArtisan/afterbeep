@@ -2275,3 +2275,10 @@
 .more-panel .theme-label {
   display: inline;
 }
+
+/* A message left in Spanish. Printed on the cream label in a fixed dark ink, like the urgency chips. */
+.chip-lang {
+  color: var(--label-ink);
+  border-color: var(--label-ink);
+  background: transparent;
+}

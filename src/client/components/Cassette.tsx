@@ -37,6 +37,11 @@ export function Cassette({ message, side, timeZone, job, playing, onPlay, onStop
                   New
                 </span>
               )}
+              {x.language === 'es' && (
+                <span className="chip chip-lang" title="Left the message in Spanish; the text back went out in Spanish" data-testid="chip-spanish">
+                  ES
+                </span>
+              )}
               <UrgencyChip urgency={x.urgency} />
             </span>
           </div>

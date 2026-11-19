@@ -20,6 +20,7 @@ function textBackBody(
   url: string,
   firstOpening: string | null,
 ): string {
+  if (extraction.language === 'es') return textBackBodySpanish(extraction, owner, businessName, url, firstOpening);
   const hi = `Hi ${firstName(extraction.callerName)}, it's ${owner} at ${businessName}.`;
   const noun = jobNoun(extraction);
   const about = noun ? ` about your ${noun}` : '';
@@ -28,6 +29,23 @@ function textBackBody(
   }
   const opening = firstOpening ? ` The first opening is ${firstOpening}.` : '';
   return `${hi} Sorry I missed your call${about}.${opening} Pick a time that works for you: ${url}`;
+}
+
+/** The same text back for a caller who left the message in Spanish. */
+function textBackBodySpanish(
+  extraction: VoicemailExtraction,
+  owner: string,
+  businessName: string,
+  url: string,
+  firstOpening: string | null,
+): string {
+  const hola = extraction.callerName ? `Hola ${firstName(extraction.callerName)}` : 'Hola';
+  const hi = `${hola}, soy ${owner} de ${businessName}.`;
+  if (extraction.urgency === 'emergency') {
+    return `${hi} Recibí su mensaje. Le llamo en cuanto termine este trabajo. Reserve la primera visita aquí: ${url}`;
+  }
+  const opening = firstOpening ? ` La primera cita libre es el ${firstOpening.replace(/\.$/, '')}.` : '';
+  return `${hi} Disculpe que no contesté su llamada.${opening} Elija la hora que le convenga: ${url}`;
 }
 
 /** What the text calls the job ("your heat", "your water heater", "your dryer"), or null when it is unknown. */
@@ -130,7 +148,7 @@ async function textBack(deps: Deps, message: Message): Promise<Message> {
         business.ownerName.split(' ')[0]!,
         business.name,
         `${deps.publicBaseUrl}${linkPath}`,
-        first ? formatSlot(first.start, first.end, business.timezone) : null,
+        first ? formatSlot(first.start, first.end, business.timezone, extraction.language) : null,
       ),
     });
   } catch (error) {

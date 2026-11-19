@@ -4,6 +4,7 @@ import {
   type ConverseCommandOutput,
   type ToolInputSchema,
 } from '@aws-sdk/client-bedrock-runtime';
+import { isSpanish } from '../../domain/spanish';
 import { spokenDigitsToText } from '../../domain/spoken-numbers';
 import { formatPhone } from '../../domain/voicemail-rules';
 import type { VoicemailExtraction } from '../../domain/types';
@@ -92,7 +93,8 @@ export class BedrockExtractor implements Extractor {
             {
               text:
                 `You read voicemails left for ${ctx.business.name}, a ${ctx.business.trade} business. ` +
-                'Record the caller details with the tool. Use null for anything the caller did not say. Never guess an address or number.',
+                'Record the caller details with the tool. Use null for anything the caller did not say. Never guess an address or number. ' +
+                'If the caller speaks Spanish, set language to "es" and still write the job and summary in English.',
             },
           ],
           messages: [{ role: 'user', content: [{ text: `Caller ID: ${ctx.callerId}\nVoicemail transcript:\n${transcript}` }] }],
@@ -121,7 +123,9 @@ export class BedrockExtractor implements Extractor {
           ? parsed.callbackNumber
           : ctx.callerId;
       const address = parsed.address && addressIsGrounded(parsed.address, transcript) ? parsed.address : null;
-      return { ...parsed, callbackNumber: formatPhone(callback), address, source: 'bedrock' };
+      const { language, ...fields } = parsed;
+      const spanish = language === 'es' || (language == null && isSpanish(transcript));
+      return { ...fields, callbackNumber: formatPhone(callback), address, source: 'bedrock', ...(spanish ? { language: 'es' as const } : {}) };
     } catch (error) {
       // The caller is still texted from the rules answer; the reason goes to the log and onto the message.
       const reason = fallbackReason(error);
