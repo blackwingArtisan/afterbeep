@@ -22,9 +22,10 @@ Where to find the proof for each submission check and each judging criterion. Ev
 | A missed job is worth about $206 to $377 | Thumbtack cost guides, cited in [docs/business.md](business.md) |
 | The market: 362,219 solo building-equipment contractors, about $170M a year at stake | US Census nonemployer statistics, [docs/business.md](business.md) |
 | It pays for itself: about $740 a month, 18 times the $39 price, under labelled assumptions | [src/domain/payback.ts](../src/domain/payback.ts), tested in [tests/unit/domain-payback.test.ts](../tests/unit/domain-payback.test.ts), interactive on the landing page |
-| Morgan's Tuesday: 2 jobs booked, $557 of work, $35 caught, 14 times the price | A labelled scenario; after "Demo the whole story" the inbox shows these exact numbers ([tests/e2e/whole-story.spec.ts](../tests/e2e/whole-story.spec.ts)) |
+| Morgan's Tuesday: 2 jobs booked, $557 of booked work ($377 quoted + $180 billed), $35 caught, 14 times the price | A labelled scenario; after "Demo the whole story" the inbox shows these exact numbers ([tests/e2e/whole-story.spec.ts](../tests/e2e/whole-story.spec.ts)) |
 | About $0.074 per call on AWS, 80% gross margin at 50 calls a month | Unit economics in [docs/business.md](business.md) |
-| Why not Live Voicemail, Google Voice, Jobber, Podium or Smith.ai | Competitor table in the [README](../README.md#why-not-iphone-live-voicemail-google-voice-jobber-podium-or-smithai) |
+| Why not Live Voicemail, Google Voice, Jobber, Housecall Pro, GoHighLevel, Podium, ServiceTitan or an AI receptionist | Competitor table with prices checked live, in [docs/business.md](business.md#why-not-live-voicemail-google-voice-jobber-housecall-pro-gohighlevel-podium-servicetitan-or-an-ai-receptionist) and the README |
+| A business, not just a feature: lifetime value, acquisition cost, 2,140 customers for $1M a year, a 12-month plan | [docs/business.md](business.md#startup-math), every input labelled as an assumption |
 
 ### Technical implementation
 
@@ -35,8 +36,8 @@ Where to find the proof for each submission check and each judging criterion. Ev
 | All money in integer cents; the server sends an invoice only when its recomputed total equals the exact total the owner approved | [src/domain/money.ts](../src/domain/money.ts), [src/server/services/invoicing.ts](../src/server/services/invoicing.ts), [.kiro/steering/money.md](../.kiro/steering/money.md) |
 | The price check: "dryer belt, fifteen" is held when the usual price is $50 (more than 15% under or 25% over) | [src/domain/price-book.ts](../src/domain/price-book.ts) |
 | Bedrock is forced to answer through one tool, and any number or address the caller never said is dropped; a failure falls back to the rules and records why | [src/adapters/extractor/bedrock.ts](../src/adapters/extractor/bedrock.ts) |
-| 160 Vitest unit and API tests, 22 Playwright tests against the production build (desktop and Pixel 7) | `npm run check`, `npm run test:e2e`, CI in [.github/workflows/check.yml](../.github/workflows/check.yml) |
-| 103 EARS criteria; 99 are named by test titles and the build fails if one is not, the other 4 are on the real AWS and Stripe path | `npm run spec:coverage`, [scripts/spec-coverage.ts](../scripts/spec-coverage.ts) |
+| 177 Vitest unit and API tests, 22 Playwright tests against the production build (desktop and Pixel 7) | `npm run check`, `npm run test:e2e`, CI in [.github/workflows/check.yml](../.github/workflows/check.yml) |
+| 106 EARS criteria; 102 are named by test titles and the build fails if one is not, the other 4 are on the real AWS and Stripe path | `npm run spec:coverage`, [scripts/spec-coverage.ts](../scripts/spec-coverage.ts) |
 | The extractor is measured, not assumed: on its first, held-out run over 24 labelled voicemails it got every phone number and address right and invented no address | [docs/eval.md](eval.md), `npm run eval` |
 
 ### Quality of the idea

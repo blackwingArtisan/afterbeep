@@ -4,7 +4,9 @@ test('[MC 6.2] landing page sells the product and opens the machine', async ({ p
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('AfterBeep got the job');
   await expect(page.getByText('Why now')).toBeVisible();
-  await expect(page.getByTestId('tuesday')).toContainText('2 jobs booked, $557 of work, $35 caught');
+  await expect(page.locator('.hero')).toContainText('about $740 of work a month walks to the next name on the list');
+  await expect(page.locator('.hero')).toContainText("It says it's a machine");
+  await expect(page.getByTestId('tuesday')).toContainText('2 jobs booked, $557 of booked work, $35 caught');
   await expect(page.locator('#pricing')).toContainText('$39');
   await expect(page.locator('#pricing')).toContainText('14-day free trial');
 

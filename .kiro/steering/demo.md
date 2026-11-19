@@ -12,7 +12,7 @@ Use this when preparing or recording the demo. Include it in a chat with `#demo`
 4. **Back to Morgan: bill it by voice.** The slip script is already filled in. Line it up, use the usual $50.00, approve and send. The SENT stamp lands next to June's text.
 5. The finale counts up what the story kept. Press **Pay as June**: PAID slams onto her invoice.
 6. **Back to the machine: raise the dead.** Last week's five hang-ups wait as ghost cassettes. One press texts each a booking link, and they rise.
-7. The inbox now reads Morgan's Tuesday: 2 booked, $557 of work, $35 caught, paid for itself 14 times.
+7. The inbox now reads Morgan's Tuesday: 2 booked, $557 of booked work, $35 caught, paid for itself 14 times.
 
 ## Before recording
 - Press **Reset demo** first; the story uses a fresh 555-01xx caller ID each run.

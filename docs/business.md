@@ -34,9 +34,11 @@ Every figure below has a source. Where a number is our own assumption, it says s
 | Value per job | $206 | Thumbtack typical minor appliance repair [2] |
 | **Booked work a month** | **about $740** | 18 times the $39 price |
 
+**The Dictaphone and the carbon copies, priced on their own.** *Assume* one misheard price a week, at the $35 gap between "dryer belt, fifteen" and the usual $50: holding it is about **$1,820 a year** kept, close to four years of AfterBeep. That is before the hour a night of typing invoices from memory.
+
 At the plain voicemail rate of 31% the same math gives about $460 a month, so even a greeting that keeps no extra callers pays for itself 11 times over. One booked job pays for more than five months of AfterBeep. A year of AfterBeep ($468) is 0.7% of the average solo shop's receipts. The landing page has the same model with both assumptions on sliders (`src/domain/payback.ts`, unit tested).
 
-**Morgan's Tuesday, a worked scenario.** The demo data is built so the app shows these numbers after "Demo the whole story": 4 calls answered and texted back, 2 booked (Priya's emergency at a $377 quote, which is Thumbtack's typical emergency plumbing price [3], and June's dryer repair billed at $180 before tax), and $35 caught when "dryer belt, fifteen" was held at the usual $50. That is $557 of booked work in one afternoon, 14 times the monthly price.
+**Morgan's Tuesday, a worked scenario.** The demo data is built so the app shows these numbers after "Demo the whole story": 4 calls answered and texted back, 2 booked (Priya's emergency at a $377 quote, which is Thumbtack's typical emergency plumbing price [3], and June's dryer repair billed at $180 before tax, $182.88 with it), and $35 caught when "dryer belt, fifteen" was held at the usual $50. That is **$557 of booked work ($377 quoted + $180 billed)** in one afternoon, 14 times the monthly price.
 
 ## Unit economics on AWS
 
@@ -73,7 +75,26 @@ Texts are two-thirds of the cost, so the main lever is short texts: one segment 
 
   NAICS 2382 sits inside NAICS 238, so the first and third rows overlap; the first row is the beachhead.
 - **Near-term goal:** 1% of the solo building-equipment contractors paying $39 a month is about **$1.7 million a year**.
+- **To $1M a year:** $1,000,000 ÷ $468 is about **2,140 paying customers**, 0.6% of the solo building-equipment contractors.
 - **Price:** $39 a month, flat, with a 14-day free trial. No per-invoice fee. It sits next to Jobber's one-user Core plan ($39 a month on a one-year commitment) [9], not above it.
+
+## Startup math
+
+Every input below is an assumption until there are paying customers, and it is labelled as one.
+
+| Step | Figure | Basis |
+|---|---|---|
+| Revenue per customer | $39 a month | The one plan |
+| Gross margin | 80% | AWS cost at 50 calls a month, above |
+| Monthly churn | 3% | **Assumption**, typical for small-business software; a tool that books jobs every week should do better |
+| Customer lifetime | about 33 months | 1 ÷ 3% |
+| Lifetime value | about **$1,040** | $39 × 80% ÷ 3% |
+| Cost to win a customer | about **$150** | **Assumption**: supply-house counter cards, trade forums and a free month per referral, no paid ads |
+| Payback on that cost | under 5 months | $150 ÷ ($39 × 80%) |
+| Lifetime value to acquisition cost | about **7 to 1** | |
+| Customers for $1M a year | about **2,140** | $1,000,000 ÷ $468 |
+
+**The first 12 months.** Months 1 to 3: ten techs who buy at one supply house, to measure missed calls, the share who leave a message and the share who book. Months 4 to 6: that whole metro through counter cards and referrals. Months 7 to 12: three metros, with the conversion numbers from the first one replacing the assumptions above.
 
 ## Go to market
 
@@ -89,17 +110,24 @@ Texts are two-thirds of the cost, so the main lever is short texts: one segment 
 - **Transcripts became free, so the value moved.** iPhone Live Voicemail shows the message as it is left [10] and Google Voice transcribes voicemail [11]. A transcript alone is no longer worth paying for. What a solo tech still lacks is what happens after the beep: the text back, the booking and the bill.
 - **The customer base is growing.** Solo building-equipment contractors grew 10% from 2019 to 2023 [4].
 
-## Why not iPhone Live Voicemail, Google Voice, Jobber, Podium or Smith.ai?
+## Why not Live Voicemail, Google Voice, Jobber, Housecall Pro, GoHighLevel, Podium, ServiceTitan or an AI receptionist?
 
-| Option | Price | What it does | What it does not do |
-|---|---|---|---|
-| iPhone Live Voicemail | Free with iOS 17 or later [10] | Shows the message on screen while the caller leaves it | No text back, no booking, no invoice. The caller still waits for a call back |
-| Google Voice | Free for personal use; $10, $20 or $30 per user a month for businesses [11] | Transcribes voicemail and blocks spam | No booking link, no schedule, no price checks |
-| Jobber | Core $29-$49 a month for one user; AI Receptionist add-on $29 a month [9] | A full field-service suite: quotes, scheduling, invoicing, and an AI that answers calls | It asks you to move your whole business into a suite. Its invoices do not check a spoken price against what you charged before |
-| Podium | Not published; quotes come from sales [12] | Reviews, messaging, payments, an "AI employee" add-on | No public price, built for multi-location businesses |
-| Smith.ai AI Receptionist | Free for 25 calls; Pro from $150 a month for 75 calls [13] | An AI answers live calls, with human backup | Priced per call, and it answers as a receptionist rather than being the owner's own machine. No invoices |
+**Text-back is table stakes. Of the tools below, only AfterBeep checks a spoken price against your own carbon copies, at $39 flat on your own number.**
 
-**AfterBeep's answer:** an honest machine on your own number. It never pretends to be a person. It texts every real caller a booking link with your real open slots, and turns your spoken invoice into a bill that is held when a price or quantity looks wrong, and sent only at the exact total you approved. Flat $39 a month, no per-call or per-invoice fees.
+| Option | Price | Answers as | What it does | What it does not do |
+|---|---|---|---|---|
+| iPhone Live Voicemail | Free with iOS 17 or later [10] | Your voicemail | Shows the message on screen while the caller leaves it | No text back, no booking, no invoice. The caller still waits for a call back |
+| Google Voice | Free for personal use; $10, $20 or $30 per user a month for businesses [11] | Your voicemail | Transcribes voicemail and blocks spam | No booking link, no schedule, no price checks |
+| Jobber | Core $29-$49 a month for one user; AI Receptionist add-on $29 a month [9] | An AI receptionist (add-on) | A full field-service suite: quotes, scheduling, invoicing, and an AI that answers calls | It asks you to move your whole business into a suite. Its invoices do not check a spoken price against what you charged before |
+| Housecall Pro | Basic $79 a month, or $59 a month billed yearly, for 1 user; Essentials $189 for up to 5 [15] | An AI call-answering add-on ("CSR AI"), price not published [15] | A field-service suite: scheduling, dispatch, invoicing, payments | A suite to move into; no spoken-price check |
+| GoHighLevel | Starter $97 a month [16], plus metered phone, text and AI usage | Your voicemail, with a missed-call text-back setting [17] | A marketing and CRM platform built for agencies, with automations | Text-back is a setting or a workflow you build; no invoices from speech, no price checks |
+| Podium | Not published; quotes come from sales [12] | An "AI employee" add-on [12] | Reviews, messaging, payments | No public price, built for multi-location businesses |
+| ServiceTitan | Not published; quotes come from sales [18] | Your office staff, with phone add-ons | Software for shops with dispatchers and call takers | Built for larger shops; far beyond a one-truck budget |
+| AI receptionists for trades, such as Rosie | Professional $49 a month for 250 minutes; Scale $149 for 1,000 [19] | A voice agent with a name and voice you pick [19] | Answers live calls and takes details | No invoices, no price checks, priced by the minute |
+| Smith.ai AI Receptionist | Free for 25 calls; Pro from $150 a month for 75 calls [13] | An AI receptionist, with human backup [13] | An AI answers live calls | Priced per call. No invoices |
+| **AfterBeep** | **$39 a month, flat** | **Your own greeting, and it says it is a machine** | Text back, booking, spoken invoices checked against your history | |
+
+**AfterBeep's answer: an honest machine on your own number.** No robot pretending to be your receptionist. It says it is a machine, takes the message and texts every real caller your real open slots, then turns your spoken invoice into a bill that is held when a price or quantity looks wrong, and sent only at the exact total you approved. Flat $39 a month, no per-call or per-invoice fees.
 
 ## Sources
 
@@ -117,5 +145,11 @@ Texts are two-thirds of the cost, so the main lever is short texts: one segment 
 12. Podium pricing. https://www.podium.com/pricing
 13. Smith.ai AI Receptionist pricing. https://smith.ai/pricing/ai-receptionist
 14. CallRail, small business marketing benchmark report, released Jan 15 2025, as reported by Plumber magazine, Jan 20 2025. https://www.plumbermag.com/online_exclusives/2025/01/callrail-releases-report-analyzing-which-marketing-efforts-best-convert-leads-into-business
+
+15. Housecall Pro, product and pricing facts for AI assistants, prices "as of July 2026". https://www.housecallpro.com/llm-info/
+16. HighLevel pricing. https://www.gohighlevel.com/pricing
+17. HighLevel help center, "Where and How to Configure the Missed Call Text Back Feature". https://help.gohighlevel.com/support/solutions/articles/48001239140
+18. ServiceTitan pricing ("Request pricing"). https://www.servicetitan.com/pricing
+19. Rosie pricing. https://heyrosie.com/pricing
 
 Prices were checked on November 18 2026 and change over time.

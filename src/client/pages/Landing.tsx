@@ -68,12 +68,12 @@ const FAQ = [
     a: 'That is what the carbon copies are for. They remember every price you have billed, so if you say fifteen for a part you always bill at fifty, the invoice stops and asks. And nothing is ever sent until you approve the exact total.',
   },
   {
-    q: 'Does the AI do my math?',
-    a: 'Never. Speech is turned into line items, then plain code does every multiplication, the sales tax and the total, in whole cents.',
+    q: 'Could it get the math wrong?',
+    a: 'The machine only reads the words. Plain code does every multiplication, the sales tax and the total, in whole cents, and refuses to send a total that is a penny off what you approved.',
   },
   {
-    q: 'Why not iPhone Live Voicemail, Google Voice, Jobber or Smith.ai?',
-    a: 'Live Voicemail and Google Voice write the message down for free, but nobody texts the caller back, books them or bills them. Jobber does all of it as a full field-service suite ($29 to $49 a month for one user, plus $29 for its AI receptionist), so you move your whole business into it. The Smith.ai AI receptionist answers live calls, free for 25 calls and then $150 a month for 75. AfterBeep is an honest machine on your own number: it never pretends to be a person, texts every real caller your open slots, and checks every spoken price against your own past invoices. Flat $39 a month.',
+    q: 'Why not Jobber, Housecall Pro, GoHighLevel or an AI receptionist?',
+    a: 'Text-back is table stakes now. Jobber ($29 to $49 a month for one user, plus $29 for its receptionist) and Housecall Pro ($79 a month for one user) are whole field-service suites to move into. GoHighLevel ($97 a month plus usage) is a marketing platform built for agencies. AI receptionists such as Rosie (from $49 a month for 250 minutes) and Smith.ai (from $150 a month for 75 calls) answer as a voice agent and never touch the bill. Live Voicemail and Google Voice write the message down and stop there. AfterBeep is an honest machine on your own number: it says it is a machine, texts every real caller your open slots, and is the only one of these that checks a spoken price against your own carbon copies. Flat $39 a month.',
   },
   {
     q: 'How do customers pay?',
@@ -110,7 +110,8 @@ export default function Landing() {
           <h1>
             You were under a sink. <span className="hl">AfterBeep</span> got the job.
           </h1>
-          <p className="hero-sub">The machine that hears fifteen and knows you meant fifty.</p>
+          <p className="hero-sub">Miss five calls a week and about $740 of work a month walks to the next name on the list.</p>
+          <p className="hero-twist">The machine that hears fifteen and knows you meant fifty.</p>
           <p className="hero-lede">
             An answering machine, a Dictaphone and a stack of carbon copies, rebuilt for one-person trades. AfterBeep answers the calls
             you miss, texts the caller a booking link, and turns your spoken invoice into a checked, approved bill.
@@ -126,7 +127,10 @@ export default function Landing() {
               $39/month, flat
             </a>
           </div>
-          <p className="faint hero-fine">For plumbers, roofers, HVAC and appliance repair. One number, unlimited messages, no per-invoice fees.</p>
+          <p className="faint hero-fine">
+            No robot pretending to be your receptionist. It says it's a machine, takes the message and texts your real open times. For
+            plumbers, roofers, HVAC and appliance repair, at one flat price.
+          </p>
         </div>
         <Device />
       </section>
@@ -185,7 +189,8 @@ export default function Landing() {
           </li>
         </ol>
         <p className="tuesday-tally">
-          <strong>2 jobs booked, $557 of work, $35 caught.</strong> AfterBeep paid for itself 14 times over.{' '}
+          <strong>2 jobs booked, $557 of booked work, $35 caught.</strong> That is $377 quoted plus $180 billed before tax, and AfterBeep
+          paid for itself 14 times over.{' '}
           <Link to="/machine/call?story=1">Run the story yourself</Link> and the inbox ends on these exact numbers.
         </p>
       </section>
@@ -269,6 +274,10 @@ export default function Landing() {
           <p className="muted">
             Your carbon copies are built from your own invoices, not a catalog. A slip of the tongue gets caught before the customer sees it,
             "twelve fifty" means $1,250 for a water heater and $12.50 for a cartridge, and the total you approve is the total that goes out.
+          </p>
+          <p className="muted" data-testid="carbon-worth">
+            <strong>What that is worth:</strong> catch one misheard price a week at the $35 gap between fifteen and fifty, and the carbon
+            copies keep about $1,800 a year. <span className="faint">(The one a week is our assumption.)</span>
           </p>
           <Link className="btn" to="/machine/invoice">
             Say one <ArrowIcon />
