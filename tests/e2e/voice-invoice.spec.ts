@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('[VI 3.4, 3.8, 3.12, 4.1, 4.3, 5.2] a spoken invoice is held on a wrong price and sent only at the approved total', async ({ page }) => {
   await page.goto('/machine/invoice');

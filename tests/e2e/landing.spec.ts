@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('[MC 6.2] landing page sells the product and opens the machine', async ({ page }) => {
   await page.goto('/');

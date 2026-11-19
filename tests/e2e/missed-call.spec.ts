@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('[MC 5.9, 6.2, 7.1, 7.2, 7.3] a missed call becomes a booked job', async ({ page, request }) => {
   const before = ((await (await request.get('/api/messages')).json()) as { newCount: number }).newCount;

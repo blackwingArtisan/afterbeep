@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('[MC 5.1, 5.9] the caller booking page works on a phone', async ({ page, request }) => {
   const res = await request.post('/api/calls', {
