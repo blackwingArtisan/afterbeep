@@ -244,7 +244,7 @@ export default function CallSimulator() {
           {error && <div className="error-box" role="alert">{error}</div>}
 
           <div className="row">
-            <button className="btn btn-primary" type="button" onClick={() => void callMachine()} disabled={busy || (mode === 'voice' && !canDictate)}>
+            <button className="btn btn-primary" type="button" onClick={() => void callMachine()} disabled={busy || (mode === 'voice' && !canDictate) || (mode === 'sample' && !sample)}>
               <PhoneIcon /> Call the machine
             </button>
             {(phase === 'ringing' || phase === 'greeting') && (

@@ -33,6 +33,8 @@ test('[VI 5.8] a bad invoice link gives up the ghost but still offers a call', a
 test('on a phone the machine header stays on one row, with theme and reset in a menu', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'phone layout only');
   await page.goto('/machine');
+  // Measure with the real fonts; the fallback font is wider and can overflow while they load.
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
   const header = page.locator('.machine-top .machine-actions');
   const story = header.getByRole('link', { name: 'Demo the whole story' });
   expect(await story.innerText()).toBe('Demo');

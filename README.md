@@ -2,6 +2,10 @@
 
 **Kiroween 2026 · Resurrection** · [![check](https://github.com/blackwingArtisan/afterbeep/actions/workflows/check.yml/badge.svg)](https://github.com/blackwingArtisan/afterbeep/actions/workflows/check.yml) · MIT · [Judge's map](docs/judging.md)
 
+> **Try it live: [afterbeep.pages.dev](https://afterbeep.pages.dev)** · press **Demo the whole story** · remote code **4-2-7** (open **Remote**, press **Call your machine**)
+>
+> The live demo is a shared sandbox with invented data. It sends no real texts (they land in the Outbox) and resets itself every day. The Amazon Connect phone number is not live yet.
+
 **Miss five calls a week and about $740 of work a month walks to the next name on the list.** AfterBeep answers the calls a one-person trade business misses, texts the caller a booking link, and turns a spoken invoice into a checked bill. One plan, $39 a month.
 
 ### The machine that hears fifteen and knows you meant fifty.
@@ -191,7 +195,7 @@ The phone wiring is in [infra/connect/README.md](infra/connect/README.md), and [
 ## Tests and spec traceability
 
 ```bash
-npm run check             # typecheck, spec coverage, 378 Vitest unit and API tests
+npm run check             # typecheck, spec coverage, 384 Vitest unit and API tests
 npx playwright install chromium
 npm run test:e2e          # 25 Playwright tests (one is phone-only) against the production build on port 3112 (AFTERBEEP_E2E_PORT changes it)
 ```
@@ -201,7 +205,9 @@ Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] h
 `npm run eval` scores the rules extractor on 24 hand-labelled voicemails it had not seen: on the first run it got every phone number and address right, never invented an address, and read urgency right in 19 of 24. The two missed emergencies it found are fixed, and urgency is now 21 of 24. Details and the remaining misses: [docs/eval.md](docs/eval.md). The same script scores Bedrock side by side with `--bedrock`, and `npm run test:aws` checks the live Bedrock path; both are paid, so both stay off unless you switch them on, and neither has been run for these numbers.
 
 ## Demo mode and deploy
-The call simulator and **Reset demo** need no login, so they run only in demo mode. Demo mode is on by default while every adapter is local and turns off by itself when any real adapter is selected; set `AFTERBEEP_DEMO=off` before any deploy that holds real customer data. The owner screens have no login yet: this build is a single-tenant demo. `render.yaml` describes a one-service deploy with local adapters.
+The call simulator and **Reset demo** need no login, so they run only in demo mode. Demo mode is on by default while every adapter is local and turns off by itself when any real adapter is selected; set `AFTERBEEP_DEMO=off` before any deploy that holds real customer data. The owner screens have no login yet: this build is a single-tenant demo.
+
+**The live demo** runs on Cloudflare's free tier: the built client on Pages, and the same Hono app as a Pages Function ([infra/cloudflare/](infra/cloudflare)) with the local adapters. Its state is one JSON document in a D1 row, saved with a version check so two visitors never overwrite each other, and reseeded once a day. `npm run deploy:demo` builds and deploys it. `render.yaml` describes an alternative one-service Node deploy.
 
 For development with hot reload: `npm run dev` (client on 3110, API on 3111).
 

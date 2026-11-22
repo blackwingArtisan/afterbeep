@@ -1,0 +1,14 @@
+# The public demo: the built client on Cloudflare Pages, and the API as a Pages Function
+# (functions/api/[[path]].ts) backed by one D1 row. Deploy with `npm run deploy:demo`.
+name = "afterbeep"
+pages_build_output_dir = "../../dist/client"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+AFTERBEEP_PUBLIC_URL = "https://afterbeep.pages.dev"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "afterbeep-demo"
+database_id = "3e308319-3cfc-4c4b-99e2-69474ac261e9"

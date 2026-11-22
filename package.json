@@ -14,6 +14,7 @@
     "dev:api": "PORT=3111 tsx watch src/server/main.ts",
     "build": "vite build && esbuild src/server/main.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/server/main.js",
     "start": "node dist/server/main.js",
+    "deploy:demo": "npm run build && cd infra/cloudflare && npx --yes wrangler@4.166.0 pages deploy --branch main",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
