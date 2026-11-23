@@ -1,6 +1,6 @@
 # Launch drafts
 
-Drafts for the Devpost entry, a dev.to post, a short social thread and the demo video. Every figure in them matches the README, [docs/business.md](../business.md) and the test suite at the time of writing; recheck the test and criteria counts before posting.
+Drafts for the Devpost entry, a dev.to post, a short social thread and the demo video. Every figure in them matches the README, [docs/business.md](../business.md) and the test suite; `tests/unit/docs-counts.test.ts` checks the criteria, coverage and Kiro credit counts in the Devpost draft. Recheck the test counts before posting.
 
 - [devpost.md](devpost.md): the project description, in Devpost's sections.
 - [dev-to.md](dev-to.md): an engineering post on keeping a voice-driven invoice honest.

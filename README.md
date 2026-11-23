@@ -195,7 +195,7 @@ The phone wiring is in [infra/connect/README.md](infra/connect/README.md), and [
 ## Tests and spec traceability
 
 ```bash
-npm run check             # typecheck, spec coverage, 384 Vitest unit and API tests
+npm run check             # typecheck, spec coverage, 389 Vitest unit and API tests
 npx playwright install chromium
 npm run test:e2e          # 25 Playwright tests (one is phone-only) against the production build on port 3112 (AFTERBEEP_E2E_PORT changes it)
 ```
