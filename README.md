@@ -4,7 +4,9 @@
 
 > **Try it live: [afterbeep.pages.dev](https://afterbeep.pages.dev)** · press **Demo the whole story** · remote code **4-2-7** (open **Remote**, press **Call your machine**)
 >
-> The live demo is a shared sandbox with invented data. It sends no real texts (they land in the Outbox) and resets itself every day. The Amazon Connect phone number is not live yet.
+> **Call the demo line: (661) 647-1482.** Leave a message after the greeting, and within about a minute it is filed in the live demo's inbox with its text back in the Outbox. Press * during the greeting and key 4-2-7 to hear the messages from the remote menu.
+>
+> The live demo is a shared sandbox with invented data. It sends no real texts (they land in the Outbox) and resets itself every day. Callers' numbers are masked before anything is stored, and the line takes a few calls a day.
 
 **Miss five calls a week and about $740 of work a month walks to the next name on the list.** AfterBeep answers the calls a one-person trade business misses, texts the caller a booking link, and turns a spoken invoice into a checked bill. One plan, $39 a month.
 
@@ -15,7 +17,7 @@
 ## Why it matters
 
 - **A resurrection of three dead machines.** The answering machine, the Dictaphone and the carbon-copy invoice book were the solo trade's front office until the cell phone folded them into a beep. AfterBeep brings all three back, and this time they book the job and check the bill.
-- **A real AWS path, not a mock-up.** Amazon Connect, Transcribe, Bedrock and End User Messaging sit behind tested ports, with a SAM template validated in CI. Everything also runs on a laptop with no accounts.
+- **A real AWS path, not a mock-up.** The demo line answers on Amazon Connect; Transcribe and Bedrock read each message in a Lambda and hand it to the live demo. End User Messaging sits behind the same tested ports, with a SAM template validated in CI. Everything also runs on a laptop with no accounts.
 - **A business that pays.** $39 a month flat, about $0.074 a call on AWS, an 80% gross margin at 50 calls a month, and 362,219 solo plumbing, HVAC and electrical contractors who cannot pick up.
 
 ## Try it in 60 seconds
@@ -29,7 +31,7 @@ Requires Node 24 or later. No accounts or keys.
 6. The story ends on a finale (1 booked, $182.88 billed, $35.00 caught). Press **Pay as June** and PAID slams onto her invoice.
 7. **Back to the machine: raise the dead.** Last week's five hang-ups wait in the graveyard as ghost cassettes. One press texts each a booking link, and they rise.
 8. Open **Messages**: "Kept this week" now reads Morgan's Tuesday: 2 booked, $557 of booked work, $35 caught, paid for itself 14 times.
-9. **Call in from the truck.** Open **Remote**, press **Call your machine** and key 4-2-7: "You have N new messages." Press 1 to play, 2 to text the caller the booking link, # for the next, 9 twice to erase. Then "After the beep, say your invoice" opens a held draft. (Built by Kiro. On a real phone the owner calls the business number from their own phone and keys the same code; the Connect flows and the turn Lambda are written and tested, not deployed.)
+9. **Call in from the truck.** Open **Remote**, press **Call your machine** and key 4-2-7: "You have N new messages." Press 1 to play, 2 to text the caller the booking link, # for the next, 9 twice to erase. Then "After the beep, say your invoice" opens a held draft. (Built by Kiro. On a real phone the owner calls the business number from their own phone and keys the same code; on the demo line, call (661) 647-1482 and press * during the greeting.)
 
 > **Built with Kiro**
 > - **Remote retrieval was built by Kiro:** kiro-cli wrote the spec (124 EARS criteria, design, 41 tasks) and then the code, tests, Amazon Connect flows and the turn Lambda for a real phone, task by task, in eight sessions and about 5,500 lines. Claude Code ran the shell, fixed one 15-line layout bug and two single lines. Prompts, output and credits: [docs/kiro-sessions/](docs/kiro-sessions)
@@ -157,15 +159,18 @@ Everything runs on a laptop with no accounts. Each item is covered by the tests 
 
 ```mermaid
 flowchart LR
-  caller([Caller]) -->|no answer, forwards| connect[Amazon Connect<br/>greeting, beep, record]
+  caller([Caller]) -->|no answer, forwards| connect[Amazon Connect<br/>greeting, record]
+  connect --> gate[Lambda call gate<br/>call caps, caller masked]
   connect --> s3[(S3 recording)]
-  s3 --> lambda[Lambda<br/>recording-to-webhook]
-  lambda -->|Bearer secret| api[AfterBeep API<br/>Hono on Node]
-  api --> transcribe[Amazon Transcribe]
-  api --> bedrock[Amazon Bedrock<br/>Converse, forced tool,<br/>grounding guard]
+  s3 --> lambda[Lambda voicemail<br/>Transcribe, mask numbers,<br/>Bedrock, token-capped]
+  lambda --> transcribe[Amazon Transcribe]
+  lambda --> bedrock[Amazon Bedrock<br/>Converse, forced tool,<br/>grounding guard]
+  lambda -->|Bearer secret| api[AfterBeep API<br/>Hono]
   api --> sms[AWS End User Messaging SMS]
   sms -->|booking link| caller
-  owner([Owner]) -->|spoken invoice| api
+  owner([Owner]) -->|calls in, keys the code| connect
+  connect --> turn[Lambda remote turn<br/>shared call script] --> api
+  owner -->|spoken invoice| api
   api --> book[(Carbon copies<br/>price book, integer cents)]
   api --> stripe[Stripe Invoicing<br/>test mode]
 ```
@@ -185,24 +190,24 @@ src/domain/     pure logic: money, spoken numbers, tax, invoice parser, price bo
 src/adapters/   ports and implementations: store, transcriber, extractor, sms, invoices
 src/server/     Hono API, services (voicemail, texting, booking, invoicing, revive, greeting), seed data
 src/client/     React app: landing, machine (inbox, call, greeting, schedule, invoice, outbox, prices), caller pages
-scripts/        spec coverage, extractor eval, the Kiro agent's hook scripts, and the project's MCP server
+scripts/        spec coverage, extractor eval, the phone path deploy, the Kiro agent's hook scripts, and the project's MCP server
 infra/          SAM template for the real phone path; connect/ holds the contact flows and Lambdas
 .kiro/          steering, specs, hooks, MCP settings and the afterbeep-builder agent
 ```
 
-The phone wiring is in [infra/connect/README.md](infra/connect/README.md), and [infra/template.yaml](infra/template.yaml) deploys it with SAM; CI validates the template on every push. All settings are listed in `.env.example`.
+The phone wiring is in [infra/connect/README.md](infra/connect/README.md): [infra/template.yaml](infra/template.yaml) holds the Lambdas and bucket, `scripts/deploy-phone.ts` deploys them with both flows and the number, and CI validates the template on every push. The demo line caps calls a day and a month, message and call length, and Bedrock tokens. All settings are listed in `.env.example`.
 
 ## Tests and spec traceability
 
 ```bash
-npm run check             # typecheck, spec coverage, 389 Vitest unit and API tests
+npm run check             # typecheck, spec coverage, 410 Vitest unit and API tests
 npx playwright install chromium
 npm run test:e2e          # 25 Playwright tests (one is phone-only) against the production build on port 3112 (AFTERBEEP_E2E_PORT changes it)
 ```
 
 Every test title names the EARS requirements it proves, such as `[VI 3.4, 3.7] holds a labor rate well below the usual rate`. `npm run spec:coverage` fails the build when a requirement has no test: today 239 of 243 are named by tests, and the other 4 are on the real AWS and Stripe path. CI runs all of it on every push.
 
-`npm run eval` scores the rules extractor on 24 hand-labelled voicemails it had not seen: on the first run it got every phone number and address right, never invented an address, and read urgency right in 19 of 24. The two missed emergencies it found are fixed, and urgency is now 21 of 24. Details and the remaining misses: [docs/eval.md](docs/eval.md). The same script scores Bedrock side by side with `--bedrock`, and `npm run test:aws` checks the live Bedrock path; both are paid, so both stay off unless you switch them on, and neither has been run for these numbers.
+`npm run eval` scores the rules extractor on 24 hand-labelled voicemails it had not seen: on the first run it got every phone number and address right, never invented an address, and read urgency right in 19 of 24. The two missed emergencies it found are fixed, and urgency is now 21 of 24. Details and the remaining misses: [docs/eval.md](docs/eval.md). The same script scores Bedrock side by side with `--bedrock`, and `npm run test:aws` checks the live Bedrock path; both are paid, so both stay off unless you switch them on. On the demo line, Bedrock read two real test calls (an English emergency and a Spanish dryer call) with every name, address, job, urgency and language right, at about 800 input and 100 output tokens a call: [docs/eval.md](docs/eval.md#the-real-phone-path).
 
 ## Demo mode and deploy
 The call simulator and **Reset demo** need no login, so they run only in demo mode. Demo mode is on by default while every adapter is local and turns off by itself when any real adapter is selected; set `AFTERBEEP_DEMO=off` before any deploy that holds real customer data. The owner screens have no login yet: this build is a single-tenant demo.

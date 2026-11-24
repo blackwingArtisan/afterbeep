@@ -2,6 +2,8 @@
 
 Try it live: [afterbeep.pages.dev](https://afterbeep.pages.dev). Press **Demo the whole story**; the remote code is 4-2-7. The live demo is a shared sandbox with invented data: it sends no real texts and resets itself every day.
 
+Call the demo line: **(661) 647-1482**. Leave a message and it appears in the live demo's inbox within about a minute, with its text back in the Outbox. Press * during the greeting and key 4-2-7 for the remote menu. Callers' numbers are masked before anything is stored.
+
 ## Inspiration
 A one-truck plumber or appliance tech misses calls all day, because their hands are inside a water heater. Plain voicemail loses 69% of those callers, and up to 85% of people whose call goes unanswered never call back. A missed job is worth $206 for a typical appliance repair and $377 for an emergency plumbing call. The same owner then types up invoices at midnight from memory.
 
@@ -13,7 +15,7 @@ Their office used to be three machines: an answering machine on the kitchen coun
 - **The carbon copies** remember what you charged before. When the machine hears "fifteen" for a part you always bill at $50, it holds the invoice and asks. That is the line we built it around: *the machine that hears fifteen and knows you meant fifty.*
 - **Spanish callers** get their text back and booking confirmation in Spanish, while the owner reads the message in English.
 - **Raise the dead.** Callers who hang up without a word wait in a graveyard. One owner press texts each a single booking link.
-- **Call in from the truck.** Like the remote code on an old answering machine, the owner calls in, keys 4-2-7 and hears "You have N new messages": 1 plays a message, 2 texts the caller the booking link, # skips to the next, 9 twice erases. Then "After the beep, say your invoice" opens a held draft in the browser. The Amazon Connect flows and turn Lambda for a real phone run the same call script; they are written and tested, not deployed yet.
+- **Call in from the truck.** Like the remote code on an old answering machine, the owner calls in, keys 4-2-7 and hears "You have N new messages": 1 plays a message, 2 texts the caller the booking link, # skips to the next, 9 twice erases. Then "After the beep, say your invoice" opens a held draft in the browser. On the demo line, the Amazon Connect flows and turn Lambda run the same call script.
 - **The outgoing message.** The owner types or says the greeting and sees live checks: it says it is a machine, promises a text and stays under 25 seconds. A greeting that claims a person is on the line is refused.
 
 One plan, $39 a month. In our worked scenario, one afternoon of missed calls books $557 of work ($377 quoted + $180 billed): 14 times the price. No robot pretends to be your receptionist: the machine says it is a machine, takes the message and texts your real open times.
@@ -40,4 +42,4 @@ Speech-to-text hears "fifteen" and "fifty" the same way, and "forty gallon water
 $39 a month flat, about $0.074 a call on AWS, and an 80% gross margin at 50 calls a month. With assumed 3% monthly churn, a customer is worth about $1,040; counter cards at supply houses and referrals should win one for about $150. About 2,140 customers make $1M a year, out of 362,219 solo plumbing, HVAC and electrical contractors. The first year: ten techs at one supply house, then that metro, then three. Text-back is table stakes; of the tools we compared (Jobber, Housecall Pro, GoHighLevel, Podium, ServiceTitan, AI receptionists), only AfterBeep checks a spoken price against your own past invoices.
 
 ## What's next
-A real phone number on Amazon Connect, with the remote-retrieval flows and turn Lambda imported and tried on a real phone, the Bedrock extractor scored side by side with the rules, and a Spanish booking page to match the Spanish texts.
+10DLC registration so the demo line's text backs reach real phones, the Bedrock extractor scored side by side with the rules on all 24 held-out voicemails, and a Spanish booking page to match the Spanish texts.

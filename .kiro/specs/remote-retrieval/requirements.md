@@ -148,7 +148,7 @@ Out of scope: deploying the Connect flows and the Lambda, and saving drafts on t
 13.3 THE SYSTEM SHALL read the 1, 2, 9 and `#` keys in that flow with one equals condition for each key.
 13.4 THE SYSTEM SHALL give every keypad input in that flow a no-matching-error transition, a timeout transition and a no-matching-condition transition where conditions are used.
 13.5 THE SYSTEM SHALL keep the remote code out of that flow; the flow passes the keyed digits to a Lambda function that answers with the next prompt.
-13.6 THE SYSTEM SHALL state in `infra/connect/README.md` that the flow is written and checked but not deployed.
+13.6 THE SYSTEM SHALL state in `infra/connect/README.md` whether the flow is deployed, and how it is created from the file.
 
 ## Extension: the phone path
 Requirements 14 to 16 were added after requirements 1 to 13. They cover the Lambda function that the remote retrieval flow calls on every turn, and how a real call reaches that flow. Two decisions by the owner apply to all three:
@@ -210,5 +210,5 @@ Extra glossary:
 16.4 THE SYSTEM SHALL read `*` on the menu with its own Equals condition and send the key `*` in its own turn, so that `*` repeats the announcement (3.7) on a phone.
 16.5 THE SYSTEM SHALL keep requirements 13.1 to 13.5 true for the changed flow, and the remote code SHALL appear in neither flow file.
 16.6 THE SYSTEM SHALL record in `infra/connect/README.md` the decision that the owner is recognised by caller ID plus the 3-digit code, with no second number, and that caller ID only routes the call.
-16.7 THE SYSTEM SHALL say in `infra/connect/README.md` that the turn Lambda is written and tested with mocks but not deployed, that neither flow has been imported into a Connect instance, and which placeholders to fill in.
+16.7 THE SYSTEM SHALL say in `infra/connect/README.md` whether the turn Lambda and both flows are deployed, what has been tried on a real phone, and which placeholders the deploy fills in.
 16.8 THE SYSTEM SHALL keep every new file in `infra/connect/` free of secrets and phone numbers; the Lambda reads its settings from the environment.

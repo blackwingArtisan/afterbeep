@@ -1,7 +1,9 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { Hono } from 'hono';
 import { z, ZodError } from 'zod';
+import { ModelExtractionSchema } from '../adapters/extractor/schema';
 import { keptThisWeek } from '../domain/kept';
+import type { VoicemailExtraction } from '../domain/types';
 import { publicBusiness } from '../domain/remote-code';
 import { buildPriceBook } from '../domain/price-book';
 import { businessTaxRateMilli } from '../domain/tax';
@@ -37,12 +39,27 @@ const InboundTextSchema = z.object({
   body: z.string().max(1600),
 });
 
+/** An extraction made on the AWS side (the voicemail Lambda runs Bedrock), checked before it is filed. */
+const HookExtractionSchema = ModelExtractionSchema.extend({
+  source: z.enum(['rules', 'bedrock']),
+  fallbackReason: z.string().max(200).optional(),
+});
+
 const ConnectHookSchema = z.object({
   contactId: z.string().min(1).max(128),
   callerNumber: z.string().min(7).max(32),
   recordingUri: z.string().startsWith('s3://').max(1024),
   durationSec: z.number().int().min(1).max(600).optional(),
+  /** The Lambda's transcript of the recording. Without it the server's own transcriber runs. */
+  transcript: z.string().trim().min(1).max(4000).optional(),
+  /** The Lambda's extraction. Without it the server's own extractor runs. */
+  extraction: HookExtractionSchema.optional(),
 });
+
+function hookExtraction(e: z.infer<typeof HookExtractionSchema>): VoicemailExtraction {
+  const { language, fallbackReason, ...fields } = e;
+  return { ...fields, ...(language === 'es' ? { language } : {}), ...(fallbackReason ? { fallbackReason } : {}) };
+}
 
 const SlotSchema = z.object({
   start: z.string().datetime(),
@@ -151,6 +168,8 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
       from: hook.callerNumber,
       audioUri: hook.recordingUri,
       durationSec: hook.durationSec,
+      ...(hook.transcript ? { transcript: hook.transcript } : {}),
+      ...(hook.extraction ? { extraction: hookExtraction(hook.extraction) } : {}),
     });
     return c.json({ messageId: message.id }, 201);
   });

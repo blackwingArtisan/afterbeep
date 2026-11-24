@@ -1,11 +1,81 @@
 {
   "Version": "2019-10-30",
-  "StartAction": "check-owner",
+  "StartAction": "gate",
   "Metadata": {
     "name": "AfterBeep voicemail",
-    "description": "Answers a forwarded call, plays the greeting, beeps, records the caller, hangs up. A call from the owner's own number goes to the remote retrieval flow first."
+    "description": "Demo line. A call gate caps calls a day and a month and masks the caller's number. The owner's own number, or * during the greeting, goes to the remote retrieval flow. Everyone else hears the greeting and leaves a recorded message of up to 60 seconds."
   },
   "Actions": [
+    {
+      "Identifier": "gate",
+      "Type": "InvokeLambdaFunction",
+      "Parameters": {
+        "LambdaFunctionARN": "REPLACE_WITH_CALL_GATE_LAMBDA_ARN",
+        "InvocationTimeLimitSeconds": "3",
+        "InvocationType": "SYNCHRONOUS",
+        "LambdaInvocationAttributes": {
+          "caller": "$.CustomerEndpoint.Address"
+        },
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
+      },
+      "Transitions": {
+        "NextAction": "check-cap",
+        "Errors": [
+          {
+            "NextAction": "over-cap",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "check-cap",
+      "Type": "Compare",
+      "Parameters": {
+        "ComparisonValue": "$.External.allowed"
+      },
+      "Transitions": {
+        "NextAction": "over-cap",
+        "Conditions": [
+          {
+            "NextAction": "stamp",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "yes"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "over-cap",
+            "ErrorType": "NoMatchingCondition"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "stamp",
+      "Type": "UpdateContactAttributes",
+      "Parameters": {
+        "Attributes": {
+          "afterbeepStart": "$.External.startedAt"
+        },
+        "TargetContact": "Current"
+      },
+      "Transitions": {
+        "NextAction": "check-owner",
+        "Errors": [
+          {
+            "NextAction": "check-owner",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
     {
       "Identifier": "check-owner",
       "Type": "Compare",
@@ -40,6 +110,7 @@
         "ContactFlowId": "REPLACE_WITH_REMOTE_FLOW_ID"
       },
       "Transitions": {
+        "NextAction": "save-caller",
         "Errors": [
           {
             "NextAction": "save-caller",
@@ -53,9 +124,62 @@
       "Type": "UpdateContactAttributes",
       "Parameters": {
         "Attributes": {
-          "afterbeepCaller": "$.CustomerEndpoint.Address"
+          "afterbeepCaller": "$.External.maskedCaller"
         },
         "TargetContact": "Current"
+      },
+      "Transitions": {
+        "NextAction": "greeting",
+        "Errors": [
+          {
+            "NextAction": "over-cap",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "greeting",
+      "Type": "GetParticipantInput",
+      "Parameters": {
+        "SSML": "<speak>You've reached Hollow Creek Plumbing and Appliance. I'm on a job. Leave your name, address, and what's going on, and you'll get a text with a booking link. Start after the beep. <break time=\"300ms\"/></speak>",
+        "InputTimeLimitSeconds": "1",
+        "StoreInput": "False"
+      },
+      "Transitions": {
+        "NextAction": "record",
+        "Conditions": [
+          {
+            "NextAction": "star-to-remote",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "*"
+              ]
+            }
+          }
+        ],
+        "Errors": [
+          {
+            "NextAction": "record",
+            "ErrorType": "InputTimeLimitExceeded"
+          },
+          {
+            "NextAction": "record",
+            "ErrorType": "NoMatchingCondition"
+          },
+          {
+            "NextAction": "record",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "star-to-remote",
+      "Type": "TransferToFlow",
+      "Parameters": {
+        "ContactFlowId": "REPLACE_WITH_REMOTE_FLOW_ID"
       },
       "Transitions": {
         "NextAction": "record",
@@ -69,23 +193,16 @@
     },
     {
       "Identifier": "record",
-      "Type": "UpdateContactRecordingBehavior",
+      "Type": "UpdateContactRecordingAndAnalyticsBehavior",
       "Parameters": {
-        "RecordingBehavior": {
-          "RecordedParticipants": [
-            "Customer"
-          ]
+        "VoiceBehavior": {
+          "VoiceRecordingBehavior": {
+            "RecordedParticipants": [
+              "Customer"
+            ],
+            "IVRRecordingBehavior": "Enabled"
+          }
         }
-      },
-      "Transitions": {
-        "NextAction": "greeting"
-      }
-    },
-    {
-      "Identifier": "greeting",
-      "Type": "MessageParticipant",
-      "Parameters": {
-        "SSML": "<speak>You've reached Hollow Creek Plumbing and Appliance. I'm on a job. Leave your name, address, and what's going on, and you'll get a text with a booking link. Start after the beep. <break time=\"300ms\"/></speak>"
       },
       "Transitions": {
         "NextAction": "listen",
@@ -93,6 +210,10 @@
           {
             "NextAction": "listen",
             "ErrorType": "NoMatchingError"
+          },
+          {
+            "NextAction": "listen",
+            "ErrorType": "ChannelMismatch"
           }
         ]
       }
@@ -102,23 +223,50 @@
       "Type": "GetParticipantInput",
       "Parameters": {
         "Text": " ",
-        "InputTimeLimitSeconds": "120",
+        "InputTimeLimitSeconds": "60",
         "StoreInput": "False"
+      },
+      "Transitions": {
+        "NextAction": "stop-record",
+        "Errors": [
+          {
+            "NextAction": "stop-record",
+            "ErrorType": "InputTimeLimitExceeded"
+          },
+          {
+            "NextAction": "stop-record",
+            "ErrorType": "NoMatchingCondition"
+          },
+          {
+            "NextAction": "stop-record",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "stop-record",
+      "Type": "UpdateContactRecordingAndAnalyticsBehavior",
+      "Parameters": {
+        "VoiceBehavior": {
+          "VoiceRecordingBehavior": {
+            "RecordedParticipants": [
+              "Customer"
+            ],
+            "IVRRecordingBehavior": "Disabled"
+          }
+        }
       },
       "Transitions": {
         "NextAction": "goodbye",
         "Errors": [
           {
             "NextAction": "goodbye",
-            "ErrorType": "InputTimeLimitExceeded"
-          },
-          {
-            "NextAction": "goodbye",
-            "ErrorType": "NoMatchingCondition"
-          },
-          {
-            "NextAction": "goodbye",
             "ErrorType": "NoMatchingError"
+          },
+          {
+            "NextAction": "goodbye",
+            "ErrorType": "ChannelMismatch"
           }
         ]
       }
@@ -127,7 +275,23 @@
       "Identifier": "goodbye",
       "Type": "MessageParticipant",
       "Parameters": {
-        "Text": "Got it. Watch for a text."
+        "Text": "Got it. This is the demo line, so the text back goes to the Outbox at afterbeep dot pages dot dev, not to your phone. Goodbye."
+      },
+      "Transitions": {
+        "NextAction": "hang-up",
+        "Errors": [
+          {
+            "NextAction": "hang-up",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Identifier": "over-cap",
+      "Type": "MessageParticipant",
+      "Parameters": {
+        "Text": "The AfterBeep demo line has taken all the calls it can for today. Try the web demo at afterbeep dot pages dot dev. Goodbye."
       },
       "Transitions": {
         "NextAction": "hang-up",

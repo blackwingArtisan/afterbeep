@@ -3,7 +3,7 @@
   "StartAction": "ask-code",
   "Metadata": {
     "name": "AfterBeep remote retrieval",
-    "description": "Owner calls in, keys the remote code, hears messages with the keypad. Each turn is handed to a Lambda that runs the call script. Not deployed."
+    "description": "Owner calls in, keys the remote code, hears messages with the keypad. Each turn is handed to a Lambda that runs the call script."
   },
   "Actions": [
     {
@@ -25,10 +25,6 @@
       "Transitions": {
         "NextAction": "turn-code",
         "Errors": [
-          {
-            "NextAction": "turn-silence",
-            "ErrorType": "InputTimeLimitExceeded"
-          },
           {
             "NextAction": "turn-other",
             "ErrorType": "NoMatchingError"
@@ -155,10 +151,6 @@
       "Transitions": {
         "NextAction": "turn-code",
         "Errors": [
-          {
-            "NextAction": "turn-silence",
-            "ErrorType": "InputTimeLimitExceeded"
-          },
           {
             "NextAction": "turn-other",
             "ErrorType": "NoMatchingError"

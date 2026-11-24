@@ -61,7 +61,14 @@ describe('remote retrieval Connect flow', () => {
     for (const a of inputs) {
       const types = (a.Transitions.Errors ?? []).map((e) => e.ErrorType);
       expect(types, a.Identifier).toContain('NoMatchingError');
-      expect(types, a.Identifier).toContain('InputTimeLimitExceeded');
+      // Connect refuses a timeout branch on a stored input: a timeout there takes the success branch
+      // with no digits, which the turn Lambda reads as silence.
+      if (a.Parameters.StoreInput === 'True') {
+        expect(types, a.Identifier).not.toContain('InputTimeLimitExceeded');
+        expect(a.Transitions.NextAction, a.Identifier).toBe('turn-code');
+      } else {
+        expect(types, a.Identifier).toContain('InputTimeLimitExceeded');
+      }
     }
   });
 
@@ -87,10 +94,12 @@ describe('remote retrieval Connect flow', () => {
     }
   });
 
-  it('[RR 13.6] says in the Connect README that the flow is written and checked but not deployed', () => {
+  it('[RR 13.6] says in the Connect README whether the flow is deployed and how it is created', () => {
     const readme = readFileSync('infra/connect/README.md', 'utf8');
     expect(readme).toContain('remote-retrieval-flow.json');
-    expect(readme).toMatch(/written and checked but not deployed/i);
+    expect(readme).toMatch(/## Status/);
+    expect(readme).toMatch(/deployed/i);
+    expect(readme).toContain('scripts/deploy-phone.ts');
   });
 });
 
@@ -141,7 +150,8 @@ describe('remote retrieval Connect flow, phone path', () => {
     expect(Number(ask.Parameters.DTMFConfiguration.InterdigitTimeLimitSeconds)).toBeGreaterThanOrEqual(1);
     expect(Number(ask.Parameters.InputTimeLimitSeconds)).toBe(10);
     const errors = ask.Transitions.Errors ?? [];
-    expect(errors.map((e) => e.ErrorType)).toEqual(expect.arrayContaining(['InputTimeLimitExceeded', 'NoMatchingError']));
+    // A stored input has no timeout branch in Connect; a timeout reaches turn-code with no digits.
+    expect(errors.map((e) => e.ErrorType)).toEqual(['NoMatchingError']);
     expect(ask.Transitions.NextAction).toBe('turn-code');
   });
 
@@ -162,13 +172,16 @@ describe('Connect README', () => {
     expect(readme).not.toContain('not decided yet');
   });
 
-  it('[RR 16.7, 13.6] says the Lambda is not deployed, neither flow is imported and names the placeholders', () => {
-    expect(readme).toMatch(/written and tested with mocks but not deployed/i);
-    expect(readme).toMatch(/Neither flow has been imported/i);
-    for (const p of ['REPLACE_WITH_OWNER_NUMBER', 'REPLACE_WITH_REMOTE_FLOW_ID', 'REPLACE_WITH_REMOTE_TURN_LAMBDA_ARN']) {
-      expect(readme).toContain(p);
-    }
-    expect(readme).toMatch(/written and checked but not deployed/i);
+  it('[RR 16.7, 13.6] says what is deployed, what was tried on a real phone, and names every placeholder', () => {
+    const status = readme.slice(readme.indexOf('## Status'));
+    expect(status).toMatch(/turn Lambda/i);
+    expect(status).toMatch(/both flows/i);
+    expect(status).toMatch(/real phone/i);
+    const placeholders = new Set(
+      ['infra/connect/contact-flow.json', 'infra/connect/remote-retrieval-flow.json'].flatMap((f) => readFileSync(f, 'utf8').match(/REPLACE_WITH_[A-Z_]+/g) ?? []),
+    );
+    expect(placeholders.size).toBe(4);
+    for (const p of placeholders) expect(readme).toContain(p);
   });
 
   it('[RR 15.7] says the remote flow must be an inbound flow', () => {

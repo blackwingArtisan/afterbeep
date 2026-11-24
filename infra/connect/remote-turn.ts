@@ -1,10 +1,11 @@
 /**
- * The turn Lambda for the remote retrieval flow. Written and tested with a fake fetch,
- * not deployed (RR 16.7).
+ * The turn Lambda for the remote retrieval flow. Tested with a fake fetch and deployed on the
+ * demo line by scripts/deploy-phone.ts.
  *
  * Amazon Connect calls it once per key press, silence or keyed code. It runs the shared call
  * script (`step`, `startState`) and answers three flat strings: `prompt`, `next` and `state`.
  * It holds no copy of the script. Caller ID is never read: it only routes the call (RR 15.5).
+ * A call that has run past MAX_CALL_SECONDS (from the call gate's start stamp) is ended.
  */
 import { z } from 'zod';
 import {
@@ -28,6 +29,9 @@ export const MAX_STEPS = 6;
 export const TURN_BUDGET_MS = 5_000;
 
 export const FAILURE_PROMPT = 'Something went wrong. Goodbye.';
+export const TIME_UP_PROMPT = 'This call has reached its time limit. Goodbye.';
+/** Longest remote call, counted from the call gate's start stamp. MAX_CALL_SECONDS overrides it. */
+export const DEFAULT_MAX_CALL_SECONDS = 240;
 export const NO_PHONE_INVOICE = 'Invoices by phone are not ready. Use the app.';
 const FALLBACK_PROMPTS = {
   code: 'Enter your three-digit remote code.',
@@ -242,6 +246,17 @@ function failureAnswer(): Answer {
 export interface HandlerDeps {
   fetch: typeof fetch;
   env: Record<string, string | undefined>;
+  /** Defaults to the system clock. */
+  clock?: () => Date;
+}
+
+/** True when the call gate stamped this call's start and the call has run past the limit. */
+export function overTime(attributes: Record<string, string> | undefined, deps: HandlerDeps): boolean {
+  const started = Number(attributes?.afterbeepStart);
+  if (!Number.isFinite(started) || started <= 0) return false;
+  const limit = Number(deps.env.MAX_CALL_SECONDS) > 0 ? Number(deps.env.MAX_CALL_SECONDS) : DEFAULT_MAX_CALL_SECONDS;
+  const now = (deps.clock ?? (() => new Date()))().getTime() / 1000;
+  return now - started > limit;
 }
 
 interface ApiResult {
@@ -498,6 +513,10 @@ export function createHandler(deps: HandlerDeps): (event: unknown) => Promise<An
       if (!parsed.success) throw new TurnFailure('bad-event');
       const event = parsed.data;
       turn = event.Details.Parameters.step;
+      if (overTime(event.Details.ContactData.Attributes, deps)) {
+        console.log(`remote-turn time-up turn=${turn}`);
+        return { prompt: TIME_UP_PROMPT, next: 'goodbye', state: encodeState({ ...startState(''), phase: 'ended' }) };
+      }
 
       const controller = new AbortController();
       let timer: ReturnType<typeof setTimeout> | undefined;

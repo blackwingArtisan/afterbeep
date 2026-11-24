@@ -222,6 +222,33 @@ describe('phone webhook (real path entry point)', () => {
     const res = await ctx.call<{ error: string }>('POST', '/api/hooks/connect-voicemail', hook, { authorization: 'Bearer test-secret' });
     expect(res).toMatchObject({ status: 422, body: { error: 'transcription-failed' } });
   });
+  it('[MC 2.2] files the transcript and Bedrock extraction the voicemail Lambda sends, and texts the caller', async () => {
+    const extraction = {
+      callerName: 'Gus Ferreira',
+      callbackNumber: null,
+      address: '19 Cobweb Lane',
+      job: 'Dryer: not heating',
+      jobCategory: 'appliance',
+      urgency: 'routine',
+      summary: 'Dryer runs but does not heat.',
+      language: null,
+      source: 'bedrock',
+    };
+    const transcript = 'Hi, this is Gus Ferreira at 19 Cobweb Lane. My dryer runs but does not heat. No rush.';
+    const auth = { authorization: 'Bearer test-secret' };
+    const res = await ctx.call<{ messageId: string }>('POST', '/api/hooks/connect-voicemail', { ...hook, contactId: 'c-2', transcript, extraction }, auth);
+    expect(res.status).toBe(201);
+    const { messages } = (await ctx.call<{ messages: Message[] }>('GET', '/api/messages')).body;
+    const filed = messages.find((m) => m.id === res.body.messageId)!;
+    expect(filed.transcript).toBe(transcript);
+    expect(filed.extraction).toMatchObject({ source: 'bedrock', callerName: 'Gus Ferreira', jobCategory: 'appliance' });
+    expect(filed.extraction.language).toBeUndefined();
+    expect(filed.textedAt).not.toBeNull();
+  });
+  it('refuses an extraction that does not match the schema', async () => {
+    const bad = { ...hook, contactId: 'c-3', transcript: 'hello', extraction: { job: 'x', source: 'model' } };
+    expect((await ctx.call('POST', '/api/hooks/connect-voicemail', bad, { authorization: 'Bearer test-secret' })).status).toBe(400);
+  });
 });
 
 describe('spoken invoice to approved bill', () => {

@@ -15,6 +15,8 @@ export interface IncomingCall {
   durationSec?: number;
   /** The phone platform's ID for this call (Amazon Connect ContactId), used to ignore retried webhooks. */
   contactId?: string;
+  /** An extraction already made upstream (the AWS voicemail Lambda runs Bedrock); skips the extractor. */
+  extraction?: VoicemailExtraction;
 }
 
 function textBackBody(
@@ -85,7 +87,7 @@ export async function receiveVoicemail(deps: Deps, call: IncomingCall): Promise<
   }
 
   const { business, messages } = deps.store.read();
-  const extraction = await deps.adapters.extractor.extract(text, { callerId, business });
+  const extraction = call.extraction ?? (await deps.adapters.extractor.extract(text, { callerId, business }));
   const now = deps.clock();
   const message: Message = {
     id: deps.newId(),

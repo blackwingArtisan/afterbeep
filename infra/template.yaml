@@ -1,10 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  AfterBeep real phone path. Amazon Connect stores each voicemail recording in S3, a Lambda hands
-  the recording to the AfterBeep webhook, and the AfterBeep server transcribes it with Amazon
-  Transcribe, reads it with Amazon Bedrock and texts the caller with AWS End User Messaging SMS.
-  The contact flow itself is imported from connect/contact-flow.json (see connect/README.md).
+  AfterBeep real phone path. A call gate Lambda caps calls and masks the caller's number, Amazon
+  Connect stores each voicemail recording in S3, and a voicemail Lambda transcribes it with Amazon
+  Transcribe, reads it with Amazon Bedrock (token-capped) and hands it to the AfterBeep webhook. The
+  remote retrieval turn Lambda runs the owner's keypad menu. The contact flows are created from
+  connect/*.json by scripts/deploy-phone.ts (see connect/README.md).
 
 Parameters:
   ConnectInstanceArn:
@@ -28,7 +29,34 @@ Parameters:
   BedrockModelId:
     Type: String
     Default: amazon.nova-lite-v1:0
-    Description: Bedrock model the server may invoke for extraction.
+    Description: Bedrock model the voicemail Lambda and the server may invoke for extraction.
+  BedrockMaxTokens:
+    Type: Number
+    Default: 300
+    MinValue: 50
+    MaxValue: 1000
+    Description: Output token cap for one voicemail extraction.
+  BedrockMaxInputChars:
+    Type: Number
+    Default: 2000
+    MinValue: 100
+    MaxValue: 8000
+    Description: Longest transcript sent to Bedrock, in characters, which caps input tokens.
+  DailyCallCap:
+    Type: Number
+    Default: 6
+    MinValue: 0
+    Description: Calls the line takes per UTC day. Later calls hear a goodbye and are not recorded.
+  MonthlyCallCap:
+    Type: Number
+    Default: 30
+    MinValue: 0
+    Description: Calls the line takes per UTC month.
+  MaxCallSeconds:
+    Type: Number
+    Default: 240
+    MinValue: 30
+    Description: Longest remote retrieval call; the turn Lambda ends it after this.
 
 Globals:
   Function:
@@ -36,11 +64,15 @@ Globals:
     Architectures: [arm64]
     MemorySize: 256
     Timeout: 30
+    Handler: index.handler
+
 
 Resources:
   RecordingsBucket:
     Type: AWS::S3::Bucket
     Properties:
+      # Named here, not generated, so the Lambda policies can name it without a dependency loop.
+      BucketName: !Sub '${AWS::StackName}-recordings-${AWS::AccountId}'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -57,7 +89,16 @@ Resources:
         Rules:
           - Id: ExpireRecordings
             Status: Enabled
+            Prefix: connect/
             ExpirationInDays: !Ref RecordingRetentionDays
+          - Id: ExpireTranscripts
+            Status: Enabled
+            Prefix: transcripts/
+            ExpirationInDays: !Ref RecordingRetentionDays
+          - Id: ExpireCallCounts
+            Status: Enabled
+            Prefix: caps/
+            ExpirationInDays: 40
 
   RecordingsBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -94,22 +135,39 @@ Resources:
       MessageRetentionPeriod: 1209600
       SqsManagedSseEnabled: true
 
-  RecordingToWebhookFunction:
+  VoicemailFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Description: Hands each new voicemail recording to the AfterBeep webhook with the caller's number.
-      CodeUri: connect/
-      Handler: recording-to-webhook.handler
+      Description: Transcribes each new voicemail, masks numbers, reads it with Bedrock and hands it to the AfterBeep webhook.
+      CodeUri: ../dist/lambda/voicemail/
+      Timeout: 120
       Environment:
         Variables:
           CONNECT_INSTANCE_ID: !Select [1, !Split ['/', !Ref ConnectInstanceArn]]
           AFTERBEEP_URL: !Ref AfterBeepUrl
           AFTERBEEP_WEBHOOK_SECRET: !Ref WebhookSecret
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          BEDROCK_MAX_TOKENS: !Ref BedrockMaxTokens
+          BEDROCK_MAX_INPUT_CHARS: !Ref BedrockMaxInputChars
       Policies:
         - Statement:
             - Effect: Allow
               Action: connect:GetContactAttributes
               Resource: !Sub '${ConnectInstanceArn}/contact/*'
+            - Effect: Allow
+              Action: [transcribe:StartTranscriptionJob, transcribe:GetTranscriptionJob]
+              Resource: '*'
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource:
+                - !Sub 'arn:${AWS::Partition}:s3:::${AWS::StackName}-recordings-${AWS::AccountId}/connect/*'
+                - !Sub 'arn:${AWS::Partition}:s3:::${AWS::StackName}-recordings-${AWS::AccountId}/transcripts/*'
+            - Effect: Allow
+              Action: s3:PutObject
+              Resource: !Sub 'arn:${AWS::Partition}:s3:::${AWS::StackName}-recordings-${AWS::AccountId}/transcripts/*'
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource: !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/${BedrockModelId}'
       Events:
         Recording:
           Type: S3
@@ -130,6 +188,75 @@ Resources:
           OnFailure:
             Type: SQS
             Destination: !GetAtt FailedHandoffQueue.Arn
+
+  CallGateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: First action of the voicemail flow. Caps calls a day and a month and masks the caller's number.
+      CodeUri: ../dist/lambda/call-gate/
+      Timeout: 8
+      Environment:
+        Variables:
+          CAPS_BUCKET: !Ref RecordingsBucket
+          DAILY_CALL_CAP: !Ref DailyCallCap
+          MONTHLY_CALL_CAP: !Ref MonthlyCallCap
+          AFTERBEEP_WEBHOOK_SECRET: !Ref WebhookSecret
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: s3:ListBucket
+              Resource: !GetAtt RecordingsBucket.Arn
+              Condition:
+                StringLike:
+                  s3:prefix: caps/*
+            - Effect: Allow
+              Action: s3:PutObject
+              Resource: !Sub '${RecordingsBucket.Arn}/caps/*'
+
+  RemoteTurnFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: One turn of the owner's remote retrieval menu; runs the shared call script.
+      CodeUri: ../dist/lambda/remote-turn/
+      Timeout: 8
+      Environment:
+        Variables:
+          AFTERBEEP_URL: !Ref AfterBeepUrl
+          AFTERBEEP_WEBHOOK_SECRET: !Ref WebhookSecret
+          MAX_CALL_SECONDS: !Ref MaxCallSeconds
+
+  # Lets the Connect instance invoke the two flow Lambdas.
+  CallGateConnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CallGateFunction
+      Action: lambda:InvokeFunction
+      Principal: connect.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Ref ConnectInstanceArn
+
+  RemoteTurnConnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RemoteTurnFunction
+      Action: lambda:InvokeFunction
+      Principal: connect.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Ref ConnectInstanceArn
+
+  CallGateIntegration:
+    Type: AWS::Connect::IntegrationAssociation
+    Properties:
+      InstanceId: !Ref ConnectInstanceArn
+      IntegrationType: LAMBDA_FUNCTION
+      IntegrationArn: !GetAtt CallGateFunction.Arn
+
+  RemoteTurnIntegration:
+    Type: AWS::Connect::IntegrationAssociation
+    Properties:
+      InstanceId: !Ref ConnectInstanceArn
+      IntegrationType: LAMBDA_FUNCTION
+      IntegrationArn: !GetAtt RemoteTurnFunction.Arn
 
   # Everything the AfterBeep server needs on the real path. Attach it to the server's role.
   AfterBeepServerPolicy:
@@ -159,6 +286,12 @@ Resources:
             Resource: '*'
 
 Outputs:
+  CallGateFunctionArn:
+    Description: Put in the voicemail flow's gate action.
+    Value: !GetAtt CallGateFunction.Arn
+  RemoteTurnFunctionArn:
+    Description: Put in the remote retrieval flow's turn actions.
+    Value: !GetAtt RemoteTurnFunction.Arn
   RecordingsBucketName:
     Description: Bucket where Amazon Connect stores the voicemail recordings.
     Value: !Ref RecordingsBucket

@@ -348,7 +348,7 @@ Every turn runs inside one catch that returns the failure answer: "Something wen
 ### Caller ID and security
 - The caller's number routes the call and nothing else (15.5). The Lambda ignores the `caller` parameter, and the server never sees it. A faked caller ID gets an attacker only to the code prompt, where the 5-wrong-codes lockout and the 3-tries-per-call limit apply as before (1.5, 1.6, 2.4). The lockout is per business, not per caller, so a faked ID does not reset it.
 - An owner whose number is withheld, or who calls from a different phone, gets the voicemail greeting. That is the safe failure: nothing about messages is revealed (1.8).
-- The transfer happens before `save-caller` and `record`, so a remote call is never recorded, never gets `afterbeepCaller`, and never reaches `recording-to-webhook.mjs` as a voicemail (15.6).
+- The transfer happens before `save-caller` and `record`, so a remote call is never recorded, never gets `afterbeepCaller`, and never reaches the voicemail Lambda (`voicemail-to-webhook.ts`) as a voicemail (15.6).
 - The webhook secret is read from `AFTERBEEP_WEBHOOK_SECRET`, sent as a bearer token, and logged nowhere (14.12, 14.23, 16.8). The Lambda writes no digit, transcript, name or job to a log (14.23).
 - The two placeholders keep the owner's number and the flow id out of git (15.4).
 - Nobody can reach the Lambda except Connect: the Connect console adds a resource permission for `connect.amazonaws.com` when the function is added to the instance (Lambda guide). Even so the Lambda trusts nothing in the event beyond its schema.

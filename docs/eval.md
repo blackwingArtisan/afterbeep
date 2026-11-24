@@ -67,3 +67,15 @@ Two more paid checks sit behind the same kind of switch:
 
 - `AFTERBEEP_AWS_TEST=1 npm run test:aws` runs two live Bedrock extractions (an emergency with a spoken number and address, and a caller who gave no address) and fails on any fallback or invented address. Without the variable both tests are skipped, so `npm test` and CI never spend money.
 - `AFTERBEEP_EVAL_PAID=1 npx tsx scripts/transcribe-sample.ts s3://bucket/voicemail.wav` runs one Amazon Transcribe batch job on a real recording and prints the transcript, how long it took, and what the rules read from it.
+
+## The real phone path
+On November 24, 2026 (UTC) the demo line was tested with real calls. Amazon Connect placed each call to the demo line from the line itself, with Amazon Polly speaking an invented voicemail after the greeting, so every step after the dial was the production path: the call gate, the greeting, the IVR recording in S3, the voicemail Lambda (Amazon Transcribe with English and Spanish, number masking, Nova Lite on Bedrock with the caps), the webhook, and the text back in the live demo's Outbox.
+
+Two of four placed calls connected; the carrier dropped the other two as possible robocalls, because a number calling itself looks like a spoofed caller ID. Both calls that connected were read right on every field:
+
+| Call | Name | Address | Job | Urgency | Language | Callback | Tokens in / out |
+|---|---|---|---|---|---|---|---|
+| Burst water heater, spoken callback number | Dana Whitfield | 42 Lantern Street | Water heater: burst, flooding | emergency | English | the spoken number, masked | 810 / 103 |
+| Dryer not heating, in Spanish | Marisol Ortega | 66 Orchard Lane | Dryer: not heating | routine | Spanish | caller ID, masked | 792 / 82 |
+
+Both were filed with `source: bedrock` (no fallback to rules), and both callers' text backs were written: an emergency promise of a call back in English, and the first opening in Spanish. The transcripts held no part of the greeting, because recording starts after it. At Nova Lite's on-demand price the two extractions cost well under a hundredth of a cent; the calls' Connect, telephony and Transcribe minutes cost a few cents in all.

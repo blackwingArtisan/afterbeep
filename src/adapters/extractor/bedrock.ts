@@ -24,7 +24,17 @@ export interface BedrockExtractorOptions {
   client?: ConverseClient;
   /** Where a fallback is reported; defaults to console.warn so the server log says why. */
   log?: (line: string) => void;
+  /** Output token cap for one voicemail. The tool answer is well under 300 tokens. */
+  maxTokens?: number;
+  /** Longest transcript sent to the model, in characters; anything after is cut. Caps input tokens. */
+  maxInputChars?: number;
+  /** Told the token counts of every model call, for cost logs. */
+  onUsage?: (usage: { inputTokens: number; outputTokens: number }) => void;
 }
+
+/** A voicemail is two minutes at most, about 2,000 characters; the cut only stops runaway input. */
+export const DEFAULT_MAX_INPUT_CHARS = 4000;
+export const DEFAULT_MAX_TOKENS = 400;
 
 /** Thrown when the model answered without calling the forced tool. */
 class NoToolUseError extends Error {
@@ -85,6 +95,7 @@ export class BedrockExtractor implements Extractor {
   }
 
   async extract(transcript: string, ctx: ExtractionContext): Promise<VoicemailExtraction> {
+    const said = transcript.slice(0, this.options.maxInputChars ?? DEFAULT_MAX_INPUT_CHARS);
     try {
       const response = await this.client.send(
         new ConverseCommand({
@@ -97,7 +108,7 @@ export class BedrockExtractor implements Extractor {
                 'If the caller speaks Spanish, set language to "es" and still write the job and summary in English.',
             },
           ],
-          messages: [{ role: 'user', content: [{ text: `Caller ID: ${ctx.callerId}\nVoicemail transcript:\n${transcript}` }] }],
+          messages: [{ role: 'user', content: [{ text: `Caller ID: ${ctx.callerId}\nVoicemail transcript:\n${said}` }] }],
           toolConfig: {
             tools: [
               {
@@ -110,9 +121,12 @@ export class BedrockExtractor implements Extractor {
             ],
             toolChoice: { tool: { name: TOOL_NAME } },
           },
-          inferenceConfig: { maxTokens: 400, temperature: 0 },
+          inferenceConfig: { maxTokens: this.options.maxTokens ?? DEFAULT_MAX_TOKENS, temperature: 0 },
         }),
       );
+      if (response.usage) {
+        this.options.onUsage?.({ inputTokens: response.usage.inputTokens ?? 0, outputTokens: response.usage.outputTokens ?? 0 });
+      }
       const toolUse = response.output?.message?.content?.find((block) => block.toolUse)?.toolUse;
       if (!toolUse) throw new NoToolUseError('the model answered without the extraction tool');
       const parsed = ModelExtractionSchema.parse(toolUse?.input);
